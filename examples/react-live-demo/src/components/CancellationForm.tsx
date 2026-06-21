@@ -4,31 +4,34 @@
  * Demonstrates:
  *  - onPause (debounced) validation on "reason" textarea
  *  - onBlur validation on the "feedback" textarea
- *  - Rate-limiting simulation after 3 validation calls
+ *  - Rate-limiting simulation after 4 validation calls
  *  - Scenario quick-fill buttons for common bad inputs
  */
 
 import React, { useState } from 'react';
-import { useMockValidation, type ValidationStatus } from '../hooks/useMockValidation';
-import { ValidationField, ValidationIndicator } from './ValidationField';
+import { useMockValidation } from '../hooks/useMockValidation';
+import { ValidationField } from './ValidationField';
 
 const CANCEL_REASONS = [
-  { value: '', label: 'Choose a reason…' },
-  { value: 'too_expensive', label: 'Too expensive' },
-  { value: 'missing_features', label: 'Missing features I need' },
-  { value: 'found_alternative', label: 'Found a better alternative' },
-  { value: 'technical_issues', label: 'Technical issues' },
-  { value: 'no_longer_needed', label: 'No longer needed' },
-  { value: 'other', label: 'Other' },
+  { value: '', label: 'Select a reason…' },
+  { value: 'too_expensive', label: 'Pricing constraints' },
+  { value: 'missing_features', label: 'Feature requirements not met' },
+  { value: 'found_alternative', label: 'Transitioned to alternative product' },
+  { value: 'technical_issues', label: 'Technical / stability issues' },
+  { value: 'no_longer_needed', label: 'Project deprecated / completed' },
+  { value: 'other', label: 'Other reasons' },
 ];
 
 export function CancellationForm() {
   const [submitted, setSubmitted] = useState(false);
-  const [reasonStatus, setReasonStatus] = useState<ValidationStatus>('idle');
-  const [feedbackStatus, setFeedbackStatus] = useState<ValidationStatus>('idle');
 
-  // Additional onSubmit validation for the elaboration field
-  const elaboration = useMockValidation({ mode: 'onPause', pauseMs: 1200, rateLimitAfter: 4 });
+  // Elaboration field (main interactive piece)
+  const elaboration = useMockValidation({
+    mode: 'onPause',
+    pauseMs: 1200,
+    rateLimitAfter: 4,
+    question: 'What is the primary reason for cancelling your subscription today?',
+  });
 
   const canSubmit = !submitted && elaboration.value.trim().length > 0;
 
@@ -36,26 +39,28 @@ export function CancellationForm() {
     e.preventDefault();
     if (!canSubmit) return;
     void elaboration.triggerValidation().then(() => {
-      if (elaboration.isValid || elaboration.result?.valid) setSubmitted(true);
+      if (elaboration.isValid || elaboration.result?.valid) {
+        setSubmitted(true);
+      }
     });
   }
 
   function quickFill(value: string) {
     elaboration.setValue(value);
-    // Manually run
-    const el = document.getElementById('cancel-elaboration') as HTMLTextAreaElement;
-    if (el) { el.value = value; }
-    void elaboration.triggerValidation();
+    elaboration.handleChange(value);
   }
 
   if (submitted) {
     return (
-      <div className="success-state">
-        <span className="success-icon">💙</span>
-        <h3>Subscription cancelled</h3>
-        <p>We're sorry to see you go. Your feedback helps us improve Normy for everyone.</p>
-        <button className="btn-ghost" onClick={() => setSubmitted(false)}>
-          ← Try again
+      <div className="success-screen">
+        <div className="success-mark">✓</div>
+        <h3>Cancellation Processed</h3>
+        <p>Your subscription has been set to cancel at the end of the billing cycle. Thank you for your feedback.</p>
+        <button className="btn btn-ghost" onClick={() => {
+          setSubmitted(false);
+          elaboration.reset();
+        }}>
+          ← Restart Demo
         </button>
       </div>
     );
@@ -63,23 +68,23 @@ export function CancellationForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate>
-      {/* ── Feature chips ── */}
-      <div className="mode-chips">
-        <span className="mode-chip pause">⏱ onPause (1.2s)</span>
-        <span className="mode-chip blur">👁 onBlur</span>
-        <span className="mode-chip submit">🚀 onSubmit gate</span>
+      <div className="mode-badges">
+        <span className="mode-badge pause">⏱ onPause (1.2s)</span>
+        <span className="mode-badge blur">👁 onBlur</span>
+        <span className="mode-badge submit">🚀 onSubmit Gate</span>
       </div>
 
-      {/* ── Rate limit banner ── */}
-      <div className="demo-banner warning">
-        <span>⚡</span>
-        <span>Rate limiting is active on the elaboration field — after 4 validations it returns a 429 so you can see graceful handling.</span>
+      <div className="v-feedback warning" style={{ marginBottom: 24 }}>
+        <span className="v-feedback-icon">⚡</span>
+        <div>
+          Rate limiting is simulated on the elaboration field. After 4 validations, the API returns a mock 429 error to demonstrate graceful error handling.
+        </div>
       </div>
 
-      {/* ── Reason select (no validation, just UX) ── */}
-      <div className="form-group">
-        <label htmlFor="cancel-reason" className="form-label">
-          Primary reason for cancelling <span className="required">*</span>
+      {/* Reason Select */}
+      <div className="field-group">
+        <label htmlFor="cancel-reason" className="field-label">
+          <span>Primary cancellation reason <span style={{ color: 'var(--red)' }}>*</span></span>
         </label>
         <select id="cancel-reason" className="field-select" defaultValue="">
           {CANCEL_REASONS.map(r => (
@@ -88,88 +93,90 @@ export function CancellationForm() {
         </select>
       </div>
 
-      {/* ── Elaboration — onPause + rate-limiting ── */}
-      <div className="form-group">
-        <label htmlFor="cancel-elaboration" className="form-label">
-          Tell us more <span className="required">*</span>
-          <span style={{ marginLeft: 8, fontWeight: 400, color: 'var(--text-dim)', fontSize: '0.75rem' }}>
-            — AI checks as you pause typing
-          </span>
+      {/* Elaboration Input */}
+      <div className="field-group">
+        <label htmlFor="cancel-elaboration" className="field-label">
+          <span>Elaborate on your decision <span style={{ color: 'var(--red)' }}>*</span></span>
+          <span className="mode-tag">onPause</span>
         </label>
         <textarea
           id="cancel-elaboration"
           className={[
             'field-textarea',
             elaboration.status === 'error' ? 'has-error' : elaboration.status === 'success' ? 'has-success' : '',
+            elaboration.status === 'validating' ? 'is-validating' : '',
           ].join(' ')}
           rows={4}
-          placeholder="What was the main thing that led to you cancelling today?"
+          placeholder="Could you share details about your decision to cancel? Be as descriptive as you like."
           value={elaboration.value}
-          aria-invalid={elaboration.status === 'error'}
           onChange={elaboration.handleChange}
           onBlur={elaboration.handleBlur}
         />
-        {/* Inline feedback */}
+
+        {/* Inline Feedback Toast */}
         {elaboration.status !== 'idle' && (
-          <div role={elaboration.status === 'error' ? 'alert' : 'status'} aria-live="polite"
-            style={{
-              display: 'flex', alignItems: 'flex-start', gap: '8px',
-              padding: '9px 14px', borderRadius: '8px', marginTop: '6px',
-              fontSize: '0.8125rem', lineHeight: '1.5',
-              animation: 'normy-slide-in 150ms ease-out',
-              ...(elaboration.status === 'validating'
-                ? { background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', color: '#93c5fd' }
-                : elaboration.status === 'rate_limited'
-                ? { background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fcd34d' }
-                : elaboration.status === 'network_error'
-                ? { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }
-                : elaboration.result?.severity === 'success'
-                ? { background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.25)', color: '#6ee7b7' }
-                : elaboration.result?.severity === 'warning'
-                ? { background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', color: '#fcd34d' }
-                : elaboration.result?.severity === 'info'
-                ? { background: 'rgba(59,130,246,0.08)', border: '1px solid rgba(59,130,246,0.25)', color: '#93c5fd' }
-                : { background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' })
-            }}
+          <div
+            role={elaboration.status === 'error' ? 'alert' : 'status'}
+            aria-live="polite"
+            className={`v-feedback ${
+              elaboration.status === 'validating' ? 'validating'
+              : elaboration.status === 'rate_limited' ? 'rate-limit'
+              : elaboration.status === 'network_error' ? 'network-error'
+              : elaboration.result?.severity ?? 'error'
+            }`}
           >
-            <span style={{
-              fontWeight: 700, flexShrink: 0,
-              display: 'inline-block',
-              animation: elaboration.status === 'validating' ? 'normy-spin 1s linear infinite' : undefined,
-            }}>
-              {elaboration.status === 'validating' ? '⟳'
-               : elaboration.status === 'rate_limited' ? '⚡'
-               : elaboration.status === 'network_error' ? '⚠'
-               : elaboration.result?.severity === 'success' ? '✓'
-               : elaboration.result?.severity === 'warning' ? '⚠'
-               : elaboration.result?.severity === 'info' ? 'ℹ' : '✕'}
-            </span>
-            <span>
-              {elaboration.status === 'validating' ? 'Checking your response…'
-               : elaboration.apiError ?? elaboration.result?.feedback ?? ''}
-            </span>
+            {elaboration.status === 'validating' ? (
+              <span className="v-feedback-spinner" />
+            ) : (
+              <span className="v-feedback-icon">
+                {elaboration.status === 'rate_limited' ? '⚡'
+                 : elaboration.status === 'network_error' ? '⚠'
+                 : elaboration.result?.severity === 'success' ? '✓'
+                 : elaboration.result?.severity === 'warning' ? '⚠'
+                 : elaboration.result?.severity === 'info' ? 'ℹ' : '✕'}
+              </span>
+            )}
+            <div style={{ flex: 1 }}>
+              <div>
+                {elaboration.status === 'validating' ? 'Analyzing response…'
+                 : elaboration.apiError ?? elaboration.result?.feedback ?? ''}
+              </div>
+              {elaboration.result && elaboration.result.score !== undefined && (
+                <div className="score-row">
+                  <div className="score-bar">
+                    <div
+                      className="score-fill"
+                      style={{
+                        transform: `scaleX(${elaboration.result.score / 100})`,
+                        background: elaboration.result.severity === 'success' ? 'var(--teal)'
+                                  : elaboration.result.severity === 'info' ? 'var(--blue)'
+                                  : elaboration.result.severity === 'warning' ? 'var(--amber)'
+                                  : 'var(--red)',
+                      }}
+                    />
+                  </div>
+                  <span className="score-label">{elaboration.result.score}/100</span>
+                </div>
+              )}
+            </div>
           </div>
         )}
-
-        {/* Validation status indicator */}
-        <div className="validation-indicators" style={{ marginTop: 8 }}>
-          <ValidationIndicator status={elaboration.status} />
-        </div>
       </div>
 
-      {/* ── Scenario quick-fill ── */}
-      <div style={{ marginBottom: 20 }}>
-        <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          🎮 Test scenarios
-        </p>
-        <div className="scenario-grid">
+      {/* Scenario buttons */}
+      <div style={{ marginBottom: 28 }}>
+        <div style={{ fontSize: '0.6875rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'var(--text-muted)', marginBottom: 12 }}>
+          Test Scenarios (Quick-fill)
+        </div>
+        <div className="scenario-strip">
           {[
-            { label: 'Empty', desc: 'Triggers EMPTY', value: '' },
-            { label: 'Too short', desc: 'Triggers TOO_SHORT', value: 'idk' },
-            { label: 'Random text', desc: 'Triggers RANDOM_TEXT', value: 'asdfjkl;qwerty' },
-            { label: 'Spam', desc: 'Triggers SPAM', value: 'bad bad bad bad bad bad' },
-            { label: 'Low quality', desc: 'Triggers LOW_QUALITY', value: 'It was okay I guess' },
-            { label: 'Good answer', desc: 'Scores 90+', value: 'The pricing model does not align with our current budget constraints after the recent restructuring. We\'ve had a great experience with the product quality but cannot justify the renewal at this time.' },
+            { label: 'Empty', desc: 'EMPTY', value: '' },
+            { label: 'Too short', desc: 'TOO_SHORT', value: 'idk' },
+            { label: 'Random text', desc: 'RANDOM_TEXT', value: 'asdfjkl;qwerty' },
+            { label: 'Spam pattern', desc: 'SPAM', value: 'cancel cancel cancel cancel cancel cancel' },
+            { label: 'Low quality', desc: 'LOW_QUALITY', value: 'Too expensive.' },
+            { label: 'Acceptable', desc: 'Score 75+', value: 'Our budget got reduced for Q3, so we need to consolidate our tool stack.' },
+            { label: 'Excellent', desc: 'Score 90+', value: 'We are restructuring our entire support infrastructure. While we loved Normy\'s interface, we are switching back to our in-house custom tools to satisfy internal privacy audits.' },
           ].map(s => (
             <button key={s.label} type="button" className="scenario-btn" onClick={() => quickFill(s.value)}>
               <span className="sb-label">{s.label}</span>
@@ -179,36 +186,26 @@ export function CancellationForm() {
         </div>
       </div>
 
-      {/* ── Would return field — onBlur ── */}
+      {/* Would Return (onBlur validation field) */}
       <ValidationField
         id="cancel-return"
-        label="What would bring you back?"
-        hint="Optional — validated when you click away"
+        label="What would convince you to return?"
+        hint="Optional — this field is validated when you click outside or change focus"
         as="textarea"
         rows={3}
-        placeholder="e.g. Lower pricing, a specific feature, better onboarding…"
+        placeholder="e.g. A specific missing integration, lower price tiers, etc."
         mode="onBlur"
-        onStatusChange={setFeedbackStatus}
       />
-      <div className="validation-indicators" style={{ marginTop: -10, marginBottom: 16 }}>
-        <ValidationIndicator status={feedbackStatus} />
-        <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginLeft: 4 }}>onBlur mode — fires when you leave the field</span>
-      </div>
-
-      <div className="form-divider" />
 
       <div className="form-actions">
-        <button type="submit" className="btn-danger" disabled={!canSubmit}>
-          Cancel Subscription
+        <button type="submit" className="btn btn-primary" disabled={!canSubmit}>
+          Process Cancellation
         </button>
-        <button type="button" className="btn-ghost" onClick={() => {
+        <button type="button" className="btn btn-ghost" onClick={() => {
           elaboration.reset();
-          setReasonStatus('idle');
-          setFeedbackStatus('idle');
         }}>
-          Reset Demo
+          Reset Form
         </button>
-        {reasonStatus}
       </div>
     </form>
   );

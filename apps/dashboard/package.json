@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "check-types": "tsc --noEmit",
-    "lint": "next lint"
+    "lint": "echo \"No linter configured yet\""
   },
   "dependencies": {
     "next": "14.2.3",

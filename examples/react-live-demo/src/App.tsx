@@ -1,178 +1,179 @@
-import { useState } from 'react'
-import './index.css'
-import { CancellationForm } from './components/CancellationForm'
-import { JobApplicationForm } from './components/JobApplicationForm'
-import { FeedbackForm } from './components/FeedbackForm'
+import { useState } from 'react';
+import './index.css';
+import { CancellationForm } from './components/CancellationForm';
+import { JobApplicationForm } from './components/JobApplicationForm';
+import { FeedbackForm } from './components/FeedbackForm';
 
 const TABS = [
   {
     id: 'cancellation',
-    icon: '💳',
-    label: 'Cancellation',
+    num: '01',
+    label: 'Subscription Cancellation',
     tag: 'onPause + rate limiting',
-    title: 'Subscription Cancellation',
-    description: 'Debounced validation fires 1.2s after you stop typing. After 4 calls the rate limiter kicks in to show graceful 429 handling.',
+    title: 'Cancellation UX Flow',
+    description: 'Debounced validation triggers 1.2s after user pauses typing. Features simulated rate-limit protection.',
     component: CancellationForm,
   },
   {
     id: 'job',
-    icon: '💼',
+    num: '02',
     label: 'Job Application',
-    tag: 'Multi-field + network error',
-    title: 'Job Application',
-    description: 'Multiple fields with different modes: onPause for long-form text, onBlur for short fields. The cover letter simulates a network error on the 3rd call.',
+    tag: 'Multi-field + network handling',
+    title: 'Job Application Flow',
+    description: 'Combines multiple validation behaviors (onPause for long-form, onBlur for inputs). Cover letter triggers a transient network error on the 3rd key-up.',
     component: JobApplicationForm,
   },
   {
     id: 'feedback',
-    icon: '⭐',
-    label: 'Feedback',
-    tag: 'All 4 severity levels',
-    title: 'Customer Feedback',
-    description: 'Use the quick-fill buttons to trigger all four severity levels — error, warning, info, and success — and watch the score bar animate in real time.',
+    num: '03',
+    label: 'Customer Feedback',
+    tag: 'All 4 severity tiers',
+    title: 'Customer Feedback Flow',
+    description: 'Demonstrates the full range of semantic classification feedback: Success (≥80), Info (50-79), Warning (30-49), Error (<30).',
     component: FeedbackForm,
   },
-] as const
+] as const;
 
-type TabId = typeof TABS[number]['id']
+type TabId = typeof TABS[number]['id'];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabId>('cancellation')
-  const tab = TABS.find(t => t.id === activeTab)!
-  const Component = tab.component
+  const [activeTab, setActiveTab] = useState<TabId>('cancellation');
+  const tab = TABS.find(t => t.id === activeTab)!;
+  const Component = tab.component;
 
   return (
-    <div className="demo-root">
-      {/* ── Header ── */}
-      <header className="demo-header">
-        <div className="badge">
-          <span className="badge-dot" />
-          Live SDK Demo
+    <div className="app-shell">
+      {/* ── Top Navigation Bar ── */}
+      <nav className="top-nav">
+        <div className="nav-logo">
+          <div className="nav-logo-mark">N</div>
+          <span>Normy Validation Platform</span>
         </div>
-        <h1>Normy React SDK</h1>
-        <p>
-          Real-time AI-powered form validation in action. No backend required —
-          the mock pipeline runs entirely in-browser.
-        </p>
-        <div className="api-status mock">
-          Mock mode active — API calls are simulated client-side
+        <div className="nav-badge">
+          Live SDK Sandbox
         </div>
-      </header>
-
-      {/* ── Tabs ── */}
-      <nav className="demo-tabs" role="tablist" aria-label="Demo forms">
-        {TABS.map(t => (
-          <button
-            key={t.id}
-            role="tab"
-            aria-selected={activeTab === t.id}
-            className={`demo-tab ${activeTab === t.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(t.id)}
-          >
-            <span className="tab-icon">{t.icon}</span>
-            {t.label}
-          </button>
-        ))}
       </nav>
 
-      {/* ── Main layout ── */}
-      <div className="demo-layout">
-        {/* Card */}
-        <div className="demo-card" role="tabpanel" key={activeTab}>
-          <div className="demo-card-header">
-            <div className="card-tag">
-              <span>{tab.icon}</span>
-              {tab.tag}
-            </div>
-            <h2>{tab.title}</h2>
-            <p>{tab.description}</p>
+      {/* ── Main Workspace ── */}
+      <main className="main-wrapper">
+        <header className="hero">
+          <div className="hero-eyebrow">
+            <span className="hero-tag">React SDK</span>
+            <div className="hero-divider" />
+            <span className="hero-tag">Phase 3A Live Demo</span>
           </div>
-          <div className="demo-card-body">
-            <Component />
-          </div>
+          <h1>
+            AI-driven form validation, <em>reimagined.</em>
+          </h1>
+          <p className="hero-desc">
+            Analyze form inputs in real-time using structured LLM classification.
+            Provide detailed, contextual guidance to users without arbitrary blockades.
+          </p>
+        </header>
+
+        {/* ── Tab Bar ── */}
+        <div className="tab-nav" role="tablist" aria-label="Demo scenarios">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              role="tab"
+              aria-selected={activeTab === t.id}
+              className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(t.id)}
+            >
+              <span className="tab-num">{t.num}</span>
+              {t.label}
+            </button>
+          ))}
         </div>
 
-        {/* Info sidebar */}
-        <aside className="info-panel">
-          <h4>SDK Features Shown</h4>
-
-          <div className="info-feature">
-            <span className="info-feature-icon">⏱</span>
-            <div>
-              <strong>onPause debounce</strong>
-              Validates after typing stops — no API spam
+        {/* ── Content Area ── */}
+        <div className="content-grid">
+          {/* Active Sandbox Card */}
+          <div className="card" role="tabpanel" key={activeTab}>
+            <div className="card-header">
+              <div className="card-label">{tab.tag}</div>
+              <h2 className="card-title">{tab.title}</h2>
+              <p className="card-desc">{tab.description}</p>
             </div>
-          </div>
-          <div className="info-feature">
-            <span className="info-feature-icon">👁</span>
-            <div>
-              <strong>onBlur validation</strong>
-              Fires when focus leaves the field
-            </div>
-          </div>
-          <div className="info-feature">
-            <span className="info-feature-icon">🚀</span>
-            <div>
-              <strong>onSubmit gating</strong>
-              Blocks submission until all fields pass
-            </div>
-          </div>
-          <div className="info-feature">
-            <span className="info-feature-icon">📊</span>
-            <div>
-              <strong>Severity levels</strong>
-              success / info / warning / error with colour-coded toasts
-            </div>
-          </div>
-          <div className="info-feature">
-            <span className="info-feature-icon">⚡</span>
-            <div>
-              <strong>Rate limit (429)</strong>
-              Graceful degradation with friendly message
-            </div>
-          </div>
-          <div className="info-feature">
-            <span className="info-feature-icon">📡</span>
-            <div>
-              <strong>Network errors</strong>
-              Simulated on the 3rd call in Job Application
-            </div>
-          </div>
-          <div className="info-feature">
-            <span className="info-feature-icon">♿</span>
-            <div>
-              <strong>Accessible</strong>
-              aria-invalid, aria-live, role="alert"
+            <div className="card-body">
+              <Component />
             </div>
           </div>
 
-          <div style={{ marginTop: 20, padding: '14px', background: 'var(--surface-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '10px' }}>
-              <strong style={{ color: 'var(--text)' }}>Live Gemini Integration</strong><br />
-              Enter a Gemini API key to use real AI validation instead of local mocks.
-            </p>
-            <input 
-              type="password" 
-              placeholder="AIza..." 
-              className="field-input"
-              style={{ fontSize: '0.75rem', padding: '6px 10px' }}
-              onChange={(e) => {
-                if (e.target.value) localStorage.setItem('GEMINI_API_KEY', e.target.value);
-                else localStorage.removeItem('GEMINI_API_KEY');
-              }}
-              defaultValue={typeof window !== 'undefined' ? localStorage.getItem('GEMINI_API_KEY') || '' : ''}
-            />
-          </div>
-        </aside>
-      </div>
+          {/* Info Sidebar */}
+          <aside className="sidebar">
+            <div className="sidebar-block">
+              <div className="sidebar-label">SDK Characteristics</div>
+              <div className="feature-list">
+                <div className="feature-row">
+                  <div className="feature-icon">⏱</div>
+                  <div>
+                    <strong className="feature-name">Debounced onPause</strong>
+                    Fires only after the user stops typing to preserve API limit quotas.
+                  </div>
+                </div>
+                <div className="feature-row">
+                  <div className="feature-icon">👁</div>
+                  <div>
+                    <strong className="feature-name">Dynamic onBlur</strong>
+                    Runs validation as the focus leaves the input, preventing premature alerts.
+                  </div>
+                </div>
+                <div className="feature-row">
+                  <div className="feature-icon">🚀</div>
+                  <div>
+                    <strong className="feature-name">Gated Submission</strong>
+                    Guarantees all fields pass validation before triggering form submission.
+                  </div>
+                </div>
+                <div className="feature-row">
+                  <div className="feature-icon">⚡</div>
+                  <div>
+                    <strong className="feature-name">Adaptive UI feedback</strong>
+                    Returns dynamic suggestions instead of simple, unhelpful error blocks.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sidebar-block">
+              <div className="api-key-block">
+                <div className="sidebar-label">AI Engine Configuration</div>
+                <div className="api-key-label">Gemini API Key</div>
+                <p className="api-key-desc">
+                  Provide your Gemini key to use real-time LLM validation instead of the default local mock.
+                </p>
+                <input
+                  type="password"
+                  placeholder="AIzaSy..."
+                  className="field-input"
+                  style={{ fontSize: '0.75rem', padding: '8px 12px', fontFamily: 'var(--mono)' }}
+                  onChange={(e) => {
+                    const val = e.target.value.trim();
+                    if (val) {
+                      localStorage.setItem('GEMINI_API_KEY', val);
+                    } else {
+                      localStorage.removeItem('GEMINI_API_KEY');
+                    }
+                  }}
+                  defaultValue={typeof window !== 'undefined' ? localStorage.getItem('GEMINI_API_KEY') || '' : ''}
+                />
+              </div>
+            </div>
+          </aside>
+        </div>
+      </main>
 
       {/* ── Footer ── */}
-      <footer className="demo-footer">
-        <p>
-          Built with <a href="https://github.com/normy">@normy/react</a> SDK ·{' '}
-          <a href="#">View source</a> · Phase 3A Live Demo
-        </p>
+      <footer className="app-footer">
+        <div>
+          Released under MIT License. Powered by <a href="https://github.com/normy" target="_blank" rel="noreferrer">@normy/react</a>.
+        </div>
+        <div>
+          <a href="#" onClick={(e) => e.preventDefault()}>Developer Console</a> · <a href="#" onClick={(e) => e.preventDefault()}>Documentation</a>
+        </div>
       </footer>
     </div>
-  )
+  );
 }
