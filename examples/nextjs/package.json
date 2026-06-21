@@ -1,0 +1,16 @@
+{
+  "name": "@normy/example-nextjs",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "build": "echo \"Building...\""
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@normy/react": "workspace:*"
+  },
+  "devDependencies": {}
+}

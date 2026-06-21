@@ -1,0 +1,13 @@
+{
+  "name": "@normy/example-vanilla",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "build": "echo \"Building...\""
+  },
+  "dependencies": {
+    "@normy/js": "workspace:*"
+  },
+  "devDependencies": {}
+}
