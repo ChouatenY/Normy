@@ -21,6 +21,31 @@ export type ValidationIssue =
 
 export type ValidationSeverity = 'info' | 'warning' | 'error' | 'success';
 
+// ─── Feedback Categories (UX grouping for SDK toast display) ─────────────────
+
+/**
+ * A coarser grouping of ValidationIssue for SDK toast logic.
+ * The SDK uses this to pick the right icon, color, and CTA.
+ */
+export type FeedbackCategory =
+  | 'input_quality'    // TOO_SHORT, EMPTY
+  | 'input_format'     // RANDOM_TEXT, SPAM
+  | 'content_quality'  // LOW_QUALITY, IRRELEVANT_RESPONSE
+  | 'content_logic'    // CONTRADICTORY_RESPONSE
+  | 'valid';           // VALID
+
+/** Maps every ValidationIssue to its FeedbackCategory. */
+export const ISSUE_TO_CATEGORY: Record<ValidationIssue, FeedbackCategory> = {
+  EMPTY:                  'input_quality',
+  TOO_SHORT:              'input_quality',
+  RANDOM_TEXT:            'input_format',
+  SPAM:                   'input_format',
+  LOW_QUALITY:            'content_quality',
+  IRRELEVANT_RESPONSE:    'content_quality',
+  CONTRADICTORY_RESPONSE: 'content_logic',
+  VALID:                  'valid',
+} as const;
+
 // ─── Validation Modes ────────────────────────────────────────────────────────
 
 export type ValidationMode = 'onBlur' | 'onPause' | 'onSubmit';
@@ -47,7 +72,7 @@ export interface ValidationResult {
   readonly valid: boolean;
   /** Quality score in the range 0–100. */
   readonly score: number;
-  /** The primary detected issue (or "none" if valid). */
+  /** The primary detected issue (or "VALID" if passing). */
   readonly issue: ValidationIssue;
   /**
    * Human-readable, AI-generated feedback to guide the user toward a better
@@ -56,6 +81,11 @@ export interface ValidationResult {
   readonly feedback: string;
   /** Computed severity level derived from score and issue. */
   readonly severity: ValidationSeverity;
+  /**
+   * Coarser UX category for the SDK toast system.
+   * Derived from issue using ISSUE_TO_CATEGORY map.
+   */
+  readonly feedbackCategory: FeedbackCategory;
   /** ISO timestamp when this result was produced. */
   readonly validatedAt: string;
   /** Which AI provider produced this result. */
@@ -102,10 +132,17 @@ export interface ScoringConfig {
   readonly warningThreshold: number;
 }
 
+/**
+ * Default scoring thresholds:
+ *   error:   score  0–29
+ *   warning: score 30–49
+ *   info:    score 50–79
+ *   success: score 80–100
+ */
 export const DEFAULT_SCORING_CONFIG: ScoringConfig = {
-  passThreshold: 50,
-  errorThreshold: 30,
-  warningThreshold: 50,
+  errorThreshold:   30,   // score < 30  → error
+  warningThreshold: 50,   // score < 50  → warning
+  passThreshold:    80,   // score >= 80 → success (50–79 = info)
 } as const;
 
 // ─── Prompt Template ──────────────────────────────────────────────────────────

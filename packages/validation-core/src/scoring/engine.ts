@@ -1,5 +1,5 @@
 import type { ValidationSeverity, ScoringConfig, ValidationResult, ValidationIssue, AIProviderName } from '../types/index.js';
-import { DEFAULT_SCORING_CONFIG } from '../types/index.js';
+import { DEFAULT_SCORING_CONFIG, ISSUE_TO_CATEGORY } from '../types/index.js';
 
 export class ScoringEngine {
   private config: ScoringConfig;
@@ -10,6 +10,12 @@ export class ScoringEngine {
 
   /**
    * Evaluates a score and maps it to a severity level.
+   *
+   * Bands (default config):
+   *   score  0–29  → error
+   *   score 30–49  → warning
+   *   score 50–79  → info
+   *   score 80–100 → success
    */
   public determineSeverity(score: number): ValidationSeverity {
     if (score < this.config.errorThreshold) {
@@ -18,7 +24,6 @@ export class ScoringEngine {
     if (score < this.config.warningThreshold) {
       return 'warning';
     }
-    // High quality scores are either success or info
     if (score >= this.config.passThreshold) {
       return 'success';
     }
@@ -34,7 +39,8 @@ export class ScoringEngine {
   }
 
   /**
-   * Finalizes a validation output by calculating severity, validity status, and timestamp.
+   * Finalizes a validation output by calculating severity, validity status,
+   * feedbackCategory, and timestamp.
    */
   public finalizeResult(params: {
     score: number;
@@ -48,6 +54,7 @@ export class ScoringEngine {
     const valid = this.isValid(params.score, params.minScore);
     const severity = this.determineSeverity(params.score);
     const confidence = params.confidence !== undefined ? params.confidence : 1.0;
+    const feedbackCategory = ISSUE_TO_CATEGORY[params.issue];
 
     return {
       valid,
@@ -55,6 +62,7 @@ export class ScoringEngine {
       issue: params.issue,
       feedback: params.feedback,
       severity,
+      feedbackCategory,
       validatedAt: new Date().toISOString(),
       provider: params.provider,
       latencyMs: params.latencyMs,
@@ -62,3 +70,4 @@ export class ScoringEngine {
     };
   }
 }
+

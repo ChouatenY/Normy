@@ -188,11 +188,12 @@ describe('Normy API Integration Tests', () => {
       });
 
       expect(res.status).toBe(200);
-      const json = await res.json() as { valid: boolean; issue: string; score: number; severity: string };
+      const json = await res.json() as { valid: boolean; issue: string; score: number; severity: string; feedbackCategory: string };
       expect(json.valid).toBe(false);
       expect(json.issue).toBe('TOO_SHORT');
       expect(json.score).toBe(30);
       expect(json.severity).toBe('error');
+      expect(json.feedbackCategory).toBe('input_quality');
 
       // Verify validation was logged to the database
       const dbValidations = await db

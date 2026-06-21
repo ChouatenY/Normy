@@ -148,6 +148,7 @@ app.openapi(validateRoute, async (c) => {
     issue: result.issue,
     severity: result.severity,
     feedback: result.feedback,
+    feedbackCategory: result.feedbackCategory,
   }, 200);
 });
 

@@ -24,6 +24,13 @@ export const ValidateResponseSchema = z.object({
   ]),
   severity: z.enum(['success', 'info', 'warning', 'error']),
   feedback: z.string(),
+  feedbackCategory: z.enum([
+    'input_quality',
+    'input_format',
+    'content_quality',
+    'content_logic',
+    'valid',
+  ]).optional(),
 }).openapi('ValidateResponse');
 
 // ─── Route Definition ─────────────────────────────────────────────────────────
