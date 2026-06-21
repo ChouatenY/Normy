@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { BaseAIProvider } from './base.js';
-import type { ValidationRequest, ValidationResult, AIProviderName, ProviderConfig } from '../types/index.js';
-import { ISSUE_TO_CATEGORY, ValidationIssue, FeedbackCategory } from '../types/index.js';
+import type { ValidationRequest, ValidationResult, AIProviderName, ProviderConfig, ValidationIssue } from '../types/index.js';
+import { ISSUE_TO_CATEGORY } from '../types/index.js';
 import { geminiValidationPrompt } from '../prompts/gemini.prompt.js';
 
 export class GeminiProvider extends BaseAIProvider {
