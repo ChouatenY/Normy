@@ -9,3 +9,4 @@ export type { AIProvider, AIProviderName, ProviderConfig } from '../types/index.
 
 export { BaseAIProvider } from './base.js';
 export { MockAIProvider } from './mock.provider.js';
+export { GeminiProvider } from './gemini.provider.js';

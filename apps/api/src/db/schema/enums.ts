@@ -67,6 +67,8 @@ export const validationEventTypeEnum = pgEnum('validation_event_type', [
   'validation_completed',   // Validation pipeline finished
   'feedback_shown',         // Toast appeared on screen
   'feedback_dismissed',     // User closed the toast manually
+  'feedback_improved',      // User improved their answer based on feedback
+  'feedback_ignored',       // User submitted without improving after warning/error
   'field_focused',          // User focused the field
   'field_blurred',          // User blurred the field
   'form_submitted',         // The parent form was submitted

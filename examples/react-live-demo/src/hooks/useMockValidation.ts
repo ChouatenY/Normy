@@ -48,20 +48,83 @@ const MOCK_RESPONSES: Record<string, ValidateResponse> = {
   },
 };
 
-function mockValidate(answer: string): Promise<ValidateResponse> {
+import { GoogleGenAI } from '@google/genai';
+
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+let ai: GoogleGenAI | null = null;
+if (apiKey) {
+  ai = new GoogleGenAI({ apiKey });
+}
+
+async function mockValidate(answer: string, context?: string): Promise<ValidateResponse> {
+  const trimmed = answer.trim();
+  if (!trimmed)                            return MOCK_RESPONSES['empty']!;
+  if (trimmed.length < 5)                  return MOCK_RESPONSES['too_short']!;
+  if (/^[^a-zA-Z\s]{4,}$/.test(trimmed))  return MOCK_RESPONSES['random']!;
+  if (/(.)\1{5,}/.test(trimmed))           return MOCK_RESPONSES['random']!;
+  
+  const words = trimmed.toLowerCase().split(/\s+/);
+  const unique = new Set(words);
+  if (words.length > 4 && unique.size / words.length < 0.35) return MOCK_RESPONSES['spam']!;
+
+  const dynamicKey = typeof window !== 'undefined' ? localStorage.getItem('GEMINI_API_KEY') : null;
+  const activeKey = apiKey || dynamicKey;
+  
+  if (activeKey && (!ai || ai.apiKey !== activeKey)) {
+    ai = new GoogleGenAI({ apiKey: activeKey });
+  }
+
+  if (ai) {
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: `
+You are Normy, an AI form validation engine.
+Analyze the user's response based on the following criteria.
+
+Context: ${context || 'None'}
+
+User Response:
+"""
+${answer}
+"""
+
+Evaluate ONLY for: CONTRADICTORY_RESPONSE, IRRELEVANT_RESPONSE, LOW_QUALITY, VALID.
+Return JSON: { "issue": "...", "score": number(0-100), "confidence": number, "feedbackCategory": "...", "feedback": "..." }
+        `,
+        config: { responseMimeType: 'application/json' }
+      });
+      const parsed = JSON.parse(response.text || '{}');
+      const safeIssue = ['IRRELEVANT_RESPONSE', 'CONTRADICTORY_RESPONSE', 'LOW_QUALITY', 'VALID'].includes(parsed.issue) ? parsed.issue : 'LOW_QUALITY';
+      const score = parsed.score ?? 50;
+      
+      const map: any = {
+        EMPTY: 'input_quality', TOO_SHORT: 'input_quality', RANDOM_TEXT: 'input_format', SPAM: 'input_format',
+        LOW_QUALITY: 'content_quality', IRRELEVANT_RESPONSE: 'content_quality', CONTRADICTORY_RESPONSE: 'content_logic', VALID: 'valid'
+      };
+
+      return {
+        valid: score >= 50,
+        score,
+        issue: safeIssue as any,
+        feedbackCategory: map[safeIssue] || 'content_quality',
+        feedback: parsed.feedback || 'Please refine your answer.',
+        severity: score >= 80 ? 'success' : score >= 50 ? 'info' : score >= 30 ? 'warning' : 'error',
+        validatedAt: new Date().toISOString(),
+        provider: 'gemini',
+        latencyMs: 500,
+        confidence: parsed.confidence ?? 0.8
+      };
+    } catch (e) {
+      console.error('Gemini error:', e);
+      // fallback
+    }
+  }
+
   return new Promise((resolve) => {
     // Simulate network latency 200–600ms
     const latency = 200 + Math.random() * 400;
     setTimeout(() => {
-      const trimmed = answer.trim();
-      if (!trimmed)                            return resolve(MOCK_RESPONSES['empty']!);
-      if (trimmed.length < 5)                  return resolve(MOCK_RESPONSES['too_short']!);
-      if (/^[^a-zA-Z\s]{4,}$/.test(trimmed))  return resolve(MOCK_RESPONSES['random']!);
-      if (/(.)\1{5,}/.test(trimmed))           return resolve(MOCK_RESPONSES['random']!);
-      // Detect word repetition (spam)
-      const words = trimmed.toLowerCase().split(/\s+/);
-      const unique = new Set(words);
-      if (words.length > 4 && unique.size / words.length < 0.35) return resolve(MOCK_RESPONSES['spam']!);
       if (trimmed.length < 20)                  return resolve(MOCK_RESPONSES['low_quality']!);
       if (trimmed.length < 60)                  return resolve(MOCK_RESPONSES['valid_info']!);
       return resolve(MOCK_RESPONSES['valid_success']!);

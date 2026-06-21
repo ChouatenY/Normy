@@ -37,7 +37,7 @@ export const serverEnvSchema = z.object({
   // ── Default AI provider to use ───────────────────────────────────────────────
   AI_PROVIDER: z
     .enum(['openai', 'gemini', 'anthropic'])
-    .default('openai'),
+    .default('gemini'),
 
   // ── API Security ─────────────────────────────────────────────────────────────
   API_SECRET: nonEmptyString.describe(

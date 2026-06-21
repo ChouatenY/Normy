@@ -147,10 +147,21 @@ export default function App() {
           </div>
 
           <div style={{ marginTop: 20, padding: '14px', background: 'var(--surface-2)', borderRadius: '8px', border: '1px solid var(--border)' }}>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-              <strong style={{ color: 'var(--text)' }}>Usage</strong><br />
-              In production, swap the mock hook for <code style={{ color: '#a5b4fc', fontSize: '0.7rem' }}>{'<NormyProvider>'}</code> and the components will call your real API.
+            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '10px' }}>
+              <strong style={{ color: 'var(--text)' }}>Live Gemini Integration</strong><br />
+              Enter a Gemini API key to use real AI validation instead of local mocks.
             </p>
+            <input 
+              type="password" 
+              placeholder="AIza..." 
+              className="field-input"
+              style={{ fontSize: '0.75rem', padding: '6px 10px' }}
+              onChange={(e) => {
+                if (e.target.value) localStorage.setItem('GEMINI_API_KEY', e.target.value);
+                else localStorage.removeItem('GEMINI_API_KEY');
+              }}
+              defaultValue={typeof window !== 'undefined' ? localStorage.getItem('GEMINI_API_KEY') || '' : ''}
+            />
           </div>
         </aside>
       </div>

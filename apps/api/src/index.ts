@@ -11,8 +11,10 @@ import {
   TooShortValidator, 
   RandomTextValidator, 
   SpamValidator, 
-  MockAIProvider, 
-  OrchestratorPipeline 
+  MockAIProvider,
+  GeminiProvider,
+  OrchestratorPipeline,
+  type AIProviderName
 } from '@normy/validation-core';
 import crypto from 'node:crypto';
 
@@ -90,13 +92,23 @@ app.openapi(validateRoute, async (c) => {
   ];
   
   // Use project settings default provider
-  const providerName = project.defaultProvider || 'openai';
-  const mockProvider = new MockAIProvider(providerName);
+  const providerName = project.defaultProvider || 'gemini';
+  
+  let provider;
+  if (providerName === 'gemini') {
+    provider = new GeminiProvider({ 
+      provider: 'gemini', 
+      apiKey: process.env.GEMINI_API_KEY || '' 
+    });
+  } else {
+    // Fallback to mock for now if not gemini
+    provider = new MockAIProvider(providerName as AIProviderName);
+  }
   
   const pipeline = new OrchestratorPipeline(
     'api-validation-pipeline',
     validators,
-    mockProvider
+    provider
   );
 
   const startTime = Date.now();
