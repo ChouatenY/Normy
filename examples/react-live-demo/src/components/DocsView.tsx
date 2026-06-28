@@ -31,6 +31,7 @@ function App() {
       apiKey="nrm_live_..."
       projectId="your-project-id"
       apiUrl="https://your-normy-api.example.com"
+      showBadge={false} // Option to remove the "Validated by Normy" badge (default: true)
     >
       <MyForm />
     </NormyProvider>
@@ -506,6 +507,7 @@ function App() {
       apiKey="nrm_live_YOUR_API_KEY"
       projectId="your-project-id"
       apiUrl="https://your-normy-api.example.com"
+      showBadge={false} // Optional: Pass false to remove the "Validated by Normy" badge (default: true)
     >
       <MyForm />
     </NormyProvider>

@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { NormyContext } from '../context/NormyContext.js';
 import { NormyClient } from '../client/api.js';
+import { NormyBadge } from './NormyBadge.js';
 import type { ValidationMode } from '../types.js';
 
 export interface NormyProviderProps {
@@ -21,6 +22,11 @@ export interface NormyProviderProps {
   pauseMs?: number;
   /** Override the API base URL. Useful for self-hosted instances. */
   apiUrl?: string;
+  /**
+   * Automatically show the "Validated by Normy" liquid glass badge at the bottom of the form container.
+   * @default true
+   */
+  showBadge?: boolean;
   children: React.ReactNode;
 }
 
@@ -30,6 +36,7 @@ export function NormyProvider({
   defaultMode = 'onPause',
   pauseMs = 2000,
   apiUrl,
+  showBadge = true,
   children,
 }: NormyProviderProps) {
   const client = useMemo(
@@ -45,6 +52,7 @@ export function NormyProvider({
   return (
     <NormyContext.Provider value={value}>
       {children}
+      {showBadge && <NormyBadge />}
     </NormyContext.Provider>
   );
 }

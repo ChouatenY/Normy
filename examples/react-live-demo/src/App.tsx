@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './index.css';
-import { NormyProvider, NormyBadge } from '@normy/react';
+import { NormyProvider } from '@normy/react';
 import { CancellationForm } from './components/CancellationForm';
 import { JobApplicationForm } from './components/JobApplicationForm';
 import { FeedbackForm } from './components/FeedbackForm';
@@ -185,30 +185,46 @@ export default function App() {
                   </h2>
                 </div>
                 {/* Badge toggle control */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.75rem', color: '#888', cursor: 'pointer', userSelect: 'none' }}>
-                  <input
-                    type="checkbox"
-                    checked={showNormyBadge}
-                    onChange={(e) => setShowNormyBadge(e.target.checked)}
-                    style={{ cursor: 'pointer', filter: 'brightness(0.8)' }}
-                  />
-                  <span>Show validation badge</span>
-                </label>
+                <button
+                  onClick={() => setShowNormyBadge(!showNormyBadge)}
+                  style={{
+                    background: showNormyBadge ? 'rgba(76, 175, 145, 0.15)' : 'rgba(255, 255, 255, 0.02)',
+                    border: showNormyBadge ? '1px solid rgba(76, 175, 145, 0.4)' : '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '20px',
+                    padding: '6px 14px',
+                    color: showNormyBadge ? '#4caf91' : '#888',
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    transition: 'all 0.25s ease',
+                    boxShadow: showNormyBadge ? '0 0 12px rgba(76, 175, 145, 0.15)' : 'none',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    fontFamily: 'monospace',
+                  }}
+                >
+                  <span style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    background: showNormyBadge ? '#4caf91' : '#666',
+                    display: 'inline-block',
+                    transition: 'all 0.25s ease',
+                  }} />
+                  {showNormyBadge ? 'Badge: On' : 'Badge: Off'}
+                </button>
               </div>
               <div className="card-body" style={{ padding: '32px' }}>
                 {isConfigured ? (
-                  <NormyProvider apiKey={apiKey} projectId={projectId} apiUrl={apiUrl} pauseMs={1200}>
+                  <NormyProvider apiKey={apiKey} projectId={projectId} apiUrl={apiUrl} pauseMs={1200} showBadge={showNormyBadge}>
                     {activeTab === 'cancellation' && <CancellationForm />}
                     {activeTab === 'job' && <JobApplicationForm />}
                     {activeTab === 'feedback' && <FeedbackForm />}
                     {activeTab === 'government' && <GovernmentForm />}
                     {activeTab === 'survey' && <SurveyForm />}
-                    
-                    {showNormyBadge && (
-                      <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', justifyContent: 'flex-start' }}>
-                        <NormyBadge />
-                      </div>
-                    )}
                   </NormyProvider>
                 ) : (
                   <div className="v-feedback warning" style={{ borderColor: 'rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)' }}>
