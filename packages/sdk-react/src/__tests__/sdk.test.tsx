@@ -110,6 +110,12 @@ describe('NormyToast', () => {
     render(<NormyToast result={null} apiError="Rate limit exceeded" />);
     expect(screen.getByText(/rate limit exceeded/i)).toBeInTheDocument();
   });
+
+  it('can be dismissed', () => {
+    render(<NormyToast result={MOCK_RESULT_INVALID} />);
+    fireEvent.click(screen.getByRole('button', { name: /dismiss/i }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });
 
 // ─── NormyTextarea ────────────────────────────────────────────────────────────

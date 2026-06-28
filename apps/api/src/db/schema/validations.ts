@@ -143,6 +143,11 @@ export const validations = pgTable(
      */
     metadata: jsonb('metadata').$type<ValidationMetadata>(),
 
+    promptVersion: text('prompt_version').notNull().default('quality-v1'),
+    scoreBefore: integer('score_before'),
+    scoreAfter: integer('score_after'),
+    improvementDelta: integer('improvement_delta'),
+
     // ── Timestamps ─────────────────────────────────────────────────────────────
     createdAt: timestamp('created_at', { withTimezone: true })
       .notNull()

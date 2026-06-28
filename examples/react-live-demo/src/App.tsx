@@ -1,179 +1,280 @@
 import { useState } from 'react';
 import './index.css';
+import { NormyProvider } from '@normy/react';
 import { CancellationForm } from './components/CancellationForm';
 import { JobApplicationForm } from './components/JobApplicationForm';
 import { FeedbackForm } from './components/FeedbackForm';
+import { GovernmentForm } from './components/GovernmentForm';
+import { SurveyForm } from './components/SurveyForm';
+import { DocsView } from './components/DocsView';
+import { LiquidMetalButton } from './components/ui/liquid-metal-button';
 
-const TABS = [
-  {
-    id: 'cancellation',
-    num: '01',
-    label: 'Subscription Cancellation',
-    tag: 'onPause + rate limiting',
-    title: 'Cancellation UX Flow',
-    description: 'Debounced validation triggers 1.2s after user pauses typing. Features simulated rate-limit protection.',
-    component: CancellationForm,
-  },
-  {
-    id: 'job',
-    num: '02',
-    label: 'Job Application',
-    tag: 'Multi-field + network handling',
-    title: 'Job Application Flow',
-    description: 'Combines multiple validation behaviors (onPause for long-form, onBlur for inputs). Cover letter triggers a transient network error on the 3rd key-up.',
-    component: JobApplicationForm,
-  },
-  {
-    id: 'feedback',
-    num: '03',
-    label: 'Customer Feedback',
-    tag: 'All 4 severity tiers',
-    title: 'Customer Feedback Flow',
-    description: 'Demonstrates the full range of semantic classification feedback: Success (≥80), Info (50-79), Warning (30-49), Error (<30).',
-    component: FeedbackForm,
-  },
-] as const;
+const env = (import.meta as any).env as Record<string, string | undefined>;
 
-type TabId = typeof TABS[number]['id'];
+const apiUrl = env.VITE_NORMY_API_URL ?? 'http://localhost:3001';
+const projectId = env.VITE_NORMY_PROJECT_ID ?? '';
+const apiKey = env.VITE_NORMY_API_KEY ?? '';
+
+/* ── Liquid-metal orb for pipeline step numbers ── */
+function MetalOrb({ step }: { step: string }) {
+  return (
+    <div style={{
+      width: 32,
+      height: 32,
+      borderRadius: '50%',
+      position: 'relative',
+      flexShrink: 0,
+      zIndex: 2,
+      /* Outer metallic ring */
+      background: 'linear-gradient(135deg, #3a3a3a 0%, #888 30%, #ccc 50%, #888 70%, #3a3a3a 100%)',
+      backgroundSize: '300% 300%',
+      animation: 'lm-shimmer 4s linear infinite',
+      boxShadow: '0 0 0 1px rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.6), 0 0 12px rgba(255,255,255,0.04)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+    }}>
+      {/* Inner dark glass disc */}
+      <div style={{
+        width: 26,
+        height: 26,
+        borderRadius: '50%',
+        background: 'linear-gradient(180deg, rgba(30,30,30,0.9) 0%, rgba(0,0,0,0.95) 100%)',
+        backdropFilter: 'blur(6px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '0.6875rem',
+        fontWeight: 800,
+        color: '#fff',
+        textShadow: '0 1px 3px rgba(0,0,0,0.8)',
+        fontFamily: "'JetBrains Mono', monospace",
+        letterSpacing: '-0.02em',
+      }}>
+        {step}
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<TabId>('cancellation');
-  const tab = TABS.find(t => t.id === activeTab)!;
-  const Component = tab.component;
+  const [activeTab, setActiveTab] = useState<'cancellation' | 'job' | 'feedback' | 'government' | 'survey' | 'docs'>('cancellation');
+  const isConfigured = Boolean(apiKey && projectId);
 
   return (
-    <div className="app-shell">
-      {/* ── Top Navigation Bar ── */}
-      <nav className="top-nav">
-        <div className="nav-logo">
-          <div className="nav-logo-mark">N</div>
-          <span>Normy Validation Platform</span>
+    <div className="app-shell" style={{ background: '#000', color: '#fff', minHeight: '100vh', padding: '40px 24px' }}>
+      
+      {/* ── Top Header ── */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        maxWidth: '1200px',
+        margin: '0 auto 48px',
+        width: '100%'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <img src="/logo.png" alt="Normy Logo" style={{ height: 36, width: 'auto', display: 'block', filter: 'brightness(1)' }} />
+          <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.03em' }}>NORMY</span>
         </div>
-        <div className="nav-badge">
-          Live SDK Sandbox
-        </div>
-      </nav>
+        <LiquidMetalButton label="API & SDK Docs" onClick={() => setActiveTab('docs')} />
+      </div>
 
-      {/* ── Main Workspace ── */}
-      <main className="main-wrapper">
-        <header className="hero">
-          <div className="hero-eyebrow">
-            <span className="hero-tag">React SDK</span>
-            <div className="hero-divider" />
-            <span className="hero-tag">Phase 3A Live Demo</span>
+      <main style={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
+        <div className="hero-wrapper">
+          <svg className="hero-svg-backdrop" viewBox="0 0 1200 300" preserveAspectRatio="none">
+            {/* Base grey/white lines */}
+            <path d="M0,30 C300,10 600,70 1200,30" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+            <path d="M0,70 C300,50 600,110 1200,70" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+            <path d="M0,110 C300,90 600,150 1200,110" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+            <path d="M0,150 C300,130 600,190 1200,150" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+            <path d="M0,190 C300,170 600,230 1200,190" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+            <path d="M0,230 C300,210 600,270 1200,230" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+            <path d="M0,270 C300,250 600,310 1200,270" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+
+            {/* Glowing energy flow overlay paths */}
+            <path d="M0,30 C300,10 600,70 1200,30" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path" />
+            <path d="M0,110 C300,90 600,150 1200,110" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-delayed" />
+            <path d="M0,190 C300,170 600,230 1200,190" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-fast" />
+            <path d="M0,270 C300,250 600,310 1200,270" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-delayed" />
+          </svg>
+
+          <div className="hero-content">
+            <div className="hero-eyebrow">
+              <span className="hero-divider" />
+              <span className="hero-tag">React SDK Live Sandbox</span>
+            </div>
+            <h1 className="hero-title">
+              Real-time validation engine.
+            </h1>
+            <p className="hero-desc">
+              This workspace demonstrates the full semantic validation lifecycle. Select a form type to see @normy/react query the Hono backend and output AI ratings and Toast feedbacks.
+            </p>
           </div>
-          <h1>
-            AI-driven form validation, <em>reimagined.</em>
-          </h1>
-          <p className="hero-desc">
-            Analyze form inputs in real-time using structured LLM classification.
-            Provide detailed, contextual guidance to users without arbitrary blockades.
-          </p>
-        </header>
+        </div>
 
-        {/* ── Tab Bar ── */}
-        <div className="tab-nav" role="tablist" aria-label="Demo scenarios">
-          {TABS.map(t => (
+        {/* ── Tab Switcher ── */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(6, 1fr)',
+          gap: '1px',
+          background: 'rgba(255,255,255,0.1)',
+          padding: '1px',
+          borderRadius: 4,
+          marginBottom: 32
+        }}>
+          {[
+            { id: 'cancellation', label: 'Subscription Cancellation' },
+            { id: 'job', label: 'Job Application' },
+            { id: 'feedback', label: 'Customer Feedback' },
+            { id: 'government', label: 'Government Forms' },
+            { id: 'survey', label: 'User Survey' },
+            { id: 'docs', label: 'API & SDK Docs' }
+          ].map(tab => (
             <button
-              key={t.id}
-              role="tab"
-              aria-selected={activeTab === t.id}
-              className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(t.id)}
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id as any)}
+              style={{
+                padding: '14px 8px',
+                fontSize: '0.8125rem',
+                fontWeight: 700,
+                background: activeTab === tab.id ? '#fff' : '#000',
+                color: activeTab === tab.id ? '#000' : '#888',
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'center',
+                transition: 'all 0.2s ease',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em'
+              }}
             >
-              <span className="tab-num">{t.num}</span>
-              {t.label}
+              {tab.label}
             </button>
           ))}
         </div>
 
-        {/* ── Content Area ── */}
-        <div className="content-grid">
-          {/* Active Sandbox Card */}
-          <div className="card" role="tabpanel" key={activeTab}>
-            <div className="card-header">
-              <div className="card-label">{tab.tag}</div>
-              <h2 className="card-title">{tab.title}</h2>
-              <p className="card-desc">{tab.description}</p>
-            </div>
-            <div className="card-body">
-              <Component />
-            </div>
+        {activeTab === 'docs' ? (
+          <div className="card" style={{ background: '#000', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4, padding: '40px' }}>
+            <DocsView />
           </div>
-
-          {/* Info Sidebar */}
-          <aside className="sidebar">
-            <div className="sidebar-block">
-              <div className="sidebar-label">SDK Characteristics</div>
-              <div className="feature-list">
-                <div className="feature-row">
-                  <div className="feature-icon">⏱</div>
-                  <div>
-                    <strong className="feature-name">Debounced onPause</strong>
-                    Fires only after the user stops typing to preserve API limit quotas.
-                  </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40, alignItems: 'start' }}>
+            
+            {/* ── Main Card ── */}
+            <div className="card" style={{ background: '#000', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4 }}>
+              <div className="card-header" style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
+                <div className="card-label" style={{ fontSize: '0.6875rem', color: '#666', fontFamily: 'monospace' }}>
+                  Pipeline Endpoint: /validate
                 </div>
-                <div className="feature-row">
-                  <div className="feature-icon">👁</div>
-                  <div>
-                    <strong className="feature-name">Dynamic onBlur</strong>
-                    Runs validation as the focus leaves the input, preventing premature alerts.
+                <h2 className="card-title" style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: 8 }}>
+                  {activeTab === 'cancellation' && 'cancellation-reason'}
+                  {activeTab === 'job' && 'job-application'}
+                  {activeTab === 'feedback' && 'customer-feedback'}
+                  {activeTab === 'government' && 'residential-address'}
+                  {activeTab === 'survey' && 'software-goals'}
+                </h2>
+              </div>
+              <div className="card-body" style={{ padding: '32px' }}>
+                {isConfigured ? (
+                  <NormyProvider apiKey={apiKey} projectId={projectId} apiUrl={apiUrl} pauseMs={1200}>
+                    {activeTab === 'cancellation' && <CancellationForm />}
+                    {activeTab === 'job' && <JobApplicationForm />}
+                    {activeTab === 'feedback' && <FeedbackForm />}
+                    {activeTab === 'government' && <GovernmentForm />}
+                    {activeTab === 'survey' && <SurveyForm />}
+                  </NormyProvider>
+                ) : (
+                  <div className="v-feedback warning" style={{ borderColor: 'rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)' }}>
+                    <span className="v-feedback-icon">!</span>
+                    <div>
+                      Please set VITE_NORMY_API_KEY and VITE_NORMY_PROJECT_ID in examples/react-live-demo/.env
+                    </div>
                   </div>
-                </div>
-                <div className="feature-row">
-                  <div className="feature-icon">🚀</div>
-                  <div>
-                    <strong className="feature-name">Gated Submission</strong>
-                    Guarantees all fields pass validation before triggering form submission.
-                  </div>
-                </div>
-                <div className="feature-row">
-                  <div className="feature-icon">⚡</div>
-                  <div>
-                    <strong className="feature-name">Adaptive UI feedback</strong>
-                    Returns dynamic suggestions instead of simple, unhelpful error blocks.
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
-            <div className="sidebar-block">
-              <div className="api-key-block">
-                <div className="sidebar-label">AI Engine Configuration</div>
-                <div className="api-key-label">Gemini API Key</div>
-                <p className="api-key-desc">
-                  Provide your Gemini key to use real-time LLM validation instead of the default local mock.
-                </p>
-                <input
-                  type="password"
-                  placeholder="AIzaSy..."
-                  className="field-input"
-                  style={{ fontSize: '0.75rem', padding: '8px 12px', fontFamily: 'var(--mono)' }}
-                  onChange={(e) => {
-                    const val = e.target.value.trim();
-                    if (val) {
-                      localStorage.setItem('GEMINI_API_KEY', val);
-                    } else {
-                      localStorage.removeItem('GEMINI_API_KEY');
-                    }
-                  }}
-                  defaultValue={typeof window !== 'undefined' ? localStorage.getItem('GEMINI_API_KEY') || '' : ''}
-                />
+            {/* ── Runtime Pipeline — Liquid Metal Glass ── */}
+            <aside>
+              <div style={{
+                background: 'rgba(255,255,255,0.015)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 8,
+                padding: '28px 24px',
+                boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+              }}>
+                <div style={{
+                  fontSize: '0.6875rem',
+                  fontWeight: 700,
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: '#555',
+                  fontFamily: "'JetBrains Mono', monospace",
+                  marginBottom: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                }}>
+                  <span style={{
+                    width: 6, height: 6, borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #666, #ccc)',
+                    boxShadow: '0 0 6px rgba(255,255,255,0.15)',
+                  }} />
+                  Runtime Pipeline
+                </div>
+
+                {/* Pipeline Steps */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+                  {[
+                    { step: '01', title: 'Input Change', desc: 'User types into form field' },
+                    { step: '02', title: 'SDK Debounce', desc: 'onPause delay intercepts typing' },
+                    { step: '03', title: 'API Gateway', desc: 'Secure hash checks at port 3001' },
+                    { step: '04', title: 'Gemini Engine', desc: 'Structured JSON validation response' },
+                    { step: '05', title: 'Inline UI Update', desc: 'Monochrome toasts & scores refresh' }
+                  ].map((item, idx) => (
+                    <div key={item.step} style={{ display: 'flex', gap: 14, position: 'relative' }}>
+                      
+                      {/* Left: metal orb + connector */}
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                        <MetalOrb step={item.step} />
+                        {idx < 4 && (
+                          <div
+                            className="flowchart-line"
+                            style={{
+                              ['--delay' as any]: `${idx * 0.4}s`,
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      {/* Right: details */}
+                      <div style={{ paddingBottom: idx < 4 ? '28px' : '0', paddingTop: 4 }}>
+                        <div style={{
+                          fontSize: '0.8125rem',
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          color: '#e0e0e0',
+                        }}>
+                          {item.title}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#555', marginTop: 4, lineHeight: 1.4 }}>
+                          {item.desc}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
               </div>
-            </div>
-          </aside>
-        </div>
+            </aside>
+
+          </div>
+        )}
       </main>
-
-      {/* ── Footer ── */}
-      <footer className="app-footer">
-        <div>
-          Released under MIT License. Powered by <a href="https://github.com/normy" target="_blank" rel="noreferrer">@normy/react</a>.
-        </div>
-        <div>
-          <a href="#" onClick={(e) => e.preventDefault()}>Developer Console</a> · <a href="#" onClick={(e) => e.preventDefault()}>Documentation</a>
-        </div>
-      </footer>
     </div>
   );
 }

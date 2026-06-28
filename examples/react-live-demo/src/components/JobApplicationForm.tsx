@@ -10,16 +10,16 @@
  */
 
 import React, { useState } from 'react';
-import { useMockValidation } from '../hooks/useMockValidation';
+import { useValidation } from '@normy/react';
 
 export function JobApplicationForm() {
   const [submitted, setSubmitted] = useState(false);
 
   // Validation configurations
-  const coverLetter  = useMockValidation({ mode: 'onPause', pauseMs: 1200, networkErrorOn: 3, question: 'Please share your cover letter describing your fit.' });
-  const whyUs        = useMockValidation({ mode: 'onPause', pauseMs: 1000, question: 'Why do you want to join our engineering organization?' });
-  const skills       = useMockValidation({ mode: 'onBlur', question: 'List your core professional skills.' });
-  const availability = useMockValidation({ mode: 'onBlur', question: 'What is your start date or notice period?' });
+  const coverLetter  = useValidation({ mode: 'onPause', pauseMs: 1200, question: 'Please share your cover letter describing your fit.' });
+  const whyUs        = useValidation({ mode: 'onPause', pauseMs: 1000, question: 'Why do you want to join our engineering organization?' });
+  const skills       = useValidation({ mode: 'onBlur', question: 'List your core professional skills.' });
+  const availability = useValidation({ mode: 'onBlur', question: 'What is your start date or notice period?' });
 
   const allValid =
     coverLetter.isValid &&
@@ -44,11 +44,11 @@ export function JobApplicationForm() {
 
   function quickFillCover(value: string) {
     coverLetter.setValue(value);
-    coverLetter.handleChange(value);
+    coverLetter.handleChange({ target: { value } } as any);
   }
 
   // Reusable inline feedback
-  function FeedbackToast({ validation }: { validation: ReturnType<typeof useMockValidation> }) {
+  function FeedbackToast({ validation }: { validation: any }) {
     const { status, result, apiError } = validation;
     if (status === 'idle') return null;
 
@@ -99,7 +99,7 @@ export function JobApplicationForm() {
         <div className="success-mark">✓</div>
         <h3>Application Filed</h3>
         <p>Your materials have been received. We will contact you regarding next steps shortly.</p>
-        <button className="btn btn-ghost" onClick={() => {
+        <button className="btn btn-glass" onClick={() => {
           setSubmitted(false);
           coverLetter.reset();
           whyUs.reset();
@@ -262,7 +262,7 @@ export function JobApplicationForm() {
         <button type="submit" className="btn btn-primary">
           Submit Application
         </button>
-        <button type="button" className="btn btn-ghost" onClick={() => {
+        <button type="button" className="btn btn-glass" onClick={() => {
           coverLetter.reset();
           whyUs.reset();
           skills.reset();

@@ -24,6 +24,10 @@ export interface UseValidationState {
 export interface UseValidationOptions {
   /** The form question / field label sent to the API */
   question: string;
+  /** Optional context about the field (e.g. "cancellation reason field"). */
+  fieldContext?: string;
+  /** Optional version of prompt template to use. */
+  promptVersion?: string;
   /** When to trigger validation */
   mode?: ValidationMode | undefined;
   /** Debounce delay in ms for onPause mode. Overrides provider default. */
@@ -45,6 +49,8 @@ export interface UseValidationReturn extends UseValidationState {
   triggerValidation: () => Promise<void>;
   /** Reset state back to idle */
   reset: () => void;
+  /** Programmatically set the field value */
+  setValue: (value: string) => void;
 }
 
 const IDLE_STATE: UseValidationState = {
@@ -88,11 +94,15 @@ export function useValidation(options: UseValidationOptions): UseValidationRetur
 
     setState(prev => ({ ...prev, isValidating: true, status: 'validating', apiError: null }));
 
-    const result = await client.validate({
+    const req: any = {
       projectId,
       question: options.question,
       answer: value,
-    });
+    };
+    if (options.fieldContext !== undefined) req.fieldContext = options.fieldContext;
+    if (options.promptVersion !== undefined) req.promptVersion = options.promptVersion;
+
+    const result = await client.validate(req);
 
     if (!result.ok) {
       const isRateLimit = result.error.status === 429;
@@ -120,7 +130,7 @@ export function useValidation(options: UseValidationOptions): UseValidationRetur
     } else {
       options.onInvalid?.(result.data);
     }
-  }, [client, projectId, options.question, options.onResult, options.onValid, options.onInvalid]);
+  }, [client, projectId, options.question, options.fieldContext, options.promptVersion, options.onResult, options.onValid, options.onInvalid]);
 
   const handleChange = useCallback((
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -152,11 +162,16 @@ export function useValidation(options: UseValidationOptions): UseValidationRetur
     setState(IDLE_STATE);
   }, []);
 
+  const setValue = useCallback((val: string) => {
+    setState(prev => ({ ...prev, value: val }));
+  }, []);
+
   return {
     ...state,
     handleChange,
     handleBlur,
     triggerValidation,
     reset,
+    setValue,
   };
 }

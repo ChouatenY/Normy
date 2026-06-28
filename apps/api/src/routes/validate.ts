@@ -6,6 +6,8 @@ export const ValidateRequestSchema = z.object({
   projectId: z.string().uuid({ message: 'Invalid projectId format (UUID required)' }),
   question: z.string().min(1, { message: 'Question cannot be empty' }),
   answer: z.string(),
+  fieldContext: z.string().optional(),
+  promptVersion: z.string().optional(),
 }).openapi('ValidateRequest');
 
 export const ValidateResponseSchema = z.object({
@@ -21,6 +23,7 @@ export const ValidateResponseSchema = z.object({
     'SPAM',
     'LOW_QUALITY',
     'VALID',
+    'LOW_CONFIDENCE',
   ]),
   severity: z.enum(['success', 'info', 'warning', 'error']),
   feedback: z.string(),
@@ -30,7 +33,16 @@ export const ValidateResponseSchema = z.object({
     'content_quality',
     'content_logic',
     'valid',
+    'EXPAND_RESPONSE',
+    'ANSWER_THE_QUESTION',
+    'ADD_SPECIFIC_DETAILS',
+    'REMOVE_RANDOM_TEXT',
+    'REMOVE_SPAM',
+    'EXPLAIN_REASON',
+    'CLARIFY_RESPONSE',
+    'NO_ACTION',
   ]).optional(),
+  exampleAnswer: z.string().nullable().optional(),
 }).openapi('ValidateResponse');
 
 // ─── Route Definition ─────────────────────────────────────────────────────────

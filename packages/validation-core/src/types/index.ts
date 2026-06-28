@@ -15,7 +15,8 @@ export type ValidationIssue =
   | 'CONTRADICTORY_RESPONSE'
   | 'SPAM'
   | 'LOW_QUALITY'
-  | 'VALID';
+  | 'VALID'
+  | 'LOW_CONFIDENCE';
 
 // ─── Severity Levels ─────────────────────────────────────────────────────────
 
@@ -32,18 +33,27 @@ export type FeedbackCategory =
   | 'input_format'     // RANDOM_TEXT, SPAM
   | 'content_quality'  // LOW_QUALITY, IRRELEVANT_RESPONSE
   | 'content_logic'    // CONTRADICTORY_RESPONSE
-  | 'valid';           // VALID
+  | 'valid'            // VALID
+  | 'EXPAND_RESPONSE'
+  | 'ANSWER_THE_QUESTION'
+  | 'ADD_SPECIFIC_DETAILS'
+  | 'REMOVE_RANDOM_TEXT'
+  | 'REMOVE_SPAM'
+  | 'EXPLAIN_REASON'
+  | 'CLARIFY_RESPONSE'
+  | 'NO_ACTION';
 
 /** Maps every ValidationIssue to its FeedbackCategory. */
 export const ISSUE_TO_CATEGORY: Record<ValidationIssue, FeedbackCategory> = {
-  EMPTY:                  'input_quality',
-  TOO_SHORT:              'input_quality',
-  RANDOM_TEXT:            'input_format',
-  SPAM:                   'input_format',
-  LOW_QUALITY:            'content_quality',
-  IRRELEVANT_RESPONSE:    'content_quality',
-  CONTRADICTORY_RESPONSE: 'content_logic',
-  VALID:                  'valid',
+  EMPTY:                  'EXPAND_RESPONSE',
+  TOO_SHORT:              'EXPAND_RESPONSE',
+  RANDOM_TEXT:            'REMOVE_RANDOM_TEXT',
+  SPAM:                   'REMOVE_SPAM',
+  LOW_QUALITY:            'ADD_SPECIFIC_DETAILS',
+  IRRELEVANT_RESPONSE:    'ANSWER_THE_QUESTION',
+  CONTRADICTORY_RESPONSE: 'CLARIFY_RESPONSE',
+  VALID:                  'NO_ACTION',
+  LOW_CONFIDENCE:         'ADD_SPECIFIC_DETAILS',
 } as const;
 
 // ─── Validation Modes ────────────────────────────────────────────────────────
@@ -65,6 +75,8 @@ export interface ValidationRequest {
   readonly fieldContext?: string;
   /** Minimum acceptable quality score (0–100). Defaults to 50. */
   readonly minScore?: number;
+  /** Version of prompt template to use. */
+  readonly promptVersion?: string;
 }
 
 export interface ValidationResult {
@@ -94,6 +106,13 @@ export interface ValidationResult {
   readonly latencyMs: number;
   /** Confidence score of the validation (0-1). */
   readonly confidence: number;
+  /** Token usage statistics from the AI provider. */
+  readonly tokenUsage?: {
+    readonly inputTokens: number;
+    readonly outputTokens: number;
+  };
+  /** Generic example answer if the response was low quality. */
+  readonly exampleAnswer?: string | null;
 }
 
 // ─── AI Provider Interface ────────────────────────────────────────────────────

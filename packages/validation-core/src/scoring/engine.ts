@@ -50,13 +50,18 @@ export class ScoringEngine {
     latencyMs: number;
     minScore?: number;
     confidence?: number;
+    tokenUsage?: {
+      readonly inputTokens: number;
+      readonly outputTokens: number;
+    };
+    exampleAnswer?: string | null;
   }): ValidationResult {
     const valid = this.isValid(params.score, params.minScore);
     const severity = this.determineSeverity(params.score);
     const confidence = params.confidence !== undefined ? params.confidence : 1.0;
     const feedbackCategory = ISSUE_TO_CATEGORY[params.issue];
 
-    return {
+    const result: ValidationResult = {
       valid,
       score: params.score,
       issue: params.issue,
@@ -67,7 +72,16 @@ export class ScoringEngine {
       provider: params.provider,
       latencyMs: params.latencyMs,
       confidence,
+      exampleAnswer: params.exampleAnswer ?? null,
+      ...(params.tokenUsage ? {
+        tokenUsage: {
+          inputTokens: params.tokenUsage.inputTokens,
+          outputTokens: params.tokenUsage.outputTokens
+        }
+      } : {}),
     };
+
+    return result;
   }
 }
 

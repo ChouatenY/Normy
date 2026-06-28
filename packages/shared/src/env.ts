@@ -89,14 +89,17 @@ export function parseServerEnv(raw: NodeJS.ProcessEnv): ServerEnv {
     );
   }
 
-  // Enforce at least one AI provider key is present
+  // Enforce that the selected AI provider has a configured key.
   const { data } = result;
-  if (!data.OPENAI_API_KEY && !data.GEMINI_API_KEY && !data.ANTHROPIC_API_KEY) {
+  const selectedProviderKey = {
+    openai: data.OPENAI_API_KEY,
+    gemini: data.GEMINI_API_KEY,
+    anthropic: data.ANTHROPIC_API_KEY,
+  }[data.AI_PROVIDER];
+
+  if (!selectedProviderKey) {
     throw new Error(
-      '[Normy] At least one AI provider key must be set:\n' +
-        '  • OPENAI_API_KEY\n' +
-        '  • GEMINI_API_KEY\n' +
-        '  • ANTHROPIC_API_KEY'
+      `[Normy] ${data.AI_PROVIDER.toUpperCase()}_API_KEY must be set because AI_PROVIDER=${data.AI_PROVIDER}.`
     );
   }
 

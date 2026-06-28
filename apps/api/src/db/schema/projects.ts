@@ -46,7 +46,7 @@ export interface ProjectSettings {
 
 export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {
   minScore: 50,
-  defaultProvider: 'openai',
+  defaultProvider: 'gemini',
   defaultValidationMode: 'onPause',
   pauseDelayMs: 2000,
   storeInputText: true,
@@ -92,13 +92,13 @@ export const projects = pgTable(
     // ── AI Configuration ───────────────────────────────────────────────────────
     defaultProvider: aiProviderEnum('default_provider')
       .notNull()
-      .default('openai'),
+      .default('gemini'),
 
     // ── Settings (flexible JSONB) ──────────────────────────────────────────────
     settings: jsonb('settings')
       .$type<ProjectSettings>()
       .notNull()
-      .default(sql`'${JSON.stringify(DEFAULT_PROJECT_SETTINGS)}'::jsonb`),
+      .default(DEFAULT_PROJECT_SETTINGS),
 
     // ── State ──────────────────────────────────────────────────────────────────
     isActive: boolean('is_active').notNull().default(true),

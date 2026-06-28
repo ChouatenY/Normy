@@ -44,7 +44,7 @@ describe('Normy API Integration Tests', () => {
       name: 'Test Project',
       slug: 'test-project',
       userId: userId,
-      defaultProvider: 'openai',
+      defaultProvider: 'gemini',
       monthlyValidationLimit: 1000,
     }).returning();
     projectId = insertedProject!.id;
@@ -240,7 +240,7 @@ describe('Normy API Integration Tests', () => {
         body: JSON.stringify({
           projectId,
           question: 'What features are you missing?',
-          answer: 'Very good experience.',
+          answer: 'idk',
         }),
       });
 

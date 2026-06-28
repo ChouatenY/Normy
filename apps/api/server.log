@@ -1,0 +1,6 @@
+[Normy] Invalid environment variables:
+  • DATABASE_URL: Required
+  • REDIS_URL: Required
+  • API_SECRET: Required
+
+Please check your .env file.

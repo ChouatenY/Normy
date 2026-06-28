@@ -1,0 +1,20 @@
+[
+  {
+    "question": "Why are you cancelling your subscription?",
+    "answer": "asdfgh",
+    "expectedIssue": "RANDOM_TEXT",
+    "expectedScoreRange": [0, 29]
+  },
+  {
+    "question": "Why are you cancelling your subscription?",
+    "answer": "yes",
+    "expectedIssue": "LOW_QUALITY",
+    "expectedScoreRange": [30, 49]
+  },
+  {
+    "question": "Why are you cancelling your subscription?",
+    "answer": "The service is too expensive for our current budget.",
+    "expectedIssue": "VALID",
+    "expectedScoreRange": [80, 100]
+  }
+]

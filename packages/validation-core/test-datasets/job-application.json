@@ -1,0 +1,20 @@
+[
+  {
+    "question": "Describe your role in your previous company.",
+    "answer": "I worked.",
+    "expectedIssue": "LOW_QUALITY",
+    "expectedScoreRange": [30, 49]
+  },
+  {
+    "question": "Describe your role in your previous company.",
+    "answer": "I led a team of 4 frontend engineers building the customer dashboard using React, TailwindCSS, and Next.js.",
+    "expectedIssue": "VALID",
+    "expectedScoreRange": [80, 100]
+  },
+  {
+    "question": "Describe your role in your previous company.",
+    "answer": "I want to buy a new subscription.",
+    "expectedIssue": "IRRELEVANT_RESPONSE",
+    "expectedScoreRange": [0, 29]
+  }
+]

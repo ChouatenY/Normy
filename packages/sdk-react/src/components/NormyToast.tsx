@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { ValidateResponse, ValidationSeverity, FeedbackCategory } from '../types.js';
+import { injectNormyToastStyles } from '../styles/toast.css.js';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -48,6 +49,8 @@ export interface NormyToastProps {
   successDismissMs?: number | undefined;
   /** Class applied to the toast wrapper */
   className?: string | undefined;
+  /** Show a dismiss button. @default true */
+  dismissible?: boolean | undefined;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -59,15 +62,22 @@ export function NormyToast({
   apiError,
   successDismissMs = 3000,
   className,
+  dismissible = true,
 }: NormyToastProps) {
   const [visible, setVisible] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    injectNormyToastStyles();
+  }, []);
 
   useEffect(() => {
     if (dismissTimer.current) clearTimeout(dismissTimer.current);
 
     if (isValidating || result || apiError) {
       setVisible(true);
+      setDismissed(false);
     }
 
     // Auto-dismiss on success
@@ -80,7 +90,28 @@ export function NormyToast({
     };
   }, [result, isValidating, apiError, successDismissMs]);
 
-  if (!visible) return null;
+  if (!visible || dismissed) return null;
+
+  const dismissButton = dismissible ? (
+    <button
+      type="button"
+      aria-label="Dismiss feedback"
+      onClick={() => setDismissed(true)}
+      style={{
+        border: 'none',
+        background: 'transparent',
+        color: 'inherit',
+        cursor: 'pointer',
+        padding: '0 0 0 0.25rem',
+        fontSize: '1rem',
+        lineHeight: 1,
+        opacity: 0.7,
+        flexShrink: 0,
+      }}
+    >
+      ×
+    </button>
+  ) : null;
 
   // Loading state
   if (isValidating) {
@@ -93,7 +124,8 @@ export function NormyToast({
         style={toastStyle({ severity: 'info' })}
       >
         <span style={spinnerStyle} aria-hidden="true">⟳</span>
-        <span>Checking your response…</span>
+        <span style={{ flex: 1 }}>Checking your response…</span>
+        {dismissButton}
       </div>
     );
   }
@@ -109,7 +141,8 @@ export function NormyToast({
         style={toastStyle({ severity: 'warning' })}
       >
         <span aria-hidden="true">{ICONS.warning}</span>
-        <span>{apiError}</span>
+        <span style={{ flex: 1 }}>{apiError}</span>
+        {dismissButton}
       </div>
     );
   }
@@ -139,7 +172,15 @@ export function NormyToast({
       >
         {ICONS[severity]}
       </span>
-      <span style={{ flex: 1 }}>{feedback}</span>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <span>{feedback}</span>
+        {result.exampleAnswer && (
+          <span style={{ fontSize: '0.75rem', opacity: 0.8, fontStyle: 'italic', marginTop: '0.25rem', display: 'block' }}>
+            Example: "{result.exampleAnswer}"
+          </span>
+        )}
+      </div>
+      {dismissButton}
     </div>
   );
 }

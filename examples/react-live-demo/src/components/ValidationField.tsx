@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { useMockValidation, type ValidationStatus, type ValidateResponse } from '../hooks/useMockValidation';
+import { useValidation, type ValidationStatus, type ValidateResponse } from '@normy/react';
 
 export type ValidationFieldMode = 'onPause' | 'onBlur' | 'onSubmit';
 
@@ -107,6 +107,7 @@ function InlineToast({
 interface ValidationFieldProps {
   id: string;
   label: string;
+  question?: string;
   required?: boolean;
   hint?: string;
   as: 'input' | 'textarea' | 'select';
@@ -115,8 +116,6 @@ interface ValidationFieldProps {
   placeholder?: string;
   mode?: ValidationFieldMode;
   pauseMs?: number;
-  rateLimitAfter?: number;
-  networkErrorOn?: number;
   options?: Array<{ value: string; label: string }>;
   onStatusChange?: (status: ValidationStatus) => void;
   onValueChange?: (value: string) => void;
@@ -124,12 +123,11 @@ interface ValidationFieldProps {
 }
 
 export function ValidationField({
-  id, label, required, hint, as, type = 'text', rows = 4, placeholder, mode = 'onPause',
-  pauseMs = 1200, rateLimitAfter = 0, networkErrorOn = 0, options,
-  onStatusChange, onValueChange, extraContent,
+  id, label, question, required, hint, as, type = 'text', rows = 4, placeholder, mode = 'onPause',
+  pauseMs = 1200, options, onStatusChange, onValueChange, extraContent,
 }: ValidationFieldProps) {
   const { value, status, result, isValidating, apiError, handleChange, handleBlur } =
-    useMockValidation({ mode, pauseMs, rateLimitAfter, networkErrorOn });
+    useValidation({ question: question || label, mode, pauseMs });
 
   const hasProblem = status === 'error';
   const hasSuccess = status === 'success' && result?.valid;

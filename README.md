@@ -1,159 +1,92 @@
-# Turborepo starter
+# Normy
 
-This Turborepo starter is maintained by the Turborepo core team.
+AI-powered form validation and guidance layer that sits between forms and databases.
 
-## Using this example
+Instead of generic "Invalid input" errors, Normy returns contextual AI feedback that helps users write better answers — in real time.
 
-Run the following command:
+## Monorepo structure
 
-```sh
-npx create-turbo@latest
+```
+apps/
+  api/           Hono REST API (POST /validate)
+  dashboard/     Analytics dashboard (Next.js)
+  docs/          Developer documentation site
+packages/
+  sdk-react/     @normy/react — React components + hooks
+  sdk-js/        @normy/js — vanilla JavaScript client
+  validation-core/  AI engine + local validators
+  shared/        Shared types and env schemas
+  ui/            Dashboard UI components
+examples/
+  react-live-demo/  Interactive SDK sandbox
 ```
 
-## What's inside?
+## Quick start
 
-This Turborepo includes the following packages/apps:
+```bash
+git clone https://github.com/normy/normy.git
+cd normy
+cp .env.example .env
+pnpm install
 
-### Apps and Packages
+# Start Postgres + Redis
+docker compose -f docker-compose.test.yml up -d
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+# Run migrations and start API
+pnpm --filter @normy/api db:push
+pnpm --filter @normy/api dev
 ```
 
-Without global `turbo`, use your package manager:
+Open API docs at http://localhost:3001/docs
 
-```sh
-cd my-turborepo
-npx turbo build
-npm dlx turbo build
-npm exec turbo build
+## Install SDKs (from npm)
+
+```bash
+npm install @normy/react
+npm install @normy/js
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## React example
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+```tsx
+import { NormyProvider, NormyTextarea } from '@normy/react';
 
-```sh
-turbo build --filter=docs
+<NormyProvider apiKey="nrm_test_..." projectId="your-project-id">
+  <NormyTextarea
+    id="reason"
+    question="Why are you cancelling?"
+    label="Cancellation reason"
+    validationMode="onPause"
+  />
+</NormyProvider>
 ```
 
-Without global `turbo`:
+## Documentation
 
-```sh
-npx turbo build --filter=docs
-npm exec turbo build --filter=docs
-npm exec turbo build --filter=docs
+Run the docs site locally:
+
+```bash
+pnpm --filter @normy/docs dev
 ```
 
-### Develop
+Open http://localhost:3002
 
-To develop all apps and packages, run the following command:
+## Development commands
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start all apps (Turbo) |
+| `pnpm build` | Build all packages |
+| `pnpm test` | Run tests |
+| `pnpm --filter @normy/react test` | React SDK unit tests |
+| `pnpm --filter @normy/react-live-demo dev` | Live demo sandbox |
 
-```sh
-cd my-turborepo
-turbo dev
-```
+## Deployment readiness
 
-Without global `turbo`, use your package manager:
+SDK publishing is intentionally paused. Current work should focus on production deployment readiness: Gemini-backed API validation, PostgreSQL, Redis, API key management, and the live demo wired to the real API.
 
-```sh
-cd my-turborepo
-npx turbo dev
-npm exec turbo dev
-npm exec turbo dev
-```
+See [DEPLOYMENT.md](DEPLOYMENT.md) for database setup, Drizzle migrations, Docker Compose, Neon, Upstash, Vercel, Railway, and first-production checklist.
 
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+## License
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-npm exec turbo dev --filter=web
-npm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-npm exec turbo login
-npm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-npm exec turbo link
-npm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+MIT

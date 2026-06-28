@@ -1,0 +1,20 @@
+[
+  {
+    "question": "How can we improve our service?",
+    "answer": "good",
+    "expectedIssue": "LOW_QUALITY",
+    "expectedScoreRange": [30, 49]
+  },
+  {
+    "question": "How can we improve our service?",
+    "answer": "Your app crashes every time I upload a large PNG file. Please optimize the file upload handler.",
+    "expectedIssue": "VALID",
+    "expectedScoreRange": [80, 100]
+  },
+  {
+    "question": "How can we improve our service?",
+    "answer": "I worked as a software developer for 5 years.",
+    "expectedIssue": "IRRELEVANT_RESPONSE",
+    "expectedScoreRange": [0, 29]
+  }
+]

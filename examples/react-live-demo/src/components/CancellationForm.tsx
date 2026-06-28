@@ -9,7 +9,7 @@
  */
 
 import React, { useState } from 'react';
-import { useMockValidation } from '../hooks/useMockValidation';
+import { useValidation } from '@normy/react';
 import { ValidationField } from './ValidationField';
 
 const CANCEL_REASONS = [
@@ -26,10 +26,9 @@ export function CancellationForm() {
   const [submitted, setSubmitted] = useState(false);
 
   // Elaboration field (main interactive piece)
-  const elaboration = useMockValidation({
+  const elaboration = useValidation({
     mode: 'onPause',
     pauseMs: 1200,
-    rateLimitAfter: 4,
     question: 'What is the primary reason for cancelling your subscription today?',
   });
 
@@ -47,7 +46,7 @@ export function CancellationForm() {
 
   function quickFill(value: string) {
     elaboration.setValue(value);
-    elaboration.handleChange(value);
+    elaboration.handleChange({ target: { value } } as any);
   }
 
   if (submitted) {
@@ -201,7 +200,7 @@ export function CancellationForm() {
         <button type="submit" className="btn btn-primary" disabled={!canSubmit}>
           Process Cancellation
         </button>
-        <button type="button" className="btn btn-ghost" onClick={() => {
+        <button type="button" className="btn btn-glass" onClick={() => {
           elaboration.reset();
         }}>
           Reset Form

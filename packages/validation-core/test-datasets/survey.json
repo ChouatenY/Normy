@@ -1,0 +1,14 @@
+[
+  {
+    "question": "What is your main goal for using this software?",
+    "answer": "none",
+    "expectedIssue": "LOW_QUALITY",
+    "expectedScoreRange": [30, 49]
+  },
+  {
+    "question": "What is your main goal for using this software?",
+    "answer": "To automate real-time form validation and get detailed analytics on user input improvements.",
+    "expectedIssue": "VALID",
+    "expectedScoreRange": [80, 100]
+  }
+]

@@ -7,7 +7,9 @@
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "check-types": "turbo run check-types",
-    "test": "turbo run test"
+    "test": "turbo run test",
+    "docs": "pnpm --filter @normy/docs dev",
+    "publish:sdk": "turbo build --filter=@normy/react --filter=@normy/js"
   },
   "devDependencies": {
     "prettier": "^3.7.4",

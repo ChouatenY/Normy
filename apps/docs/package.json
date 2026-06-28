@@ -1,0 +1,25 @@
+{
+  "name": "@normy/docs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Normy developer documentation site",
+  "scripts": {
+    "dev": "next dev --port 3002",
+    "build": "next build",
+    "start": "next start --port 3002",
+    "check-types": "tsc --noEmit",
+    "lint": "echo \"No linter configured yet\""
+  },
+  "dependencies": {
+    "next": "14.2.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "typescript": "^5.4.5"
+  }
+}

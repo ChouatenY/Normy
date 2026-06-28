@@ -10,10 +10,12 @@
     "check-types": "tsc -b"
   },
   "dependencies": {
-    "@google/genai": "^2.9.0",
     "@normy/react": "workspace:*",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "@google/genai": "^2.9.0",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.3.0"
   },
   "devDependencies": {
     "@types/react": "^18.3.0",

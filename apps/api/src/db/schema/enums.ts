@@ -25,6 +25,7 @@ export const validationIssueEnum = pgEnum('validation_issue', [
   'SPAM',                 // Repetitive, copy-pasted, or garbage
   'LOW_QUALITY',          // Catch-all for poor but not otherwise categorised
   'VALID',                // No issue — answer meets quality threshold
+  'LOW_CONFIDENCE',       // AI provider failed or returned low confidence
 ]);
 
 export type ValidationIssue = (typeof validationIssueEnum.enumValues)[number];
@@ -65,6 +66,7 @@ export type KeyEnvironment = (typeof keyEnvironmentEnum.enumValues)[number];
 export const validationEventTypeEnum = pgEnum('validation_event_type', [
   'validation_triggered',   // SDK sent a validate request
   'validation_completed',   // Validation pipeline finished
+  'token_analytics',        // Store token usage and cost analytics
   'feedback_shown',         // Toast appeared on screen
   'feedback_dismissed',     // User closed the toast manually
   'feedback_improved',      // User improved their answer based on feedback

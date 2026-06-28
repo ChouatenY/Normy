@@ -10,7 +10,7 @@
  */
 
 import React, { useState } from 'react';
-import { useMockValidation } from '../hooks/useMockValidation';
+import { useValidation } from '@normy/react';
 
 function StarRating({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   const [hovered, setHovered] = useState(0);
@@ -42,9 +42,23 @@ export function FeedbackForm() {
   const [rating, setRating] = useState(0);
   const [submitted, setSubmitted] = useState(false);
 
-  const mainFeedback   = useMockValidation({ mode: 'onPause', pauseMs: 1000, question: 'What is your honest feedback about our product interface?' });
-  const improvement    = useMockValidation({ mode: 'onBlur', question: 'What specific feature or flow would you suggest we improve?' });
-  const recommendation = useMockValidation({ mode: 'onPause', pauseMs: 800, question: 'Would you recommend this tool to your team?' });
+  const ratingLabel = rating > 0 ? ['', 'Terrible', 'Needs Work', 'Acceptable', 'Very Good', 'Exceptional'][rating] : 'none';
+
+  const mainFeedback   = useValidation({
+    mode: 'onPause',
+    pauseMs: 1000,
+    question: 'What is your honest feedback about our product interface?',
+    fieldContext: `The user selected a star rating of ${rating}/5 (${ratingLabel}). Validate if their feedback matches this rating level or contradicts it.`
+  });
+  const improvement    = useValidation({ mode: 'onBlur', question: 'What specific feature or flow would you suggest we improve?' });
+  const recommendation = useValidation({ mode: 'onPause', pauseMs: 800, question: 'Would you recommend this tool to your team?' });
+
+  // Re-trigger text validation when star rating changes to keep rating/text correlation real-time!
+  React.useEffect(() => {
+    if (rating > 0 && mainFeedback.value.trim().length > 0) {
+      mainFeedback.triggerValidation();
+    }
+  }, [rating]);
 
   const canSubmit = rating > 0 && mainFeedback.value.trim().length > 0;
 
@@ -64,11 +78,11 @@ export function FeedbackForm() {
 
   function quickFill(value: string) {
     mainFeedback.setValue(value);
-    mainFeedback.handleChange(value);
+    mainFeedback.handleChange({ target: { value } } as any);
   }
 
   // Reusable editorial toast
-  function MiniToast({ validation }: { validation: ReturnType<typeof useMockValidation> }) {
+  function MiniToast({ validation }: { validation: any }) {
     const { status, result, apiError } = validation;
     if (status === 'idle') return null;
 
@@ -118,7 +132,7 @@ export function FeedbackForm() {
         <div className="success-mark">✓</div>
         <h3>Feedback Received</h3>
         <p>Thank you for submitting your evaluation. We review all entries in detail.</p>
-        <button className="btn btn-ghost" onClick={() => {
+        <button className="btn btn-glass" onClick={() => {
           setSubmitted(false);
           setRating(0);
           mainFeedback.reset();
@@ -268,7 +282,7 @@ export function FeedbackForm() {
         <button type="submit" className="btn btn-primary" disabled={!canSubmit}>
           Submit Feedback
         </button>
-        <button type="button" className="btn btn-ghost" onClick={() => {
+        <button type="button" className="btn btn-glass" onClick={() => {
           setRating(0);
           mainFeedback.reset();
           improvement.reset();

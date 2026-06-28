@@ -73,6 +73,8 @@ export class OrchestratorPipeline implements ValidationPipeline {
         feedback: aiResult.feedback,
         provider: this.provider.name,
         latencyMs,
+        ...(aiResult.tokenUsage ? { tokenUsage: aiResult.tokenUsage } : {}),
+        ...(aiResult.exampleAnswer !== undefined ? { exampleAnswer: aiResult.exampleAnswer } : {}),
       };
       if (aiResult.confidence !== undefined) {
         params.confidence = aiResult.confidence;

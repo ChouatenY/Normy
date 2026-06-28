@@ -1,0 +1,20 @@
+[
+  {
+    "question": "What is your primary residential address?",
+    "answer": "abc",
+    "expectedIssue": "LOW_QUALITY",
+    "expectedScoreRange": [30, 49]
+  },
+  {
+    "question": "What is your primary residential address?",
+    "answer": "I live in the forest near the lake.",
+    "expectedIssue": "LOW_QUALITY",
+    "expectedScoreRange": [30, 79]
+  },
+  {
+    "question": "What is your primary residential address?",
+    "answer": "123 Main Street, Springfield, OR 97477",
+    "expectedIssue": "VALID",
+    "expectedScoreRange": [80, 100]
+  }
+]

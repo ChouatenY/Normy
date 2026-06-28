@@ -15,7 +15,8 @@ export type ValidationIssue =
   | 'CONTRADICTORY_RESPONSE'
   | 'SPAM'
   | 'LOW_QUALITY'
-  | 'VALID';
+  | 'VALID'
+  | 'LOW_CONFIDENCE';
 
 export type ValidationSeverity = 'success' | 'info' | 'warning' | 'error';
 
@@ -24,12 +25,22 @@ export type FeedbackCategory =
   | 'input_format'
   | 'content_quality'
   | 'content_logic'
-  | 'valid';
+  | 'valid'
+  | 'EXPAND_RESPONSE'
+  | 'ANSWER_THE_QUESTION'
+  | 'ADD_SPECIFIC_DETAILS'
+  | 'REMOVE_RANDOM_TEXT'
+  | 'REMOVE_SPAM'
+  | 'EXPLAIN_REASON'
+  | 'CLARIFY_RESPONSE'
+  | 'NO_ACTION';
 
 export interface ValidateRequest {
   projectId: string;
   question: string;
   answer: string;
+  fieldContext?: string;
+  promptVersion?: string;
 }
 
 export interface ValidateResponse {
@@ -39,8 +50,8 @@ export interface ValidateResponse {
   issue: ValidationIssue;
   severity: ValidationSeverity;
   feedback: string;
-  /** Derived from issue on the client side since the API may not send it yet */
   feedbackCategory?: FeedbackCategory;
+  exampleAnswer?: string | null;
 }
 
 export interface NormyApiError {
@@ -55,14 +66,15 @@ export type NormyApiResult =
 // ─── Issue → FeedbackCategory mapping (client-side) ─────────────────────────
 
 export const ISSUE_TO_CATEGORY: Record<ValidationIssue, FeedbackCategory> = {
-  EMPTY:                  'input_quality',
-  TOO_SHORT:              'input_quality',
-  RANDOM_TEXT:            'input_format',
-  SPAM:                   'input_format',
-  LOW_QUALITY:            'content_quality',
-  IRRELEVANT_RESPONSE:    'content_quality',
-  CONTRADICTORY_RESPONSE: 'content_logic',
-  VALID:                  'valid',
+  EMPTY:                  'EXPAND_RESPONSE',
+  TOO_SHORT:              'EXPAND_RESPONSE',
+  RANDOM_TEXT:            'REMOVE_RANDOM_TEXT',
+  SPAM:                   'REMOVE_SPAM',
+  LOW_QUALITY:            'ADD_SPECIFIC_DETAILS',
+  IRRELEVANT_RESPONSE:    'ANSWER_THE_QUESTION',
+  CONTRADICTORY_RESPONSE: 'CLARIFY_RESPONSE',
+  VALID:                  'NO_ACTION',
+  LOW_CONFIDENCE:         'ADD_SPECIFIC_DETAILS',
 };
 
 // ─── Client ───────────────────────────────────────────────────────────────────
