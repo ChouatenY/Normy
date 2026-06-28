@@ -29,6 +29,7 @@ export { NormyToast }       from './components/NormyToast.js';
 export { NormyTextarea }    from './components/NormyTextarea.js';
 export { NormyInput }       from './components/NormyInput.js';
 export { NormySelect }      from './components/NormySelect.js';
+export { NormyBadge }       from './components/NormyBadge.js';
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 export { useNormy }         from './hooks/useNormy.js';
@@ -44,6 +45,7 @@ export type { NormyToastProps }       from './components/NormyToast.js';
 export type { NormyTextareaProps }    from './components/NormyTextarea.js';
 export type { NormyInputProps }       from './components/NormyInput.js';
 export type { NormySelectProps, NormySelectOption } from './components/NormySelect.js';
+export type { NormyBadgeProps }       from './components/NormyBadge.js';
 export type { NormyContextValue }     from './context/NormyContext.js';
 export type { UseValidationOptions, UseValidationReturn, UseValidationState, ValidationStatus } from './hooks/useValidation.js';
 export type {

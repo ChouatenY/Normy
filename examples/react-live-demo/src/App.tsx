@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './index.css';
-import { NormyProvider } from '@normy/react';
+import { NormyProvider, NormyBadge } from '@normy/react';
 import { CancellationForm } from './components/CancellationForm';
 import { JobApplicationForm } from './components/JobApplicationForm';
 import { FeedbackForm } from './components/FeedbackForm';
@@ -59,6 +59,7 @@ function MetalOrb({ step }: { step: string }) {
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<'cancellation' | 'job' | 'feedback' | 'government' | 'survey' | 'docs'>('cancellation');
+  const [showNormyBadge, setShowNormyBadge] = useState(true);
   const isConfigured = Boolean(apiKey && projectId);
 
   return (
@@ -170,17 +171,29 @@ export default function App() {
             
             {/* ── Main Card ── */}
             <div className="card" style={{ background: '#000', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4 }}>
-              <div className="card-header" style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.15)' }}>
-                <div className="card-label" style={{ fontSize: '0.6875rem', color: '#666', fontFamily: 'monospace' }}>
-                  Pipeline Endpoint: /validate
+              <div className="card-header" style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div className="card-label" style={{ fontSize: '0.6875rem', color: '#666', fontFamily: 'monospace' }}>
+                    Pipeline Endpoint: /validate
+                  </div>
+                  <h2 className="card-title" style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: 8 }}>
+                    {activeTab === 'cancellation' && 'cancellation-reason'}
+                    {activeTab === 'job' && 'job-application'}
+                    {activeTab === 'feedback' && 'customer-feedback'}
+                    {activeTab === 'government' && 'residential-address'}
+                    {activeTab === 'survey' && 'software-goals'}
+                  </h2>
                 </div>
-                <h2 className="card-title" style={{ fontSize: '1.5rem', fontWeight: 800, marginTop: 8 }}>
-                  {activeTab === 'cancellation' && 'cancellation-reason'}
-                  {activeTab === 'job' && 'job-application'}
-                  {activeTab === 'feedback' && 'customer-feedback'}
-                  {activeTab === 'government' && 'residential-address'}
-                  {activeTab === 'survey' && 'software-goals'}
-                </h2>
+                {/* Badge toggle control */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.75rem', color: '#888', cursor: 'pointer', userSelect: 'none' }}>
+                  <input
+                    type="checkbox"
+                    checked={showNormyBadge}
+                    onChange={(e) => setShowNormyBadge(e.target.checked)}
+                    style={{ cursor: 'pointer', filter: 'brightness(0.8)' }}
+                  />
+                  <span>Show validation badge</span>
+                </label>
               </div>
               <div className="card-body" style={{ padding: '32px' }}>
                 {isConfigured ? (
@@ -190,6 +203,12 @@ export default function App() {
                     {activeTab === 'feedback' && <FeedbackForm />}
                     {activeTab === 'government' && <GovernmentForm />}
                     {activeTab === 'survey' && <SurveyForm />}
+                    
+                    {showNormyBadge && (
+                      <div style={{ marginTop: 24, paddingTop: 16, borderTop: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', justifyContent: 'flex-start' }}>
+                        <NormyBadge />
+                      </div>
+                    )}
                   </NormyProvider>
                 ) : (
                   <div className="v-feedback warning" style={{ borderColor: 'rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)' }}>
