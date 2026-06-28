@@ -77,85 +77,92 @@ export default function App() {
           <img src="/logo.png" alt="Normy Logo" style={{ height: 36, width: 'auto', display: 'block', filter: 'brightness(1)' }} />
           <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.03em' }}>NORMY</span>
         </div>
-        <LiquidMetalButton label="API & SDK Docs" onClick={() => setActiveTab('docs')} />
+        {activeTab === 'docs' ? (
+          <LiquidMetalButton label="← Back to Sandbox" onClick={() => setActiveTab('cancellation')} />
+        ) : (
+          <LiquidMetalButton label="API & SDK Docs" onClick={() => setActiveTab('docs')} />
+        )}
       </div>
 
       <main style={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
-        <div className="hero-wrapper">
-          <svg className="hero-svg-backdrop" viewBox="0 0 1200 300" preserveAspectRatio="none">
-            {/* Base grey/white lines */}
-            <path d="M0,30 C300,10 600,70 1200,30" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-            <path d="M0,70 C300,50 600,110 1200,70" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-            <path d="M0,110 C300,90 600,150 1200,110" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-            <path d="M0,150 C300,130 600,190 1200,150" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-            <path d="M0,190 C300,170 600,230 1200,190" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-            <path d="M0,230 C300,210 600,270 1200,230" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-            <path d="M0,270 C300,250 600,310 1200,270" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+        {activeTab !== 'docs' && (
+          <>
+            <div className="hero-wrapper">
+              <svg className="hero-svg-backdrop" viewBox="0 0 1200 300" preserveAspectRatio="none">
+                {/* Base grey/white lines */}
+                <path d="M0,30 C300,10 600,70 1200,30" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+                <path d="M0,70 C300,50 600,110 1200,70" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+                <path d="M0,110 C300,90 600,150 1200,110" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+                <path d="M0,150 C300,130 600,190 1200,150" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+                <path d="M0,190 C300,170 600,230 1200,190" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+                <path d="M0,230 C300,210 600,270 1200,230" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+                <path d="M0,270 C300,250 600,310 1200,270" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
 
-            {/* Glowing energy flow overlay paths */}
-            <path d="M0,30 C300,10 600,70 1200,30" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path" />
-            <path d="M0,110 C300,90 600,150 1200,110" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-delayed" />
-            <path d="M0,190 C300,170 600,230 1200,190" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-fast" />
-            <path d="M0,270 C300,250 600,310 1200,270" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-delayed" />
-          </svg>
+                {/* Glowing energy flow overlay paths */}
+                <path d="M0,30 C300,10 600,70 1200,30" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path" />
+                <path d="M0,110 C300,90 600,150 1200,110" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-delayed" />
+                <path d="M0,190 C300,170 600,230 1200,190" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-fast" />
+                <path d="M0,270 C300,250 600,310 1200,270" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-delayed" />
+              </svg>
 
-          <div className="hero-content">
-            <div className="hero-eyebrow">
-              <span className="hero-divider" />
-              <span className="hero-tag">React SDK Live Sandbox</span>
+              <div className="hero-content">
+                <div className="hero-eyebrow">
+                  <span className="hero-divider" />
+                  <span className="hero-tag">React SDK Live Sandbox</span>
+                </div>
+                <h1 className="hero-title">
+                  Real-time validation engine.
+                </h1>
+                <p className="hero-desc">
+                  This workspace demonstrates the full semantic validation lifecycle. Select a form type to see @normy/react query the Hono backend and output AI ratings and Toast feedbacks.
+                </p>
+              </div>
             </div>
-            <h1 className="hero-title">
-              Real-time validation engine.
-            </h1>
-            <p className="hero-desc">
-              This workspace demonstrates the full semantic validation lifecycle. Select a form type to see @normy/react query the Hono backend and output AI ratings and Toast feedbacks.
-            </p>
-          </div>
-        </div>
 
-        {/* ── Tab Switcher ── */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(6, 1fr)',
-          gap: '1px',
-          background: 'rgba(255,255,255,0.1)',
-          padding: '1px',
-          borderRadius: 4,
-          marginBottom: 32
-        }}>
-          {[
-            { id: 'cancellation', label: 'Subscription Cancellation' },
-            { id: 'job', label: 'Job Application' },
-            { id: 'feedback', label: 'Customer Feedback' },
-            { id: 'government', label: 'Government Forms' },
-            { id: 'survey', label: 'User Survey' },
-            { id: 'docs', label: 'API & SDK Docs' }
-          ].map(tab => (
-            <button
-              key={tab.id}
-              type="button"
-              onClick={() => setActiveTab(tab.id as any)}
-              style={{
-                padding: '14px 8px',
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                background: activeTab === tab.id ? '#fff' : '#000',
-                color: activeTab === tab.id ? '#000' : '#888',
-                border: 'none',
-                cursor: 'pointer',
-                textAlign: 'center',
-                transition: 'all 0.2s ease',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em'
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
+            {/* ── Tab Switcher ── */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(5, 1fr)',
+              gap: '1px',
+              background: 'rgba(255,255,255,0.1)',
+              padding: '1px',
+              borderRadius: 4,
+              marginBottom: 32
+            }}>
+              {[
+                { id: 'cancellation', label: 'Subscription Cancellation' },
+                { id: 'job', label: 'Job Application' },
+                { id: 'feedback', label: 'Customer Feedback' },
+                { id: 'government', label: 'Government Forms' },
+                { id: 'survey', label: 'User Survey' }
+              ].map(tab => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActiveTab(tab.id as any)}
+                  style={{
+                    padding: '14px 8px',
+                    fontSize: '0.8125rem',
+                    fontWeight: 700,
+                    background: activeTab === tab.id ? '#fff' : '#000',
+                    color: activeTab === tab.id ? '#000' : '#888',
+                    border: 'none',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    transition: 'all 0.2s ease',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em'
+                  }}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
 
         {activeTab === 'docs' ? (
-          <div className="card" style={{ background: '#000', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4, padding: '40px' }}>
+          <div style={{ width: '100%' }}>
             <DocsView />
           </div>
         ) : (
