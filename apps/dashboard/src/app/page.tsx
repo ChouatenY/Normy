@@ -68,7 +68,7 @@ export default function AppMain() {
 
   // Load user session
   useEffect(() => {
-    supabase.getSession().then(({ data: { session } }: any) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (session) {
         setUser(session.user);
         setName(session.user.user_metadata?.name || '');
@@ -109,7 +109,7 @@ export default function AppMain() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    const { error } = await supabase.signUp({
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { name } }
@@ -125,7 +125,7 @@ export default function AppMain() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    const { data, error } = await supabase.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setAuthError(error.message);
     } else {
@@ -138,7 +138,7 @@ export default function AppMain() {
   };
 
   const handleSignOut = async () => {
-    await supabase.signOut();
+    await supabase.auth.signOut();
     setUser(null);
     setSelectedProject(null);
     setProjects([]);
@@ -241,7 +241,7 @@ export default function AppMain() {
   // --- Profile Settings ---
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.updateUser({
+    const { error } = await supabase.auth.updateUser({
       data: { name: newName },
       email: newEmail
     });
