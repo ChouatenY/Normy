@@ -9,7 +9,7 @@
  */
 
 import React, { useState } from 'react';
-import { useValidation } from '@normy/react';
+import { useValidation } from '@normy-validation/react';
 import { ValidationField } from './ValidationField';
 
 const CANCEL_REASONS = [

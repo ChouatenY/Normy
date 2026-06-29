@@ -10,7 +10,7 @@
  */
 
 import React, { useState } from 'react';
-import { useValidation } from '@normy/react';
+import { useValidation } from '@normy-validation/react';
 
 function StarRating({ value, onChange }: { value: number; onChange: (n: number) => void }) {
   const [hovered, setHovered] = useState(0);

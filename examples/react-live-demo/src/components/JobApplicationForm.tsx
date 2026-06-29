@@ -10,7 +10,7 @@
  */
 
 import React, { useState } from 'react';
-import { useValidation } from '@normy/react';
+import { useValidation } from '@normy-validation/react';
 
 export function JobApplicationForm() {
   const [submitted, setSubmitted] = useState(false);

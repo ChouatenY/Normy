@@ -13,7 +13,7 @@ instead of simple regex error messages.
 ## Installation
 
 \`\`\`bash
-npm install @normy/react    # React SDK
+npm install @normy-validation/react    # React SDK
 npm install @normy/js        # Vanilla JS SDK
 \`\`\`
 
@@ -22,7 +22,7 @@ npm install @normy/js        # Vanilla JS SDK
 ### React (Recommended)
 
 \`\`\`tsx
-import { NormyProvider, useValidation } from '@normy/react';
+import { NormyProvider, useValidation } from '@normy-validation/react';
 
 // 1. Wrap your app
 function App() {
@@ -475,7 +475,7 @@ export function DocsView() {
               <CodeBlock
                 title="React Project"
                 lang="bash"
-                code="npm install @normy/react"
+                code="npm install @normy-validation/react"
               />
               <CodeBlock
                 title="Vanilla JS / Node"
@@ -499,8 +499,8 @@ export function DocsView() {
               <CodeBlock
                 title="App Entry — Provider Setup"
                 lang="tsx"
-                code={`import { NormyProvider } from '@normy/react';
-
+                code={`import { NormyProvider } from '@normy-validation/react';
+ 
 function App() {
   return (
     <NormyProvider
@@ -520,7 +520,7 @@ function App() {
               <CodeBlock
                 title="Form Field — useValidation Hook"
                 lang="tsx"
-                code={`import { useValidation } from '@normy/react';
+                code={`import { useValidation } from '@normy-validation/react';
 
 function CancellationField() {
   const field = useValidation({

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './index.css';
-import { NormyProvider } from '@normy/react';
+import { NormyProvider } from '@normy-validation/react';
 import { CancellationForm } from './components/CancellationForm';
 import { JobApplicationForm } from './components/JobApplicationForm';
 import { FeedbackForm } from './components/FeedbackForm';

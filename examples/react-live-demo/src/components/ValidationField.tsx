@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { useValidation, type ValidationStatus, type ValidateResponse } from '@normy/react';
+import { useValidation, type ValidationStatus, type ValidateResponse } from '@normy-validation/react';
 
 export type ValidationFieldMode = 'onPause' | 'onBlur' | 'onSubmit';
 

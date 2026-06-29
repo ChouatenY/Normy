@@ -1,5 +1,5 @@
 {
-  "name": "@normy/react",
+  "name": "@normy-validation/react",
   "version": "0.1.0",
   "description": "React SDK for Normy — real-time AI form validation components",
   "license": "MIT",
