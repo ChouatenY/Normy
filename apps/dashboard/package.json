@@ -8,21 +8,24 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "test": "vitest run",
     "check-types": "tsc --noEmit",
     "lint": "echo \"No linter configured yet\""
   },
   "dependencies": {
+    "@normy/shared": "workspace:*",
+    "@normy/ui": "workspace:*",
+    "@supabase/supabase-js": "^2.108.2",
     "next": "14.2.3",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "@normy/ui": "workspace:*",
-    "@normy/shared": "workspace:*"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "typescript": "^5.4.5",
-    "tailwindcss": "^3.4.3",
     "@types/node": "^20.0.0",
     "@types/react": "^18.3.0",
-    "@types/react-dom": "^18.3.0"
+    "@types/react-dom": "^18.3.0",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.1"
   }
 }
