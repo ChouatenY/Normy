@@ -60,10 +60,21 @@ function MetalOrb({ step }: { step: string }) {
 export default function App() {
   const [activeTab, setActiveTab] = useState<'cancellation' | 'job' | 'feedback' | 'government' | 'survey' | 'docs'>('cancellation');
   const [showNormyBadge, setShowNormyBadge] = useState(true);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const isConfigured = Boolean(apiKey && projectId);
 
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    if (nextTheme === 'light') {
+      document.documentElement.classList.add('light-theme');
+    } else {
+      document.documentElement.classList.remove('light-theme');
+    }
+  };
+
   return (
-    <div className="app-shell" style={{ background: '#000', color: '#fff', minHeight: '100vh', padding: '40px 24px' }}>
+    <div className="app-shell" style={{ background: 'var(--black)', color: 'var(--text)', minHeight: '100vh', padding: '40px 24px', transition: 'background 0.3s ease, color 0.3s ease' }}>
       
       {/* ── Top Header ── */}
       <div style={{
@@ -75,14 +86,64 @@ export default function App() {
         width: '100%'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <img src="/logo.png" alt="Normy Logo" style={{ height: 36, width: 'auto', display: 'block', filter: 'brightness(1)' }} />
-          <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.03em' }}>NORMY</span>
+          <img src="/logo.png" alt="Normy Logo" style={{ height: 36, width: 'auto', display: 'block', filter: 'invert(var(--logo-invert)) brightness(1.1)', transition: 'filter 0.3s ease' }} />
+          <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text)' }}>NORMY</span>
         </div>
-        {activeTab === 'docs' ? (
-          <LiquidMetalButton label="← Back to Sandbox" onClick={() => setActiveTab('cancellation')} />
-        ) : (
-          <LiquidMetalButton label="API & SDK Docs" onClick={() => setActiveTab('docs')} />
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {activeTab === 'docs' ? (
+            <LiquidMetalButton label="← Back to Sandbox" onClick={() => setActiveTab('cancellation')} />
+          ) : (
+            <LiquidMetalButton label="API & SDK Docs" onClick={() => setActiveTab('docs')} />
+          )}
+
+          {/* Round Glass Theme Toggle Button */}
+          <button
+            onClick={toggleTheme}
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: '50%',
+              background: 'rgba(255, 255, 255, 0.04)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              color: 'var(--text)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.1)',
+              transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)';
+              e.currentTarget.style.transform = 'scale(1.05)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
+              e.currentTarget.style.transform = 'scale(1)';
+            }}
+            title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {theme === 'dark' ? (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="5" />
+                <line x1="12" y1="1" x2="12" y2="3" />
+                <line x1="12" y1="21" x2="12" y2="23" />
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+                <line x1="1" y1="12" x2="3" y2="12" />
+                <line x1="21" y1="12" x2="23" y2="12" />
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
       <main style={{ maxWidth: '1200px', margin: '0 auto', width: '100%' }}>
@@ -91,19 +152,19 @@ export default function App() {
             <div className="hero-wrapper">
               <svg className="hero-svg-backdrop" viewBox="0 0 1200 300" preserveAspectRatio="none">
                 {/* Base grey/white lines */}
-                <path d="M0,30 C300,10 600,70 1200,30" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-                <path d="M0,70 C300,50 600,110 1200,70" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-                <path d="M0,110 C300,90 600,150 1200,110" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-                <path d="M0,150 C300,130 600,190 1200,150" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-                <path d="M0,190 C300,170 600,230 1200,190" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-                <path d="M0,230 C300,210 600,270 1200,230" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
-                <path d="M0,270 C300,250 600,310 1200,270" fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="1" />
+                <path d="M0,30 C300,10 600,70 1200,30" fill="none" stroke="var(--energy-bg-stroke)" strokeWidth="1" style={{ transition: 'stroke 0.3s ease' }} />
+                <path d="M0,70 C300,50 600,110 1200,70" fill="none" stroke="var(--energy-bg-stroke)" strokeWidth="1" style={{ transition: 'stroke 0.3s ease' }} />
+                <path d="M0,110 C300,90 600,150 1200,110" fill="none" stroke="var(--energy-bg-stroke)" strokeWidth="1" style={{ transition: 'stroke 0.3s ease' }} />
+                <path d="M0,150 C300,130 600,190 1200,150" fill="none" stroke="var(--energy-bg-stroke)" strokeWidth="1" style={{ transition: 'stroke 0.3s ease' }} />
+                <path d="M0,190 C300,170 600,230 1200,190" fill="none" stroke="var(--energy-bg-stroke)" strokeWidth="1" style={{ transition: 'stroke 0.3s ease' }} />
+                <path d="M0,230 C300,210 600,270 1200,230" fill="none" stroke="var(--energy-bg-stroke)" strokeWidth="1" style={{ transition: 'stroke 0.3s ease' }} />
+                <path d="M0,270 C300,250 600,310 1200,270" fill="none" stroke="var(--energy-bg-stroke)" strokeWidth="1" style={{ transition: 'stroke 0.3s ease' }} />
 
                 {/* Glowing energy flow overlay paths */}
-                <path d="M0,30 C300,10 600,70 1200,30" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path" />
-                <path d="M0,110 C300,90 600,150 1200,110" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-delayed" />
-                <path d="M0,190 C300,170 600,230 1200,190" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-fast" />
-                <path d="M0,270 C300,250 600,310 1200,270" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" className="energy-path-delayed" />
+                <path d="M0,30 C300,10 600,70 1200,30" fill="none" stroke="var(--energy-stroke)" strokeWidth="1.5" className="energy-path" style={{ transition: 'stroke 0.3s ease' }} />
+                <path d="M0,110 C300,90 600,150 1200,110" fill="none" stroke="var(--energy-stroke)" strokeWidth="1.5" className="energy-path-delayed" style={{ transition: 'stroke 0.3s ease' }} />
+                <path d="M0,190 C300,170 600,230 1200,190" fill="none" stroke="var(--energy-stroke)" strokeWidth="1.5" className="energy-path-fast" style={{ transition: 'stroke 0.3s ease' }} />
+                <path d="M0,270 C300,250 600,310 1200,270" fill="none" stroke="var(--energy-stroke)" strokeWidth="1.5" className="energy-path-delayed" style={{ transition: 'stroke 0.3s ease' }} />
               </svg>
 
               <div className="hero-content">
@@ -170,8 +231,8 @@ export default function App() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 40, alignItems: 'start' }}>
             
             {/* ── Main Card ── */}
-            <div className="card" style={{ background: '#000', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 4 }}>
-              <div className="card-header" style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="card" style={{ background: 'var(--black)', border: '1px solid var(--border)', borderRadius: 4, transition: 'background 0.3s ease, border 0.3s ease' }}>
+              <div className="card-header" style={{ padding: '24px 32px', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: 'border-bottom 0.3s ease' }}>
                 <div>
                   <div className="card-label" style={{ fontSize: '0.6875rem', color: '#666', fontFamily: 'monospace' }}>
                     Pipeline Endpoint: /validate
@@ -240,13 +301,14 @@ export default function App() {
             {/* ── Runtime Pipeline — Liquid Metal Glass ── */}
             <aside>
               <div style={{
-                background: 'rgba(255,255,255,0.015)',
+                background: 'var(--glass-bg)',
                 backdropFilter: 'blur(16px)',
                 WebkitBackdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255,255,255,0.12)',
+                border: '1px solid var(--glass-border)',
                 borderRadius: 8,
                 padding: '28px 24px',
-                boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)',
+                boxShadow: 'var(--glass-shadow)',
+                transition: 'background 0.3s ease, border 0.3s ease, box-shadow 0.3s ease',
               }}>
                 <div style={{
                   fontSize: '0.6875rem',
