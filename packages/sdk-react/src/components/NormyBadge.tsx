@@ -5,8 +5,7 @@ export interface NormyBadgeProps {
   style?: React.CSSProperties;
 }
 
-export const NormyBadge: React.FC<NormyBadgeProps> = ({ theme = 'dark', style }) => {
-  const isDark = theme === 'dark';
+export const NormyBadge: React.FC<NormyBadgeProps> = ({ style }) => {
   return (
     <div style={{ display: 'flex', width: '100%', justifyContent: 'flex-start', marginTop: '16px' }}>
       <a
@@ -26,18 +25,13 @@ export const NormyBadge: React.FC<NormyBadgeProps> = ({ theme = 'dark', style })
           textDecoration: 'none',
           fontFamily: "'Inter', -apple-system, sans-serif",
           
-          /* Liquid Glass styling */
-          background: isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)',
-          border: isDark ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(0, 0, 0, 0.15)',
-          color: isDark ? 'rgba(255, 255, 255, 0.75)' : '#444',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+          /* Black Liquid Metal styling */
+          background: 'linear-gradient(135deg, #2a2a2a 0%, #555 20%, #888 35%, #bbb 50%, #888 65%, #555 80%, #2a2a2a 100%)',
+          backgroundSize: '400% 100%',
+          animation: 'lm-shimmer-badge 4s linear infinite',
+          border: 'none',
+          boxShadow: '0 0 0 1px rgba(255,255,255,0.2), 0 4px 16px rgba(0,0,0,0.5)',
           
-          /* Premium glass reflections */
-          boxShadow: isDark 
-            ? '0 6px 20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(255,255,255,0.05)'
-            : '0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)',
-            
           transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           cursor: 'pointer',
           position: 'relative',
@@ -45,24 +39,40 @@ export const NormyBadge: React.FC<NormyBadgeProps> = ({ theme = 'dark', style })
           ...style
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)';
-          e.currentTarget.style.borderColor = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.25)';
-          e.currentTarget.style.color = isDark ? '#fff' : '#000';
-          e.currentTarget.style.transform = 'translateY(-1px)';
-          e.currentTarget.style.boxShadow = isDark
-            ? '0 8px 24px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.35), 0 0 12px rgba(255,255,255,0.1)'
-            : '0 6px 16px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.8)';
+          e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
+          e.currentTarget.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.4), 0 8px 24px rgba(255,255,255,0.08), 0 2px 8px rgba(255,255,255,0.12)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = isDark ? 'rgba(255, 255, 255, 0.02)' : 'rgba(0, 0, 0, 0.02)';
-          e.currentTarget.style.borderColor = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.15)';
-          e.currentTarget.style.color = isDark ? 'rgba(255, 255, 255, 0.75)' : '#444';
           e.currentTarget.style.transform = 'none';
-          e.currentTarget.style.boxShadow = isDark
-            ? '0 6px 20px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.25), 0 0 0 1px rgba(255,255,255,0.05)'
-            : '0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.6)';
+          e.currentTarget.style.boxShadow = '0 0 0 1px rgba(255,255,255,0.2), 0 4px 16px rgba(0,0,0,0.5)';
         }}
       >
+        {/* Inner dark overlay */}
+        <span
+          style={{
+            position: 'absolute',
+            inset: 1.5,
+            borderRadius: '30px',
+            background: 'linear-gradient(180deg, rgba(20,20,20,0.85) 0%, rgba(0,0,0,0.92) 100%)',
+            zIndex: 1,
+            pointerEvents: 'none',
+          }}
+        />
+        
+        {/* Shimmer highlight */}
+        <span
+          style={{
+            position: 'absolute',
+            inset: 1.5,
+            borderRadius: '30px',
+            background: 'linear-gradient(105deg, transparent 30%, rgba(255,255,255,0.06) 45%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.06) 55%, transparent 70%)',
+            backgroundSize: '300% 100%',
+            animation: 'lm-shimmer-badge 3s ease-in-out infinite',
+            zIndex: 2,
+            pointerEvents: 'none',
+          }}
+        />
+
         {/* Normy Navbar Logo Image */}
         <img
           src="/logo.png"
@@ -72,29 +82,21 @@ export const NormyBadge: React.FC<NormyBadgeProps> = ({ theme = 'dark', style })
             width: 'auto',
             display: 'block',
             flexShrink: 0,
-            filter: 'brightness(1.1)',
+            filter: 'invert(var(--logo-invert)) brightness(1.1)',
+            zIndex: 3,
+            position: 'relative',
+            transition: 'filter 0.3s ease',
           }}
         />
         
-        <span>Validated by Normy</span>
-        
-        {/* Metallic gloss highlight sweep */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: '-150%',
-          width: '100%',
-          height: '100%',
-          background: 'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent)',
-          transform: 'skewX(-25deg)',
-          animation: 'normy-badge-shimmer 6s infinite ease-in-out',
-        }} />
+        <span style={{ position: 'relative', zIndex: 3, color: '#fff', textShadow: '0 1px 3px rgba(0,0,0,0.7)' }}>
+          Validated by Normy
+        </span>
         
         <style dangerouslySetInnerHTML={{__html: `
-          @keyframes normy-badge-shimmer {
-            0% { left: -150%; }
-            20% { left: 150%; }
-            100% { left: 150%; }
+          @keyframes lm-shimmer-badge {
+            0% { background-position: 200% 50%; }
+            100% { background-position: -200% 50%; }
           }
         `}} />
       </a>

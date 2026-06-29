@@ -1177,13 +1177,13 @@ html, body, .app-shell, .card, aside, section, div, header, h1, h2, h3, p, label
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
 }
 .light-theme pre {
-  background: #f7f7f7 !important;
-  border-color: #e4e4e7 !important;
+  background: #fafafa !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
 }
-.light-theme pre code {
-  background: transparent !important;
-  border: none !important;
-  color: #27272a !important;
+.light-theme pre,
+.light-theme pre code,
+.light-theme pre span {
+  color: #000000 !important;
 }
 .light-theme .docs-sidebar button {
   color: #444 !important;
@@ -1248,4 +1248,31 @@ html, body, .app-shell, .card, aside, section, div, header, h1, h2, h3, p, label
 }
 .light-theme .feedback-metric-val {
   color: #111111 !important;
+}
+
+/* Form Buttons in White Theme */
+.light-theme .btn-primary {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #000000 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+}
+.light-theme .btn-primary:hover:not(:disabled) {
+  background: #222222 !important;
+  border-color: #222222 !important;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2) !important;
+}
+.light-theme .btn-primary:disabled {
+  background: #cccccc !important;
+  border-color: #cccccc !important;
+  color: #888888 !important;
+}
+.light-theme .btn-glass {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  color: #000000 !important;
+}
+.light-theme .btn-glass:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.08) !important;
+  border-color: rgba(0, 0, 0, 0.25) !important;
 }

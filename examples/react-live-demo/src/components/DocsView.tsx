@@ -151,10 +151,10 @@ function CodeBlock({ code, lang, title }: { code: string; lang?: string; title?:
         }}>{title}</div>
       )}
       <div style={{
-        background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 6,
+        background: 'var(--near-black)', border: '1px solid var(--border)', borderRadius: 6,
         overflow: 'hidden',
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: '1px solid var(--border)' }}>
           <span style={{ fontSize: '0.6875rem', color: '#555', fontFamily: "'JetBrains Mono', monospace" }}>{lang ?? ''}</span>
           <button
             type="button"
@@ -162,8 +162,8 @@ function CodeBlock({ code, lang, title }: { code: string; lang?: string; title?:
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 4,
               fontSize: '0.6875rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s ease',
-              background: copied ? 'rgba(76,175,145,0.12)' : 'rgba(255,255,255,0.04)',
-              border: `1px solid ${copied ? 'rgba(76,175,145,0.3)' : 'rgba(255,255,255,0.1)'}`,
+              background: copied ? 'rgba(76,175,145,0.12)' : 'var(--glass-bg)',
+              border: `1px solid ${copied ? 'rgba(76,175,145,0.3)' : 'var(--border)'}`,
               color: copied ? '#4caf91' : '#888',
             }}
           >
@@ -171,7 +171,7 @@ function CodeBlock({ code, lang, title }: { code: string; lang?: string; title?:
             {copied ? 'Copied' : 'Copy'}
           </button>
         </div>
-        <pre style={{ padding: '14px 16px', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8125rem', lineHeight: 1.65, overflowX: 'auto', margin: 0, color: '#ccc' }}>
+        <pre style={{ padding: '14px 16px', fontFamily: "'JetBrains Mono', monospace", fontSize: '0.8125rem', lineHeight: 1.65, overflowX: 'auto', margin: 0, color: 'var(--text)' }}>
           {code}
         </pre>
       </div>
