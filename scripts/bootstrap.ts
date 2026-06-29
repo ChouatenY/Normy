@@ -92,12 +92,11 @@ async function main() {
     });
   }
 
-  // 4. Update examples/react-live-demo/.env
   const demoEnvPath = path.resolve(__dirname, '../examples/react-live-demo/.env');
   const envContent = `VITE_NORMY_API_URL="http://localhost:3001"
 VITE_NORMY_PROJECT_ID="${project.id}"
 VITE_NORMY_API_KEY="${rawKey}"
-VITE_GEMINI_API_KEY="AIzaSyBg0idKcxO9CkD-OymBcRlnsHLqqyK8Jk8"
+VITE_GEMINI_API_KEY="${process.env.GEMINI_API_KEY || ''}"
 `;
 
   fs.writeFileSync(demoEnvPath, envContent, 'utf8');
