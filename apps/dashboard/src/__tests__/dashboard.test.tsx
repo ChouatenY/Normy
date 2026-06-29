@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { supabase } from '../lib/supabase';
-import { DbService, resetMockDatabase } from '../lib/db-service';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { supabase } from '../lib/supabase.js';
+import { DbService, resetMockDatabase } from '../lib/db-service.js';
 
 // Mock browser localStorage for mock auth/db test runs
 const localStorageMock = (() => {
@@ -96,7 +96,7 @@ describe('Normy Developer Dashboard - Unit Tests', () => {
 
       const projects = await DbService.getProjects(userId);
       expect(projects.length).toBe(1);
-      expect(projects[0].name).toBe('Vite Production SDK App');
+      expect(projects[0]?.name).toBe('Vite Production SDK App');
     });
 
     it('should edit existing project properties', async () => {
@@ -149,7 +149,7 @@ describe('Normy Developer Dashboard - Unit Tests', () => {
       expect(success).toBe(true);
 
       const keys = await DbService.getApiKeys(projId);
-      expect(keys[0].revokedAt).toBeDefined();
+      expect(keys[0]?.revokedAt).toBeDefined();
     });
   });
 });

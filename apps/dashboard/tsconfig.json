@@ -8,7 +8,11 @@
     "incremental": true,
     "noEmit": true,
     "noUncheckedSideEffectImports": false,
-    "plugins": [{ "name": "next" }]
+    "plugins": [{ "name": "next" }],
+    "baseUrl": ".",
+    "paths": {
+      "@normy-validation/react": ["../../packages/sdk-react/src/index.ts"]
+    }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]

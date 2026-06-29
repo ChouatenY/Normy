@@ -115,7 +115,7 @@ export class NormyClient {
     } catch (err: unknown) {
       clearTimeout(timerId);
 
-      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      const isAbort = (err as any)?.name === 'AbortError';
       return {
         ok: false,
         error: {

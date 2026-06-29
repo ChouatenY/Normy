@@ -30,9 +30,9 @@ export const serverEnvSchema = z.object({
   ),
 
   // ── AI Providers (at least one required at runtime) ──────────────────────────
-  OPENAI_API_KEY: nonEmptyString.optional(),
-  GEMINI_API_KEY: nonEmptyString.optional(),
-  ANTHROPIC_API_KEY: nonEmptyString.optional(),
+  OPENAI_API_KEY: z.string().transform(val => val || undefined).optional(),
+  GEMINI_API_KEY: z.string().transform(val => val || undefined).optional(),
+  ANTHROPIC_API_KEY: z.string().transform(val => val || undefined).optional(),
 
   // ── Default AI provider to use ───────────────────────────────────────────────
   AI_PROVIDER: z

@@ -110,7 +110,7 @@ export class DbService {
 
   static async getProjects(userId: string): Promise<Project[]> {
     const { projects } = this.getStorage();
-    return projects.filter(p => p.userId === userId || p.userId === 'default_user');
+    return projects.filter((p: Project) => p.userId === userId || p.userId === 'default_user');
   }
 
   static async createProject(userId: string, data: Partial<Project>): Promise<Project> {
@@ -134,7 +134,7 @@ export class DbService {
 
   static async updateProject(projectId: string, data: Partial<Project>): Promise<Project | null> {
     const { projects } = this.getStorage();
-    const idx = projects.findIndex(p => p.id === projectId);
+    const idx = projects.findIndex((p: Project) => p.id === projectId);
     if (idx === -1) return null;
     projects[idx] = { ...projects[idx], ...data } as Project;
     this.saveProjects(projects);
@@ -143,8 +143,8 @@ export class DbService {
 
   static async deleteProject(projectId: string): Promise<boolean> {
     const { projects, apiKeys } = this.getStorage();
-    const filteredProj = projects.filter(p => p.id !== projectId);
-    const filteredKeys = apiKeys.filter(k => k.projectId !== projectId);
+    const filteredProj = projects.filter((p: Project) => p.id !== projectId);
+    const filteredKeys = apiKeys.filter((k: ApiKey) => k.projectId !== projectId);
     this.saveProjects(filteredProj);
     this.saveApiKeys(filteredKeys);
     return true;
@@ -152,7 +152,7 @@ export class DbService {
 
   static async getApiKeys(projectId: string): Promise<ApiKey[]> {
     const { apiKeys } = this.getStorage();
-    return apiKeys.filter(k => k.projectId === projectId);
+    return apiKeys.filter((k: ApiKey) => k.projectId === projectId);
   }
 
   static async generateApiKey(projectId: string, name: string, environment: 'development' | 'production'): Promise<{ apiKey: string; record: ApiKey }> {
@@ -182,7 +182,7 @@ export class DbService {
 
   static async revokeApiKey(keyId: string): Promise<boolean> {
     const { apiKeys } = this.getStorage();
-    const idx = apiKeys.findIndex(k => k.id === keyId);
+    const idx = apiKeys.findIndex((k: ApiKey) => k.id === keyId);
     if (idx === -1) return false;
     apiKeys[idx] = { ...apiKeys[idx], revokedAt: new Date().toISOString() };
     this.saveApiKeys(apiKeys);
@@ -191,7 +191,7 @@ export class DbService {
 
   static async deleteApiKey(keyId: string): Promise<boolean> {
     const { apiKeys } = this.getStorage();
-    const filtered = apiKeys.filter(k => k.id !== keyId);
+    const filtered = apiKeys.filter((k: ApiKey) => k.id !== keyId);
     this.saveApiKeys(filtered);
     return true;
   }

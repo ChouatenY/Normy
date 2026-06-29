@@ -1,11 +1,21 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import { DbService, Project, ApiKey } from '../lib/db-service';
-import { InteractiveDocs } from '../components/InteractiveDocs';
-import { PlaygroundView } from '../components/PlaygroundView';
-import { CodeBlock } from '../components/CodeBlock';
+import { supabase } from '../lib/supabase.js';
+import { DbService } from '../lib/db-service.js';
+import type { Project, ApiKey } from '../lib/db-service.js';
+import { InteractiveDocs } from '../components/InteractiveDocs.js';
+import { PlaygroundView } from '../components/PlaygroundView.js';
+import { CodeBlock } from '../components/CodeBlock.js';
+import { LiquidMetalButton } from '../components/LiquidMetalButton.js';
+
+// Active Form Components
+import { CancellationForm } from '../components/CancellationForm.js';
+import { JobApplicationForm } from '../components/JobApplicationForm.js';
+import { FeedbackForm } from '../components/FeedbackForm.js';
+import { GovernmentForm } from '../components/GovernmentForm.js';
+import { SurveyForm } from '../components/SurveyForm.js';
+import { NormyProvider } from '@normy-validation/react';
 
 type ActiveSection = 'overview' | 'projects' | 'keys' | 'docs' | 'playground' | 'settings';
 
@@ -18,8 +28,15 @@ export default function AppMain() {
   const [name, setName] = useState('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
-  // Dashboard Section routing state
+  // Landing Page vs Interactive Docs switcher (for non-logged-in users)
+  const [landingSection, setLandingSection] = useState<'sandbox' | 'docs'>('sandbox');
+
+  // Form Live Demo active tab (for non-logged-in users)
+  const [activeFormTab, setActiveFormTab] = useState<'cancel' | 'job' | 'feedback' | 'gov' | 'survey'>('cancel');
+
+  // Dashboard Section routing state (for logged-in users)
   const [activeSection, setActiveSection] = useState<ActiveSection>('overview');
 
   // Application Data state
@@ -45,6 +62,9 @@ export default function AppMain() {
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // API host determination
+  const apiHostUrl = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://localhost:3001';
 
   // Load user session
   useEffect(() => {
@@ -76,7 +96,7 @@ export default function AppMain() {
     const list = await DbService.getProjects(user?.id || 'default_user');
     setProjects(list);
     if (list.length > 0 && !selectedProject) {
-      setSelectedProject(list[0]);
+      setSelectedProject(list[0] ?? null);
     }
   };
 
@@ -89,7 +109,7 @@ export default function AppMain() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthError(null);
-    const { data, error } = await supabase.signUp({
+    const { error } = await supabase.signUp({
       email,
       password,
       options: { data: { name } }
@@ -113,6 +133,7 @@ export default function AppMain() {
       setName(data.user.user_metadata?.name || '');
       setNewName(data.user.user_metadata?.name || '');
       setNewEmail(data.user.email || '');
+      setShowAuthModal(false); // Close modal on success
     }
   };
 
@@ -122,6 +143,7 @@ export default function AppMain() {
     setSelectedProject(null);
     setProjects([]);
     setApiKeys([]);
+    setLandingSection('sandbox');
   };
 
   // --- Project Handlers ---
@@ -192,7 +214,7 @@ export default function AppMain() {
     e.preventDefault();
     if (!selectedProject || !newKeyName) return;
 
-    const { apiKey, record } = await DbService.generateApiKey(selectedProject.id, newKeyName, newKeyEnv);
+    const { apiKey } = await DbService.generateApiKey(selectedProject.id, newKeyName, newKeyEnv);
     setGeneratedKey(apiKey);
     setNewKeyName('');
     await loadApiKeys(selectedProject.id);
@@ -219,7 +241,7 @@ export default function AppMain() {
   // --- Profile Settings ---
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { data, error } = await supabase.updateUser({
+    const { error } = await supabase.updateUser({
       data: { name: newName },
       email: newEmail
     });
@@ -241,157 +263,448 @@ export default function AppMain() {
     }
   };
 
-  // --- Render Authentication Pages ---
+  /* ── Third-Party OAuth SVGs ── */
+  const GoogleLogo = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style={{ marginRight: 8 }}>
+      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05" />
+      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335" />
+    </svg>
+  );
+
+  const GitHubLogo = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" style={{ marginRight: 8, fill: theme === 'light' ? '#000' : '#fff' }}>
+      <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.579.688.481C19.137 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10z" />
+    </svg>
+  );
+
+  // --- Render Landing Page (Unauthenticated State) ---
   if (!user) {
     return (
-      <div className="auth-container">
-        <div className="auth-card">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center', marginBottom: 32 }}>
-            <div style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: 'var(--white)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 800,
-              fontSize: '0.875rem',
-              color: 'var(--black)',
-              letterSpacing: '-0.04em'
-            }}>N</div>
-            <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--white)' }}>NORMY</span>
+      <div className="app-shell" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        
+        {/* ══ Header Strip ══ */}
+        <header className="top-nav">
+          <div className="nav-logo" onClick={() => setLandingSection('sandbox')} style={{ cursor: 'pointer' }}>
+            <img
+              src="/logo.png"
+              alt="Normy logo"
+              style={{
+                height: 24,
+                width: 'auto',
+                filter: theme === 'light' ? 'invert(1)' : 'none',
+                transition: 'filter 0.3s ease'
+              }}
+            />
+            <span style={{ fontSize: '1rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--white)' }}>NORMY</span>
+            <span className="nav-badge">Open Source</span>
           </div>
 
-          {authError && (
-            <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', color: 'var(--red)', padding: 12, borderRadius: 6, fontSize: '0.8125rem', marginBottom: 20 }}>
-              {authError}
-            </div>
-          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+            {/* Toggle views between live forms demo and API docs */}
+            {landingSection === 'sandbox' ? (
+              <button 
+                className="btn btn-glass" 
+                onClick={() => setLandingSection('docs')}
+                style={{ fontSize: '0.8125rem', padding: '6px 16px' }}
+              >
+                API & SDK Docs
+              </button>
+            ) : (
+              <button 
+                className="btn btn-glass" 
+                onClick={() => setLandingSection('sandbox')}
+                style={{ fontSize: '0.8125rem', padding: '6px 16px' }}
+              >
+                Live Sandbox
+              </button>
+            )}
 
-          {authMessage && (
-            <div style={{ background: 'rgba(76, 175, 145, 0.1)', border: '1px solid rgba(76, 175, 145, 0.2)', color: 'var(--teal)', padding: 12, borderRadius: 6, fontSize: '0.8125rem', marginBottom: 20 }}>
-              {authMessage}
-            </div>
-          )}
+            <LiquidMetalButton 
+              label="Console Login" 
+              onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
+              width={150}
+              height={34}
+            />
 
-          {authMode === 'login' ? (
-            <form onSubmit={handleLogin}>
-              <div className="input-group">
-                <label className="input-label">Email Address</label>
-                <input type="email" required className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. dev@example.com" />
-              </div>
+            {/* Shimmering Round theme switcher button */}
+            <button
+              onClick={toggleTheme}
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #111 0%, #333 50%, #111 100%)',
+                backgroundSize: '200% 200%',
+                animation: 'lm-shimmer 4s linear infinite',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                fontSize: '0.8125rem',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+                transition: 'transform 0.15s ease'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+            >
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
+          </div>
+        </header>
 
-              <div className="input-group" style={{ marginBottom: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <label className="input-label">Password</label>
-                  <span onClick={() => setAuthMode('forgot')} style={{ fontSize: '0.75rem', color: 'var(--text-sec)', cursor: 'pointer', marginBottom: 8 }}>Forgot?</span>
-                </div>
-                <input type="password" required className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
-              </div>
-
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginBottom: 16 }}>Sign In</button>
-
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-sec)', textAlign: 'center' }}>
-                New to Normy? <span onClick={() => setAuthMode('register')} style={{ color: 'var(--white)', cursor: 'pointer', fontWeight: 600 }}>Create an account</span>
-              </div>
-            </form>
-          ) : authMode === 'register' ? (
-            <form onSubmit={handleRegister}>
-              <div className="input-group">
-                <label className="input-label">Full Name</label>
-                <input type="text" required className="input-field" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Alex Dev" />
-              </div>
-
-              <div className="input-group">
-                <label className="input-label">Email Address</label>
-                <input type="email" required className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. dev@example.com" />
-              </div>
-
-              <div className="input-group" style={{ marginBottom: 24 }}>
-                <label className="input-label">Password</label>
-                <input type="password" required className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
-              </div>
-
-              <button type="submit" className="btn btn-primary" style={{ width: '100%', marginBottom: 16 }}>Create Account</button>
-
-              <div style={{ fontSize: '0.8125rem', color: 'var(--text-sec)', textAlign: 'center' }}>
-                Already have an account? <span onClick={() => setAuthMode('login')} style={{ color: 'var(--white)', cursor: 'pointer', fontWeight: 600 }}>Sign In</span>
-              </div>
-            </form>
-          ) : (
+        {/* ══ Main Landing Page Layout ══ */}
+        <main className="main-wrapper" style={{ flex: 1 }}>
+          
+          {landingSection === 'docs' ? (
+            /* --- Documentation Layout --- */
             <div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12 }}>Reset Password</h3>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-sec)', marginBottom: 20 }}>Enter your email address and we will send you a password reset link.</p>
-              <div className="input-group" style={{ marginBottom: 24 }}>
-                <label className="input-label">Email Address</label>
-                <input type="email" className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. dev@example.com" />
+              <div className="docs-header-container">
+                <h2 className="docs-header-title">Developer Integration Kit</h2>
               </div>
-              <button onClick={() => { setAuthMessage('Password reset link sent!'); setAuthMode('login'); }} className="btn btn-primary" style={{ width: '100%', marginBottom: 16 }}>Send Reset Link</button>
-              <button onClick={() => setAuthMode('login')} className="btn btn-glass" style={{ width: '100%' }}>Back to Login</button>
+              <InteractiveDocs />
+            </div>
+          ) : (
+            /* --- Standard SDK Sandbox Landing Page Layout --- */
+            <div>
+              {/* Hero Banner with SVG backdrop animation */}
+              <div className="hero-wrapper">
+                <svg className="hero-svg-backdrop" viewBox="0 0 1000 360" fill="none">
+                  <path className="energy-path" d="M -100 180 Q 250 80 500 180 T 1100 180" stroke="var(--energy-stroke)" strokeWidth="1.5" fill="none" />
+                  <path className="energy-path-delayed" d="M -100 180 Q 250 280 500 180 T 1100 180" stroke="var(--energy-bg-stroke)" strokeWidth="1" fill="none" />
+                  <path className="energy-path-fast" d="M -100 180 Q 250 180 500 180 T 1100 180" stroke="var(--energy-bg-stroke)" strokeWidth="1" fill="none" />
+                </svg>
+
+                <div className="hero-content">
+                  <div className="hero-eyebrow">
+                    <span className="hero-tag">AI-Powered Form Validation</span>
+                    <span className="hero-divider" />
+                    <span className="hero-tag">v0.1.0</span>
+                  </div>
+                  <h1 className="hero-title">Say goodbye to regex form errors.</h1>
+                  <p className="hero-desc">
+                    Normy analyzes user input context and semantics in real time. Wrap fields with our SDK to suggest immediate helpful improvements, score answers, and guide users to write great text content.
+                  </p>
+                </div>
+              </div>
+
+              {/* Tab Selector */}
+              <div className="tab-nav">
+                {[
+                  { id: 'cancel', num: '01', label: 'Subscription Cancellation' },
+                  { id: 'job', num: '02', label: 'Job Application' },
+                  { id: 'feedback', num: '03', label: 'Customer Feedback' },
+                  { id: 'gov', num: '04', label: 'Public Service Request' },
+                  { id: 'survey', num: '05', label: 'Structured Survey' },
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveFormTab(t.id as any)}
+                    className={`tab-btn ${activeFormTab === t.id ? 'active' : ''}`}
+                  >
+                    <span className="tab-num">{t.num}</span>
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Live Form Grid / Flowchart pipeline */}
+              <div className="content-grid">
+                
+                {/* Active Form Card Wrapper */}
+                <div className="card">
+                  <div className="card-header">
+                    <span className="card-label">Live Integration sandbox</span>
+                    <h2 className="card-title">
+                      {activeFormTab === 'cancel' && 'Cancellation Feedback Form'}
+                      {activeFormTab === 'job' && 'Software Engineer Job Application'}
+                      {activeFormTab === 'feedback' && 'Customer Experience Rating'}
+                      {activeFormTab === 'gov' && 'Road Infrastructure Repair Request'}
+                      {activeFormTab === 'survey' && 'Technology Stack Survey'}
+                    </h2>
+                    <p className="card-desc">
+                      {activeFormTab === 'cancel' && 'Validates the depth and clarity of subscription cancellation reasons.'}
+                      {activeFormTab === 'job' && 'Evaluates summary structure, professional tone, and required experience.'}
+                      {activeFormTab === 'feedback' && 'Validates user-submitted descriptions for spam, gibberish, or short strings.'}
+                      {activeFormTab === 'gov' && 'Ensures the description contains sufficient context for public dispatchers.'}
+                      {activeFormTab === 'survey' && 'Checks if the listed stack matches development tools.'}
+                    </p>
+                  </div>
+                  <div className="card-body">
+                    {/* Wrap forms in NormyProvider pointing to local test credentials */}
+                    <NormyProvider
+                      apiKey="nrm_live_demo"
+                      projectId="00000000-0000-0000-0000-000000000000"
+                      apiUrl={apiHostUrl}
+                      showBadge={false}
+                    >
+                      {activeFormTab === 'cancel' && <CancellationForm />}
+                      {activeFormTab === 'job' && <JobApplicationForm />}
+                      {activeFormTab === 'feedback' && <FeedbackForm />}
+                      {activeFormTab === 'gov' && <GovernmentForm />}
+                      {activeFormTab === 'survey' && <SurveyForm />}
+                    </NormyProvider>
+                  </div>
+                </div>
+
+                {/* Right Flowchart Pipeline Illustration */}
+                <aside className="sidebar">
+                  <div className="sidebar-block">
+                    <span className="sidebar-label">Runtime pipeline</span>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      
+                      {/* Step 1 */}
+                      <div style={{
+                        width: '100%', padding: '12px 16px', background: 'var(--surface-2)',
+                        border: '1px solid var(--border)', borderRadius: 6, display: 'flex', gap: 12, alignItems: 'center'
+                      }}>
+                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700 }}>1</div>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--white)' }}>Input Hook</div>
+                          <div style={{ fontSize: '0.625rem', color: 'var(--text-sec)' }}>Debounces text field change</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flowchart-line" style={{ '--delay': '0s' } as any} />
+
+                      {/* Step 2 */}
+                      <div style={{
+                        width: '100%', padding: '12px 16px', background: 'var(--surface-2)',
+                        border: '1px solid var(--border)', borderRadius: 6, display: 'flex', gap: 12, alignItems: 'center'
+                      }}>
+                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700 }}>2</div>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--white)' }}>Orchestrator</div>
+                          <div style={{ fontSize: '0.625rem', color: 'var(--text-sec)' }}>Runs local rules & guards</div>
+                        </div>
+                      </div>
+
+                      <div className="flowchart-line" style={{ '--delay': '0.5s' } as any} />
+
+                      {/* Step 3 */}
+                      <div style={{
+                        width: '100%', padding: '12px 16px', background: 'var(--surface-2)',
+                        border: '1px solid var(--border)', borderRadius: 6, display: 'flex', gap: 12, alignItems: 'center'
+                      }}>
+                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700 }}>3</div>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--white)' }}>Gemini API</div>
+                          <div style={{ fontSize: '0.625rem', color: 'var(--text-sec)' }}>Evaluates context semantic quality</div>
+                        </div>
+                      </div>
+
+                      <div className="flowchart-line" style={{ '--delay': '1s' } as any} />
+
+                      {/* Step 4 */}
+                      <div style={{
+                        width: '100%', padding: '12px 16px', background: 'var(--surface-2)',
+                        border: '1px solid var(--border)', borderRadius: 6, display: 'flex', gap: 12, alignItems: 'center'
+                      }}>
+                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700 }}>4</div>
+                        <div>
+                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--white)' }}>SDK Feedback</div>
+                          <div style={{ fontSize: '0.625rem', color: 'var(--text-sec)' }}>Renders suggestions inline</div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </aside>
+
+              </div>
             </div>
           )}
 
-          {/* Third-Party Auth UI Placeholders */}
-          <div style={{ marginTop: 32, borderTop: '1px solid var(--border)', paddingTop: 24 }}>
-            <div style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', textAlign: 'center', marginBottom: 16, letterSpacing: '0.05em' }}>
-              Or continue with
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <button className="btn btn-glass" style={{ fontSize: '0.8125rem' }} onClick={() => alert('OAuth flow is ready. Integration config missing.')}>
-                <span>GitHub</span>
+        </main>
+
+        {/* ══ Footer ══ */}
+        <footer className="app-footer">
+          <div>© {new Date().getFullYear()} Normy Validation Engine. Open-source under MIT License.</div>
+          <div style={{ display: 'flex', gap: 20 }}>
+            <a href="https://github.com/ChouatenY/Normy" target="_blank" rel="noreferrer">GitHub Repository</a>
+            <a href="#installation" onClick={(e) => { e.preventDefault(); setLandingSection('docs'); }}>Developer SDK Documentation</a>
+          </div>
+        </footer>
+
+        {/* ══ Auth Modal (Console Portal) ══ */}
+        {showAuthModal && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+            background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 99999,
+            padding: 24
+          }}>
+            <div className="auth-card" style={{ position: 'relative' }}>
+              
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setShowAuthModal(false)}
+                style={{
+                  position: 'absolute', top: 20, right: 20, background: 'none', border: 'none',
+                  color: 'var(--text-sec)', fontSize: '1.25rem', cursor: 'pointer'
+                }}
+              >
+                ✕
               </button>
-              <button className="btn btn-glass" style={{ fontSize: '0.8125rem' }} onClick={() => alert('OAuth flow is ready. Integration config missing.')}>
-                <span>Google</span>
-              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: 'center', marginBottom: 32 }}>
+                <img
+                  src="/logo.png"
+                  alt="Normy logo"
+                  style={{
+                    height: 24,
+                    width: 'auto',
+                    filter: theme === 'light' ? 'invert(1)' : 'none',
+                  }}
+                />
+                <span style={{ fontSize: '1.25rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--white)' }}>NORMY</span>
+              </div>
+
+              {authError && (
+                <div style={{ background: 'var(--red-bg)', border: '1px solid var(--red-border)', color: 'var(--red)', padding: 12, borderRadius: 6, fontSize: '0.8125rem', marginBottom: 20 }}>
+                  {authError}
+                </div>
+              )}
+
+              {authMessage && (
+                <div style={{ background: 'rgba(76, 175, 145, 0.1)', border: '1px solid rgba(76, 175, 145, 0.2)', color: 'var(--teal)', padding: 12, borderRadius: 6, fontSize: '0.8125rem', marginBottom: 20 }}>
+                  {authMessage}
+                </div>
+              )}
+
+              {/* Login / Register Forms */}
+              {authMode === 'login' ? (
+                <form onSubmit={handleLogin}>
+                  <div className="input-group">
+                    <label className="input-label">Email Address</label>
+                    <input type="email" required className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. dev@example.com" />
+                  </div>
+
+                  <div className="input-group" style={{ marginBottom: 24 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label className="input-label">Password</label>
+                      <span onClick={() => setAuthMode('forgot')} style={{ fontSize: '0.75rem', color: 'var(--text-sec)', cursor: 'pointer', marginBottom: 8 }}>Forgot?</span>
+                    </div>
+                    <input type="password" required className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 16 }}>
+                    <LiquidMetalButton label="Sign In" type="submit" />
+                  </div>
+
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-sec)', textAlign: 'center' }}>
+                    New to Normy? <span onClick={() => setAuthMode('register')} style={{ color: 'var(--white)', cursor: 'pointer', fontWeight: 600 }}>Create an account</span>
+                  </div>
+                </form>
+              ) : authMode === 'register' ? (
+                <form onSubmit={handleRegister}>
+                  <div className="input-group">
+                    <label className="input-label">Full Name</label>
+                    <input type="text" required className="input-field" value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Alex Dev" />
+                  </div>
+
+                  <div className="input-group">
+                    <label className="input-label">Email Address</label>
+                    <input type="email" required className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. dev@example.com" />
+                  </div>
+
+                  <div className="input-group" style={{ marginBottom: 24 }}>
+                    <label className="input-label">Password</label>
+                    <input type="password" required className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 16 }}>
+                    <LiquidMetalButton label="Create Account" type="submit" />
+                  </div>
+
+                  <div style={{ fontSize: '0.8125rem', color: 'var(--text-sec)', textAlign: 'center' }}>
+                    Already have an account? <span onClick={() => setAuthMode('login')} style={{ color: 'var(--white)', cursor: 'pointer', fontWeight: 600 }}>Sign In</span>
+                  </div>
+                </form>
+              ) : (
+                <div>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 12 }}>Reset Password</h3>
+                  <p style={{ fontSize: '0.8125rem', color: 'var(--text-sec)', marginBottom: 20 }}>Enter your email address and we will send you a password reset link.</p>
+                  <div className="input-group" style={{ marginBottom: 24 }}>
+                    <label className="input-label">Email Address</label>
+                    <input type="email" className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. dev@example.com" />
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <LiquidMetalButton label="Send Reset Link" type="submit" onClick={() => { setAuthMessage('Password reset link sent!'); setAuthMode('login'); }} />
+                    <button onClick={() => setAuthMode('login')} className="btn btn-glass" style={{ width: '100%' }}>Back to Login</button>
+                  </div>
+                </div>
+              )}
+
+              {/* OAuth Providers with Liquid Metal Button wrapper and Google / GitHub SVG Logos */}
+              <div style={{ marginTop: 32, borderTop: '1px solid var(--border)', paddingTop: 24 }}>
+                <div style={{ fontSize: '0.6875rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', textAlign: 'center', marginBottom: 16, letterSpacing: '0.05em' }}>
+                  Or continue with
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <LiquidMetalButton
+                    label="GitHub"
+                    onClick={() => alert('OAuth flow is ready. Integration config missing.')}
+                    icon={<GitHubLogo />}
+                  />
+                  <LiquidMetalButton
+                    label="Google"
+                    onClick={() => alert('OAuth flow is ready. Integration config missing.')}
+                    icon={<GoogleLogo />}
+                  />
+                </div>
+              </div>
+
             </div>
           </div>
+        )}
 
-        </div>
       </div>
     );
   }
 
-  // --- Render Dashboard Shell ---
+  // --- Render Dashboard Shell (Authenticated Developer State) ---
   return (
     <div className="dashboard-shell">
       
       {/* ── Navigation Sidebar ── */}
       <aside className="sidebar">
         <div className="sidebar-logo">
-          <div style={{
-            width: 24,
-            height: 24,
-            borderRadius: 6,
-            background: 'var(--white)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontWeight: 800,
-            fontSize: '0.75rem',
-            color: 'var(--black)',
-            letterSpacing: '-0.04em'
-          }}>N</div>
-          <span>NORMY CONSOLE</span>
+          <img
+            src="/logo.png"
+            alt="Normy logo"
+            style={{
+              height: 20,
+              width: 'auto',
+              filter: theme === 'light' ? 'invert(1)' : 'none',
+              transition: 'filter 0.3s ease'
+            }}
+          />
+          <span style={{ fontSize: '0.9375rem', fontWeight: 800, letterSpacing: '-0.02em' }}>NORMY CONSOLE</span>
         </div>
 
         <nav style={{ flex: 1 }}>
-          <button onClick={() => setActiveSection('overview')} className={`nav-link ${activeSection === 'overview' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%' }}>
+          <button onClick={() => setActiveSection('overview')} className={`nav-link ${activeSection === 'overview' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
             <span>Overview</span>
           </button>
-          <button onClick={() => setActiveSection('projects')} className={`nav-link ${activeSection === 'projects' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%' }}>
+          <button onClick={() => setActiveSection('projects')} className={`nav-link ${activeSection === 'projects' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
             <span>Projects</span>
           </button>
-          <button onClick={() => setActiveSection('keys')} className={`nav-link ${activeSection === 'keys' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%' }}>
+          <button onClick={() => setActiveSection('keys')} className={`nav-link ${activeSection === 'keys' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
             <span>API Keys</span>
           </button>
-          <button onClick={() => setActiveSection('docs')} className={`nav-link ${activeSection === 'docs' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%' }}>
+          <button onClick={() => setActiveSection('docs')} className={`nav-link ${activeSection === 'docs' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
             <span>Documentation</span>
           </button>
-          <button onClick={() => setActiveSection('playground')} className={`nav-link ${activeSection === 'playground' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%' }}>
+          <button onClick={() => setActiveSection('playground')} className={`nav-link ${activeSection === 'playground' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
             <span>Playground</span>
           </button>
-          <button onClick={() => setActiveSection('settings')} className={`nav-link ${activeSection === 'settings' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%' }}>
+          <button onClick={() => setActiveSection('settings')} className={`nav-link ${activeSection === 'settings' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
             <span>Settings</span>
           </button>
         </nav>
@@ -399,7 +712,7 @@ export default function AppMain() {
         {/* User profile footer */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8125rem' }}>
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8125rem', color: 'var(--black)' }}>
               {name.charAt(0).toUpperCase() || 'U'}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -457,22 +770,28 @@ export default function AppMain() {
               </div>
             )}
 
-            {/* Theme Toggle Button */}
+            {/* Shimmering Liquid Metal theme switcher button for Authenticated console */}
             <button
               onClick={toggleTheme}
               style={{
                 width: 32,
                 height: 32,
                 borderRadius: '50%',
-                background: 'var(--surface-1)',
-                border: '1px solid var(--border)',
+                background: 'linear-gradient(135deg, #111 0%, #333 50%, #111 100%)',
+                backgroundSize: '200% 200%',
+                animation: 'lm-shimmer 4s linear infinite',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: 'var(--white)',
-                fontSize: '0.875rem'
+                color: '#fff',
+                fontSize: '0.8125rem',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
+                transition: 'transform 0.15s ease'
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
             >
               {theme === 'dark' ? '☀️' : '🌙'}
             </button>
@@ -500,7 +819,7 @@ export default function AppMain() {
                   title="App Setup"
                   lang="tsx"
                   code={`import { NormyProvider } from '@normy-validation/react';
-
+ 
 <NormyProvider apiKey="${apiKeys.find(k => k.environment === 'development')?.prefix || 'nrm_test_xxxxxx'}" projectId="${selectedProject?.id || 'proj_xxxx'}">
   <textarea />
 </NormyProvider>`}

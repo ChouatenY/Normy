@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { CodeBlock } from './CodeBlock';
+import { CodeBlock } from './CodeBlock.js';
 
 interface PlaygroundViewProps {
   apiKey?: string;

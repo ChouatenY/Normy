@@ -35,7 +35,7 @@ class MockAuthService {
     }
   }
 
-  async signUp({ email, password, options }: any) {
+  async signUp({ email, options }: any) {
     const { user } = this.getStorage();
     if (user && user.email === email) {
       return { data: { user: null }, error: { message: 'User already exists' } };
@@ -76,7 +76,7 @@ class MockAuthService {
     return { data: { user: newUser }, error: null };
   }
 
-  async signInWithPassword({ email, password }: any) {
+  async signInWithPassword({ email }: any) {
     const { user } = this.getStorage();
     if (!user || user.email !== email) {
       return { data: { user: null }, error: { message: 'Invalid credentials or user not found' } };
@@ -101,7 +101,7 @@ class MockAuthService {
     return { data: { user }, error: null };
   }
 
-  async updateUser({ data, password }: any) {
+  async updateUser({ data }: any) {
     const { user } = this.getStorage();
     if (!user) return { data: { user: null }, error: { message: 'Not authenticated' } };
     if (data?.name) user.user_metadata = { ...user.user_metadata, name: data.name };

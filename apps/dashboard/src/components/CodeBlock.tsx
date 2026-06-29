@@ -8,7 +8,7 @@ interface CodeBlockProps {
   lang?: string;
 }
 
-export function CodeBlock({ title, code, lang = 'tsx' }: CodeBlockProps) {
+export function CodeBlock({ title, code, lang: _lang = 'tsx' }: CodeBlockProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
