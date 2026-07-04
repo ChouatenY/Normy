@@ -428,6 +428,19 @@ export default function AppMain() {
                 {/* 3D Background behind the folder gallery */}
                 <AiHeroBackground intensity={activeFormTab ? 'high' : 'normal'} />
 
+                {/* Dark overlay to dim the background when a form is active */}
+                <motion.div
+                  animate={{ opacity: activeFormTab ? 0.7 : 0 }}
+                  transition={{ duration: 0.5 }}
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: '#000000',
+                    zIndex: 1,
+                    pointerEvents: 'none'
+                  }}
+                />
+
                 {/* Top gradient overlay — fades from dark to transparent, matching hero bottom */}
                 <div style={{
                   position: 'absolute',
@@ -467,7 +480,7 @@ export default function AppMain() {
                   <motion.div
                     animate={{
                       flex: activeFormTab ? "0 0 320px" : "1 1 auto",
-                      opacity: activeFormTab ? 0.85 : 1,
+                      opacity: activeFormTab ? 0.45 : 1,
                     }}
                     transition={{ type: "spring", stiffness: 200, damping: 25 }}
                     style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "500px", cursor: activeFormTab ? "pointer" : "default" }}
