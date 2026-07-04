@@ -16,7 +16,7 @@ COPY packages/shared packages/shared
 COPY packages/validation-core packages/validation-core
 
 ENV NODE_ENV=production
-ENV PORT=3001
-EXPOSE 3001
+ENV PORT=5000
+EXPOSE 5000
 
 CMD ["pnpm", "--filter", "@normy/api", "start"]
