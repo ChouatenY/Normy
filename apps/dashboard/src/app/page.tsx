@@ -20,6 +20,7 @@ import { FeedbackForm } from '../components/FeedbackForm.js';
 import { GovernmentForm } from '../components/GovernmentForm.js';
 import { SurveyForm } from '../components/SurveyForm.js';
 import { NormyProvider } from '@normy-validation/react';
+import { Features } from '../components/ui/features-6.js';
 
 type ActiveSection = 'overview' | 'projects' | 'keys' | 'docs' | 'playground' | 'settings';
 
@@ -406,6 +407,9 @@ export default function AppMain() {
                   }
                 }}
               />
+
+              {/* ── Features Ecosystem Section ── */}
+              <Features />
 
               {/* ── Interactive Folder Gallery ── */}
               <motion.div 
