@@ -1349,7 +1349,7 @@ export default function AppMain() {
             </div>
 
             {/* BYOK Section */}
-            <div className="card-glass" style={{ maxWidth: 800 }}>
+            <div className="card-glass" style={{ width: '100%' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                 <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)' }}>Bring Your Own Key (BYOK)</h3>
                 {!showByokForm && (
@@ -1438,15 +1438,24 @@ export default function AppMain() {
                               showAlert('Prominent Provider Updated', `${key.title} is now your prominent default key.`);
                             }
                           }}
-                          style={{
+                          className={isProminent ? 'btn-liquid-metal' : 'btn btn-glass'}
+                          style={isProminent ? {
+                            width: 36, height: 36, borderRadius: 8, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', padding: 1, margin: 0
+                          } : {
                             width: 36, height: 36, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            background: isProminent ? 'var(--teal)' : 'var(--glass-bg)',
-                            border: `1px solid ${isProminent ? 'var(--teal)' : 'var(--glass-border)'}`,
-                            color: isProminent ? '#fff' : 'var(--text-sec)',
-                            cursor: 'pointer', transition: 'all 0.2s'
+                            background: 'var(--glass-bg)',
+                            border: '1px solid var(--glass-border)',
+                            color: 'var(--text-sec)',
+                            cursor: 'pointer', transition: 'all 0.2s', padding: 0
                           }}
                         >
-                          <Star size={16} fill={isProminent ? '#fff' : 'none'} />
+                          {isProminent ? (
+                            <div className="btn-liquid-metal-inner" style={{ padding: 0, width: '100%', height: '100%', borderRadius: 7 }}>
+                              <Star size={16} fill="#fff" />
+                            </div>
+                          ) : (
+                            <Star size={16} fill="none" />
+                          )}
                         </button>
                         <button className="btn btn-glass" style={{ padding: 0, width: 36, height: 36 }} onClick={() => { setByokForm(key); setShowByokForm(true); }}>
                           <Edit2 size={16} />
@@ -1538,15 +1547,11 @@ export default function AppMain() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 28 }}>
                 <div className="input-group" style={{ marginBottom: 0 }}>
                   <label className="input-label">Default Model</label>
-                  <select
-                    className="input-field"
+                  <CustomSelect
                     value={projProvider}
-                    onChange={(e) => setProjProvider(e.target.value as any)}
-                  >
-                    <option value="gemini">Gemini AI</option>
-                    <option value="openai">OpenAI GPT</option>
-                    <option value="anthropic">Anthropic</option>
-                  </select>
+                    onChange={(val) => setProjProvider(val as any)}
+                    options={[{label: 'Gemini AI', value: 'gemini'}, {label: 'OpenAI GPT', value: 'openai'}, {label: 'Anthropic', value: 'anthropic'}]}
+                  />
                 </div>
 
                 <div className="input-group" style={{ marginBottom: 0 }}>
@@ -1560,6 +1565,19 @@ export default function AppMain() {
                     onChange={(e) => setProjMinScore(Number(e.target.value))}
                   />
                 </div>
+              </div>
+
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)', borderRadius: 8, padding: 16, marginBottom: 28, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                  <AlertCircle size={16} color="var(--teal)" style={{ marginTop: 2 }} />
+                  <div>
+                    <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--white)', display: 'block', marginBottom: 4 }}>BYOK Configuration Required</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-sec)', lineHeight: 1.4 }}>If you do not have sufficient live credits, ensure you have set up a custom API key (BYOK) for {projProvider === 'gemini' ? 'Google Gemini' : projProvider === 'openai' ? 'OpenAI' : 'Anthropic'} before executing live validations.</span>
+                  </div>
+                </div>
+                <button type="button" className="btn btn-glass" style={{ alignSelf: 'flex-start', padding: '6px 12px', fontSize: '0.75rem' }} onClick={() => { setShowProjModal(false); setActiveSection('billing'); }}>
+                  Setup BYOK Now
+                </button>
               </div>
 
               <div style={{ display: 'flex', gap: 12 }}>
