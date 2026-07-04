@@ -24,6 +24,7 @@ import { Features } from '../components/ui/features-6.js';
 import ContributorsWallDemo from '../components/ui/contributors-section.js';
 import { LayoutDashboard, FolderKanban, KeyRound, BookOpenText, CodeXml, Settings2, CreditCard, AlertCircle, Plus, Edit2, Trash2, PanelLeftClose, Star } from 'lucide-react';
 import { CustomSelect } from '../components/ui/custom-select.js';
+import { EmptyProjectsState } from '../components/ui/empty-projects.js';
 
 type ActiveSection = 'overview' | 'projects' | 'keys' | 'docs' | 'playground' | 'settings' | 'billing';
 
@@ -951,6 +952,10 @@ export default function AppMain() {
         {/* ── Overview Section ── */}
         {activeSection === 'overview' && (
           <div>
+            {!isLoadingProjects && projects.length === 0 ? (
+              <EmptyProjectsState onCreateProject={() => { setActiveSection('projects'); openCreateProject(); }} />
+            ) : (
+              <>
             {/* Quick start banner if no validation activity */}
             <div className="card-glass" style={{ background: 'linear-gradient(90deg, rgba(255,255,255,0.01) 0%, rgba(255,255,255,0.03) 100%)' }}>
               <h3 style={{ fontSize: '1.125rem', fontWeight: 800, marginBottom: 8, color: 'var(--white)' }}>
@@ -970,7 +975,7 @@ export default function AppMain() {
                   lang="tsx"
                   code={`import { NormyProvider } from '@normy-validation/react';
  
-<NormyProvider apiKey="${apiKeys.find(k => k.environment === 'development')?.prefix || 'nrm_test_xxxxxx'}" projectId="${selectedProject?.id || 'proj_xxxx'}">
+<NormyProvider apiKey="${apiKeys.find(k => k.environment === 'development')?.keyPrefix || 'nrm_test_xxxxxx'}" projectId="${selectedProject?.id || 'proj_xxxx'}">
   <textarea />
 </NormyProvider>`}
                 />
@@ -1085,6 +1090,8 @@ export default function AppMain() {
                 </div>
               </div>
             </div>
+            </>
+            )}
           </div>
         )}
 
@@ -1097,6 +1104,9 @@ export default function AppMain() {
               </button>
             </div>
 
+            {!isLoadingProjects && projects.length === 0 ? (
+              <EmptyProjectsState onCreateProject={openCreateProject} />
+            ) : (
             <div className="card-glass" style={{ padding: 0 }}>
               <div className="table-container">
                 <table className="data-table">
@@ -1133,6 +1143,7 @@ export default function AppMain() {
                 </table>
               </div>
             </div>
+            )}
           </div>
         )}
 
@@ -1285,7 +1296,7 @@ export default function AppMain() {
         {activeSection === 'docs' && (
           <InteractiveDocs
             projectId={selectedProject?.id || 'proj_example'}
-            apiKey={apiKeys.find(k => !k.revokedAt)?.prefix || 'nrm_live_xxxxxxxx'}
+            apiKey={apiKeys.find(k => !k.revokedAt)?.keyPrefix || 'nrm_live_xxxxxxxx'}
           />
         )}
 
@@ -1293,7 +1304,7 @@ export default function AppMain() {
         {activeSection === 'playground' && (
           <PlaygroundView
             projectId={selectedProject?.id || 'proj_example'}
-            apiKey={apiKeys.find(k => !k.revokedAt)?.prefix || 'nrm_test_xxxx'}
+            apiKey={apiKeys.find(k => !k.revokedAt)?.keyPrefix || 'nrm_test_xxxx'}
           />
         )}
 
