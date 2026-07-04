@@ -6,7 +6,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: 3001
-      DATABASE_URL: postgresql://normy:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-normy}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://normy:${POSTGRES_PASSWORD:-change-me}@postgres:5432/${POSTGRES_DB:-normy}}
       REDIS_URL: redis://redis:6379
       API_SECRET: ${API_SECRET:?API_SECRET is required}
       AI_PROVIDER: ${AI_PROVIDER:-gemini}
