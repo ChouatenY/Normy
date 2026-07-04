@@ -22,7 +22,7 @@ import { SurveyForm } from '../components/SurveyForm.js';
 import { NormyProvider } from '@normy-validation/react';
 import { Features } from '../components/ui/features-6.js';
 import ContributorsWallDemo from '../components/ui/contributors-section.js';
-import { LayoutDashboard, FolderKanban, KeyRound, BookOpenText, CodeXml, Settings2, CreditCard, Sun, Moon, AlertCircle, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, KeyRound, BookOpenText, CodeXml, Settings2, CreditCard, Sun, Moon, AlertCircle, ChevronLeft, ChevronRight, Star, PanelLeftClose, Plus, Edit2, Trash2 } from 'lucide-react';
 import { CustomSelect } from '../components/ui/custom-select.js';
 
 type ActiveSection = 'overview' | 'projects' | 'keys' | 'docs' | 'playground' | 'settings' | 'billing';
@@ -37,6 +37,10 @@ export default function AppMain() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // BYOK Form state
+  const [showByokForm, setShowByokForm] = useState(false);
+  const [byokForm, setByokForm] = useState<{ id?: string; provider: 'gemini' | 'openai' | 'anthropic'; title: string; key: string }>({ provider: 'gemini', title: '', key: '' });
 
   // Landing Page vs Interactive Docs switcher (for non-logged-in users)
   const [landingSection, setLandingSection] = useState<'sandbox' | 'docs'>('sandbox');
@@ -778,16 +782,20 @@ export default function AppMain() {
       
       {/* ── Navigation Sidebar ── */}
       <aside className="sidebar" style={{ width: isSidebarCollapsed ? 80 : 260, transition: 'width 0.3s ease', overflow: 'hidden' }}>
-        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: isSidebarCollapsed ? 'center' : 'space-between', paddingBottom: 24, borderBottom: '1px solid var(--border)', marginBottom: 24 }}>
-          {!isSidebarCollapsed && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <img src="/logo.png" alt="Normy logo" style={{ height: 20, width: 'auto', filter: theme === 'light' ? 'invert(1)' : 'none' }} />
-              <span style={{ fontSize: '0.9375rem', fontWeight: 800, letterSpacing: '-0.02em', whiteSpace: 'nowrap', color: 'var(--white)' }}>NORMY CONSOLE</span>
-            </div>
+        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: isSidebarCollapsed ? 'center' : 'space-between', paddingBottom: 24, borderBottom: '1px solid var(--border)', marginBottom: 24, cursor: isSidebarCollapsed ? 'pointer' : 'default' }} onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+          {isSidebarCollapsed ? (
+            <img src="/logo.png" alt="Normy logo" style={{ height: 24, width: 'auto', filter: theme === 'light' ? 'invert(1)' : 'none' }} />
+          ) : (
+            <>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <img src="/logo.png" alt="Normy logo" style={{ height: 20, width: 'auto', filter: theme === 'light' ? 'invert(1)' : 'none' }} />
+                <span style={{ fontSize: '0.9375rem', fontWeight: 800, letterSpacing: '-0.02em', whiteSpace: 'nowrap', color: 'var(--white)' }}>NORMY CONSOLE</span>
+              </div>
+              <button onClick={() => setIsSidebarCollapsed(true)} style={{ background: 'none', border: 'none', color: 'var(--text-sec)', cursor: 'pointer' }}>
+                <PanelLeftClose size={18} />
+              </button>
+            </>
           )}
-          <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-sec)', cursor: 'pointer' }}>
-            {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
-          </button>
         </div>
 
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -1342,62 +1350,118 @@ export default function AppMain() {
 
             {/* BYOK Section */}
             <div className="card-glass" style={{ maxWidth: 800 }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)', marginBottom: 8 }}>Bring Your Own Key (BYOK)</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)' }}>Bring Your Own Key (BYOK)</h3>
+                {!showByokForm && (
+                  <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.8125rem' }} onClick={() => { setByokForm({ provider: 'gemini', title: '', key: '' }); setShowByokForm(true); }}>
+                    <Plus size={14} /> Add Key
+                  </button>
+                )}
+              </div>
               <p style={{ color: 'var(--text-sec)', fontSize: '0.875rem', marginBottom: 24, lineHeight: 1.5 }}>
-                Bypass Normy's hosted billing entirely by supplying your own API keys. We proxy your validations directly to your provider and never bill you for token usage. Click the star icon to set your prominent default provider.
+                Bypass Normy's hosted billing entirely by supplying your own API keys. Add multiple custom keys for Gemini, OpenAI, or Anthropic, and set one as your prominent default provider.
               </p>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24, marginBottom: 24 }}>
-                {['gemini', 'openai', 'anthropic'].map((provider) => {
-                  const title = provider === 'gemini' ? 'Google Gemini' : provider === 'openai' ? 'OpenAI' : 'Anthropic';
-                  const isProminent = selectedProject?.defaultProvider === provider;
-                  const savedKey = (selectedProject as any)?.[`${provider}ApiKey`];
-                  
+
+              {showByokForm && (
+                <div style={{ background: 'var(--surface-1)', padding: 20, borderRadius: 12, marginBottom: 24, border: '1px solid var(--border)' }}>
+                  <h4 style={{ fontSize: '0.9375rem', fontWeight: 600, color: 'var(--white)', marginBottom: 16 }}>{byokForm.id ? 'Edit BYOK Key' : 'Add New BYOK Key'}</h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+                    <div className="input-group" style={{ marginBottom: 0 }}>
+                      <label className="input-label">Provider</label>
+                      <CustomSelect
+                        value={byokForm.provider}
+                        onChange={(val) => setByokForm({ ...byokForm, provider: val as any })}
+                        options={[{label: 'Google Gemini', value: 'gemini'}, {label: 'OpenAI', value: 'openai'}, {label: 'Anthropic', value: 'anthropic'}]}
+                      />
+                    </div>
+                    <div className="input-group" style={{ marginBottom: 0 }}>
+                      <label className="input-label">Key Title</label>
+                      <input type="text" className="input-field" value={byokForm.title} onChange={(e) => setByokForm({ ...byokForm, title: e.target.value })} placeholder="e.g. Prod Gemini Key" />
+                    </div>
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">API Key</label>
+                    <input type="password" className="input-field" value={byokForm.key} onChange={(e) => setByokForm({ ...byokForm, key: e.target.value })} placeholder="sk-..." />
+                  </div>
+                  <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                    <button className="btn btn-glass" onClick={() => setShowByokForm(false)}>Cancel</button>
+                    <button className="btn btn-primary" onClick={async () => {
+                      if (!byokForm.title || !byokForm.key) {
+                        showAlert('Error', 'Please provide a title and API key.');
+                        return;
+                      }
+                      if (selectedProject) {
+                        let updatedKeys = [...(selectedProject.byokKeys || [])];
+                        if (byokForm.id) {
+                          updatedKeys = updatedKeys.map(k => k.id === byokForm.id ? { ...byokForm, id: k.id! } : k);
+                        } else {
+                          updatedKeys.push({ ...byokForm, id: 'byok_' + Math.random().toString(36).substr(2, 9) });
+                        }
+                        const updated = await DbService.updateProject(selectedProject.id, { byokKeys: updatedKeys });
+                        if (updated) setSelectedProject(updated);
+                        setShowByokForm(false);
+                        showAlert('Success', 'BYOK Key saved successfully.');
+                      }
+                    }}>Save Key</button>
+                  </div>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {(selectedProject?.byokKeys || []).length === 0 && !showByokForm && (
+                  <div style={{ padding: 32, textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px dashed var(--border-hi)' }}>
+                    <p style={{ color: 'var(--text-sec)', fontSize: '0.875rem' }}>No custom keys configured yet.</p>
+                  </div>
+                )}
+                {(selectedProject?.byokKeys || []).map((key) => {
+                  const isProminent = selectedProject?.activeByokId === key.id;
+                  const providerName = key.provider === 'gemini' ? 'Google Gemini' : key.provider === 'openai' ? 'OpenAI' : 'Anthropic';
                   return (
-                    <div key={provider} style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
-                      <div className="input-group" style={{ flex: 1, marginBottom: 0 }}>
-                        <label className="input-label">{title} API Key</label>
-                        <input 
-                          type="password" 
-                          placeholder={savedKey ? "••••••••••••••••••••••••" : `Enter ${title} Key...`}
-                          className="input-field"
-                          id={`byok-${provider}`}
-                        />
+                    <div key={key.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, background: 'var(--surface-1)', border: '1px solid var(--border)', borderRadius: 12 }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--white)' }}>{key.title}</span>
+                          <span style={{ fontSize: '0.625rem', background: 'var(--surface-3)', padding: '2px 6px', borderRadius: 4, color: 'var(--text-sec)', textTransform: 'uppercase', fontWeight: 700 }}>{providerName}</span>
+                          {isProminent && <span style={{ fontSize: '0.625rem', background: 'rgba(76,175,145,0.1)', color: 'var(--teal)', border: '1px solid rgba(76,175,145,0.2)', padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase', fontWeight: 700 }}>Prominent</span>}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', fontFamily: 'var(--mono)' }}>
+                          ••••••••••••••••{key.key.slice(-4)}
+                        </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button 
-                          className="btn btn-glass"
-                          onClick={async () => {
-                            const val = (document.getElementById(`byok-${provider}`) as HTMLInputElement).value;
-                            if (val && selectedProject) {
-                              const update = { [`${provider}ApiKey`]: val };
-                              const updated = await DbService.updateProject(selectedProject.id, update);
-                              if (updated) setSelectedProject(updated);
-                              showAlert('BYOK Updated', `Successfully saved custom API key for ${title}.`);
-                              (document.getElementById(`byok-${provider}`) as HTMLInputElement).value = '';
-                            }
-                          }}
-                        >
-                          Save
-                        </button>
                         <button
-                          title="Set as Prominent Provider"
+                          title="Set as Prominent Key"
                           onClick={async () => {
                             if (selectedProject) {
-                              const updated = await DbService.updateProject(selectedProject.id, { defaultProvider: provider as any });
+                              const updated = await DbService.updateProject(selectedProject.id, { activeByokId: key.id, defaultProvider: key.provider });
                               if (updated) setSelectedProject(updated);
-                              showAlert('Prominent Provider Updated', `Validations will now route through ${title} by default.`);
+                              showAlert('Prominent Provider Updated', `${key.title} is now your prominent default key.`);
                             }
                           }}
                           style={{
-                            width: 44, height: 44, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            width: 36, height: 36, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
                             background: isProminent ? 'var(--teal)' : 'var(--glass-bg)',
                             border: `1px solid ${isProminent ? 'var(--teal)' : 'var(--glass-border)'}`,
                             color: isProminent ? '#fff' : 'var(--text-sec)',
                             cursor: 'pointer', transition: 'all 0.2s'
                           }}
                         >
-                          <Star size={18} fill={isProminent ? '#fff' : 'none'} />
+                          <Star size={16} fill={isProminent ? '#fff' : 'none'} />
+                        </button>
+                        <button className="btn btn-glass" style={{ padding: 0, width: 36, height: 36 }} onClick={() => { setByokForm(key); setShowByokForm(true); }}>
+                          <Edit2 size={16} />
+                        </button>
+                        <button className="btn btn-glass" style={{ padding: 0, width: 36, height: 36, color: '#ef4444' }} onClick={async () => {
+                          if (selectedProject) {
+                            const updatedKeys = selectedProject.byokKeys!.filter(k => k.id !== key.id);
+                            const updated = await DbService.updateProject(selectedProject.id, { 
+                              byokKeys: updatedKeys,
+                              ...(selectedProject.activeByokId === key.id ? { activeByokId: undefined } : {})
+                            });
+                            if (updated) setSelectedProject(updated);
+                          }
+                        }}>
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </div>

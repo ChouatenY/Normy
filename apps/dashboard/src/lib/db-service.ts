@@ -1,3 +1,10 @@
+export interface ByokKey {
+  id: string;
+  provider: 'gemini' | 'openai' | 'anthropic';
+  title: string;
+  key: string;
+}
+
 export interface Project {
   id: string;
   userId: string;
@@ -9,9 +16,8 @@ export interface Project {
   status: 'active' | 'suspended';
   validationCount: number;
   createdAt: string;
-  geminiApiKey?: string;
-  openaiApiKey?: string;
-  anthropicApiKey?: string;
+  byokKeys?: ByokKey[];
+  activeByokId?: string;
 }
 
 export interface ApiKey {
