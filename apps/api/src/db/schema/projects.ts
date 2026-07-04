@@ -12,10 +12,10 @@ import {
   text,
   integer,
   boolean,
-  timestamp,
   jsonb,
   index,
   uniqueIndex,
+  numeric,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { users } from './users.js';
@@ -93,6 +93,22 @@ export const projects = pgTable(
     defaultProvider: aiProviderEnum('default_provider')
       .notNull()
       .default('gemini'),
+
+    // Bring Your Own Key (BYOK)
+    geminiApiKey: text('gemini_api_key'),
+    openaiApiKey: text('openai_api_key'),
+    anthropicApiKey: text('anthropic_api_key'),
+
+    // ── Billing & Credits (Normy Hosted AI) ────────────────────────────────────
+    /** Test/Sandbox credits (in USD). Starts at $5.00 for free dev testing */
+    testCreditsBalance: numeric('test_credits_balance', { precision: 10, scale: 4 })
+      .notNull()
+      .default('5.0000'),
+
+    /** Live production credits (in USD) */
+    liveCreditsBalance: numeric('live_credits_balance', { precision: 10, scale: 4 })
+      .notNull()
+      .default('0.0000'),
 
     // ── Settings (flexible JSONB) ──────────────────────────────────────────────
     settings: jsonb('settings')

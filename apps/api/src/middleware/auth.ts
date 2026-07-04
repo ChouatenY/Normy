@@ -9,6 +9,7 @@ export interface AuthContext {
   Variables: {
     project: Project;
     apiKeyId: string;
+    apiKeyEnvironment: 'development' | 'production';
   };
 }
 
@@ -104,6 +105,7 @@ export const apiKeyAuth = createMiddleware<AuthContext>(async (c, next) => {
     // Bind to request context
     c.set('project', apiKeyRecord.project);
     c.set('apiKeyId', apiKeyRecord.id);
+    c.set('apiKeyEnvironment', apiKeyRecord.environment || 'development');
 
     // Update usage metadata asynchronously to avoid blocking the request path
     db.update(apiKeys)

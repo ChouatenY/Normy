@@ -282,7 +282,28 @@ app.openapi(validateRoute, async (c) => {
 
   const sessionId = c.req.header('x-session-id') || null;
   const promptVersion = body.promptVersion || (project.settings as any)?.defaultPromptVersion || 'quality-v1';
-  const providerName = project.defaultProvider || env.AI_PROVIDER || 'gemini';
+  const providerName = (project as any).defaultProvider || env.AI_PROVIDER || 'gemini';
+  const apiKeyEnv = c.get('apiKeyEnvironment');
+
+  // BYOK & Billing Check
+  const isBYOK = providerName === 'gemini' ? !!(project as any).geminiApiKey :
+                 providerName === 'openai' ? !!(project as any).openaiApiKey :
+                 providerName === 'anthropic' ? !!(project as any).anthropicApiKey : false;
+
+  const activeProviderKey = isBYOK ? 
+    (providerName === 'gemini' ? (project as any).geminiApiKey :
+     providerName === 'openai' ? (project as any).openaiApiKey :
+     providerName === 'anthropic' ? (project as any).anthropicApiKey : null) :
+    (providerName === 'gemini' ? env.GEMINI_API_KEY : '');
+
+  if (!isBYOK) {
+    // Hosted by Normy, check credits
+    const balanceStr = apiKeyEnv === 'production' ? (project as any).liveCreditsBalance : (project as any).testCreditsBalance;
+    const balance = parseFloat(balanceStr as string || '0');
+    if (isNaN(balance) || balance <= 0) {
+      return c.json({ error: `Insufficient ${apiKeyEnv} credits. Please top up your balance or provide your own API key (BYOK).` }, 402);
+    }
+  }
 
   // 1. Check Redis Cache
   const cacheKey = `validation_cache:${crypto.createHash('sha256').update(
@@ -378,7 +399,7 @@ app.openapi(validateRoute, async (c) => {
 
   const provider = new GeminiProvider({
     provider: 'gemini',
-    apiKey: env.GEMINI_API_KEY || '',
+    apiKey: activeProviderKey || '',
   });
   
   const pipeline = new OrchestratorPipeline(
@@ -481,8 +502,21 @@ app.openapi(validateRoute, async (c) => {
         latencyMs,
         provider: 'gemini',
         model: 'gemini-2.5-flash',
+        billedToUser: !isBYOK,
       },
     }).catch(err => console.error('Failed to log token_analytics event:', err));
+
+    // Deduct cost from project balance
+    if (!isBYOK) {
+      const balanceField = apiKeyEnv === 'production' ? 'liveCreditsBalance' : 'testCreditsBalance';
+      const currentBalance = parseFloat((project as any)[balanceField] as string || '0');
+      const newBalance = Math.max(0, currentBalance - cost).toFixed(4);
+      
+      await db.update(projects)
+        .set({ [balanceField]: newBalance })
+        .where(eq(projects.id, project.id))
+        .catch(err => console.error('Failed to deduct project credits:', err));
+    }
   }
 
   // 8. Record improvement event if applicable
