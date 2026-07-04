@@ -1107,7 +1107,7 @@ export default function AppMain() {
             {selectedProject ? (
               <div>
                 {/* Generate New API Key Panel */}
-                <div className="card-glass">
+                <div className="card-glass" style={{ position: 'relative', zIndex: 10 }}>
                   <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 16, color: 'var(--white)' }}>
                     Generate API Credentials for: <span style={{ textDecoration: 'underline' }}>{selectedProject.name}</span>
                   </h3>

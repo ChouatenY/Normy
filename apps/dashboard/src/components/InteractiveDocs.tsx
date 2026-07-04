@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { LiquidMetalButton } from './LiquidMetalButton.js';
+import { CustomSelect } from './ui/custom-select.js';
 
 interface InteractiveDocsProps {
   projectId?: string;
@@ -132,6 +133,10 @@ npm install @normy-validation/react    # React SDK
 npm install @normy/js        # Vanilla JS SDK
 \`\`\`
 
+> **🔒 Security Note (BYOK)**: 
+> You MUST use your **Normy API Key** (e.g., \`nrm_...\`) generated in the API Keys tab in your code. 
+> **NEVER** expose your raw OpenAI, Gemini, or Anthropic keys in your frontend code! Normy securely proxies validation requests to your configured providers automatically on the backend using the BYOK keys you save in your Dashboard.
+
 ## Quick Integration Pattern
 
 ### React (Recommended)
@@ -238,49 +243,33 @@ curl -X POST ${apiHostUrl}/validate \\
           {/* AI Provider Switcher */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.04em' }}>AI Provider:</span>
-            <select
-              value={provider}
-              onChange={(e) => setProvider(e.target.value as any)}
-              style={{
-                background: '#070707',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 6,
-                padding: '6px 12px',
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="gemini">Gemini (Default)</option>
-              <option value="openai">OpenAI GPT</option>
-              <option value="anthropic">Anthropic Claude</option>
-            </select>
+            <div style={{ width: 170, zIndex: 100 }}>
+              <CustomSelect
+                value={provider}
+                onChange={(val) => setProvider(val as any)}
+                options={[
+                  { label: 'Gemini (Default)', value: 'gemini' },
+                  { label: 'OpenAI GPT', value: 'openai' },
+                  { label: 'Anthropic Claude', value: 'anthropic' }
+                ]}
+              />
+            </div>
           </div>
 
           {/* Framework Switcher */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Framework:</span>
-            <select
-              value={framework}
-              onChange={(e) => setFramework(e.target.value as any)}
-              style={{
-                background: '#070707',
-                color: '#fff',
-                border: '1px solid rgba(255,255,255,0.15)',
-                borderRadius: 6,
-                padding: '6px 12px',
-                fontSize: '0.8125rem',
-                fontWeight: 700,
-                outline: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              <option value="react">React SDK</option>
-              <option value="nextjs">Next.js</option>
-              <option value="vanillajs">Vanilla JS</option>
-            </select>
+            <div style={{ width: 150, zIndex: 100 }}>
+              <CustomSelect
+                value={framework}
+                onChange={(val) => setFramework(val as any)}
+                options={[
+                  { label: 'React SDK', value: 'react' },
+                  { label: 'Next.js', value: 'nextjs' },
+                  { label: 'Vanilla JS', value: 'vanillajs' }
+                ]}
+              />
+            </div>
           </div>
         </div>
 
