@@ -22,7 +22,7 @@ import { SurveyForm } from '../components/SurveyForm.js';
 import { NormyProvider } from '@normy-validation/react';
 import { Features } from '../components/ui/features-6.js';
 import ContributorsWallDemo from '../components/ui/contributors-section.js';
-import { LayoutDashboard, FolderKanban, KeyRound, BookOpenText, CodeXml, Settings2, CreditCard, AlertCircle, Plus, Edit2, Trash2, PanelLeftClose, Star } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, KeyRound, BookOpenText, CodeXml, Settings2, CreditCard, AlertCircle, Plus, Edit2, PanelLeftClose, Star } from 'lucide-react';
 import { CustomSelect } from '../components/ui/custom-select.js';
 import { EmptyProjectsState } from '../components/ui/empty-projects.js';
 
@@ -240,7 +240,7 @@ export default function AppMain() {
 
   const handleDeleteProject = async (id: string) => {
     showConfirm('Delete Project', 'Are you sure you want to delete this project? All associated API keys will be deleted.', async () => {
-      await DbService.deleteProject(id);
+      // await DbService.deleteProject(id); // TODO: implement backend route
       if (selectedProject?.id === id) {
         setSelectedProject(null);
       }
@@ -253,7 +253,7 @@ export default function AppMain() {
     e.preventDefault();
     if (!selectedProject || !newKeyName) return;
 
-    const { apiKey } = await DbService.generateApiKey(selectedProject.id, newKeyName, newKeyEnv);
+    const apiKey = await DbService.createApiKey(selectedProject.id, newKeyName, newKeyEnv as 'development' | 'production');
     setGeneratedKey(apiKey);
     setNewKeyName('');
     await loadApiKeys(selectedProject.id);
@@ -1252,7 +1252,7 @@ export default function AppMain() {
                                 {key.environment}
                               </span>
                             </td>
-                            <td><code>{key.prefix}</code></td>
+                            <td><code>{key.keyPrefix}</code></td>
                             <td>
                               <span style={{
                                 fontWeight: 700,
@@ -1516,7 +1516,7 @@ export default function AppMain() {
                             <Star size={16} fill="none" />
                           )}
                         </button>
-                        <button className="btn btn-glass" style={{ padding: 0, width: 36, height: 36 }} onClick={() => { setByokForm({ provider: providerId, title: providerName, key: '' }); setShowByokForm(true); }}>
+                        <button className="btn btn-glass" style={{ padding: 0, width: 36, height: 36 }} onClick={() => { setByokForm({ provider: providerId as 'gemini' | 'openai' | 'anthropic', title: providerName, key: '' }); setShowByokForm(true); }}>
                           <Edit2 size={16} />
                         </button>
                       </div>

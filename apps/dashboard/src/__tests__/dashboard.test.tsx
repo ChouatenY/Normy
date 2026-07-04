@@ -28,7 +28,7 @@ vi.mock('../app/actions.js', () => {
   let apiKeys: any[] = [];
   
   return {
-    getProjectsAction: vi.fn(async (email) => projects),
+    getProjectsAction: vi.fn(async (_email) => projects),
     createProjectAction: vi.fn(async (data) => {
       const proj = { ...data, id: 'proj_' + Math.random().toString(36).substr(2, 9) };
       projects.push(proj);
@@ -42,7 +42,7 @@ vi.mock('../app/actions.js', () => {
       }
       return null;
     }),
-    updateByokAction: vi.fn(async (id, provider, key) => true),
+    updateByokAction: vi.fn(async (_id, _provider, _key) => true),
     getApiKeysAction: vi.fn(async (projectId) => apiKeys.filter(k => k.projectId === projectId)),
     createApiKeyAction: vi.fn(async (projectId, name, environment) => {
       const apiKey = `nrm_${environment === 'production' ? 'live' : 'test'}_${Math.random().toString(36).substr(2, 9)}`;
@@ -172,7 +172,7 @@ describe('Normy Developer Dashboard - Unit Tests', () => {
       const keys = await DbService.getApiKeys(projId);
       const record = keys[0];
 
-      await DbService.revokeApiKey(record.id);
+      await DbService.revokeApiKey(record!.id);
 
       const keysAfter = await DbService.getApiKeys(projId);
       expect(keysAfter[0]?.revokedAt).toBeDefined();

@@ -1,5 +1,28 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+    --muted: 0 0% 96.1%;
+    --muted-foreground: 0 0% 45.1%;
+    --primary: 160 50% 50%;
+    --primary-foreground: 0 0% 100%;
+  }
+
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 0 0% 98%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+    --primary: 160 50% 50%;
+    --primary-foreground: 0 0% 9%;
+  }
+}
 @keyframes slide-up {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
