@@ -57,12 +57,6 @@ export function InteractiveFolderGallery({
         alignItems: "center",
         justifyContent: "center",
       }}
-      animate={{
-        x: isSelected ? "-35%" : "0%",
-        scale: isSelected ? 0.8 : 1,
-        opacity: isSelected ? 0.8 : 1,
-      }}
-      transition={{ type: "spring", stiffness: 200, damping: 25 }}
     >
       <div style={{ position: "relative", width: "100%", minHeight: "500px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         
@@ -122,7 +116,7 @@ export function InteractiveFolderGallery({
             {documents.map((doc, i) => {
               const offset = i - 2;
 
-              const stackY = hoverFolder ? offset * -10 - 40 : offset * -5;
+              const stackY = hoverFolder ? offset * -5 + 20 : offset * -5;
               const stackX = hoverFolder ? offset * 30 : offset * 3;
               const stackRotate = hoverFolder ? offset * 8 : offset * 3;
               const stackScale = 1 - Math.abs(offset) * 0.03;
@@ -230,8 +224,8 @@ export function InteractiveFolderGallery({
             }}
             animate={{ 
               opacity: isFolderOpen ? 0 : 1, 
-              rotateX: hoverFolder ? -25 : 0, 
-              y: hoverFolder ? 10 : 0,
+              rotateX: hoverFolder ? -35 : 0, 
+              y: hoverFolder ? 30 : 0,
               pointerEvents: isFolderOpen ? "none" : "auto" 
             }}
             onMouseEnter={() => setHoverFolder(true)}
