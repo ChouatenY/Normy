@@ -1278,3 +1278,21 @@ select.input-field, .header-select {
 }
 
 
+
+@media (max-width: 768px) {
+  .mobile-blocker {
+    display: flex !important;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #000;
+    color: #fff;
+    z-index: 999999;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 20px;
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+}
+

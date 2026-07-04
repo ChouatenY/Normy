@@ -314,6 +314,9 @@ export default function AppMain() {
   if (!user) {
     return (
       <div className="app-shell">
+        <div className="mobile-blocker" style={{ display: 'none' }}>
+          Site looks better on desktop, please open with PC
+        </div>
         
         <header className="top-nav">
           <div className="nav-logo" onClick={() => setLandingSection('sandbox')} style={{ cursor: 'pointer' }}>
@@ -364,7 +367,7 @@ export default function AppMain() {
 
             {/* Theme switcher — round liquid metal button with SVG sun/moon */}
             <LiquidMetalButton
-              onClick={toggleTheme}
+              onClick={() => showAlert("Theme Switcher", "this website actually looks better in black so no 🤣")}
               width={34}
               height={34}
               icon={
