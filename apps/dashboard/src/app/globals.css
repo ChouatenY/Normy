@@ -426,6 +426,80 @@ html, body {
 }
 
 /* ════════════════════════════════════════════════════════════
+   LANDING PAGE SHELL — Navbar / Footer / Main wrapper
+   ════════════════════════════════════════════════════════════ */
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  overflow-x: hidden;       /* prevent horizontal blowout */
+}
+
+.top-nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 32px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.light-theme .top-nav {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+}
+
+.nav-badge {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 99px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  font-family: var(--mono);
+}
+
+.main-wrapper {
+  flex: 1;
+  width: 100%;
+  overflow-x: hidden;       /* prevent children (like x:800 anim) from blowing layout */
+}
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 32px;
+  border-top: 1px solid var(--border);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.app-footer a {
+  color: var(--text-sec);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.app-footer a:hover {
+  color: var(--white);
+}
+
+/* ════════════════════════════════════════════════════════════
    LIVE SANDBOX DEMO ADDITIONS
    ════════════════════════════════════════════════════════════ */
 
@@ -1117,4 +1191,36 @@ html, body {
   background: rgba(0, 0, 0, 0.08) !important;
   border-color: rgba(0, 0, 0, 0.25) !important;
 }
+
+/* Custom Hero Animations */
+@keyframes fade-in {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-up {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-fade-up {
+  animation: fade-up 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 

@@ -7,3 +7,6 @@ export * from './validation-events.js';
 export * from './analytics-daily.js';
 export * from './provider-configs.js';
 export * from './relations.js';
+export * from './knowledge-sources.js';
+export * from './assistant-conversations.js';
+export * from './assistant-messages.js';

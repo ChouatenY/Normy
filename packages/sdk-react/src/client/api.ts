@@ -77,6 +77,35 @@ export const ISSUE_TO_CATEGORY: Record<ValidationIssue, FeedbackCategory> = {
   LOW_CONFIDENCE:         'ADD_SPECIFIC_DETAILS',
 };
 
+export interface AssistantChatRequest {
+  projectId: string;
+  message: string;
+  conversationId?: string | undefined;
+  fieldContext?: {
+    fieldId: string;
+    question?: string | undefined;
+    helpContext?: string | undefined;
+  } | undefined;
+  sessionId?: string | undefined;
+  knowledge?: string | undefined;
+}
+
+export interface AssistantChatResponse {
+  conversationId: string;
+  messageId: string;
+  response: string;
+  createdAt: string;
+}
+
+export interface AssistantMessage {
+  id: string;
+  conversationId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  metadata?: any;
+  createdAt: string;
+}
+
 // ─── Client ───────────────────────────────────────────────────────────────────
 
 export interface NormyClientOptions {
@@ -142,6 +171,148 @@ export class NormyClient {
         ok: false,
         error: {
           error: isAbort ? 'Request timed out' : 'Network error — please check your connection',
+          status: isAbort ? 408 : 0,
+        },
+      };
+    }
+  }
+
+  async chat(req: AssistantChatRequest): Promise<
+    | { ok: true; data: AssistantChatResponse }
+    | { ok: false; error: NormyApiError }
+  > {
+    const controller = new AbortController();
+    const timerId = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      const res = await fetch(`${this.baseUrl}/assistant/chat`, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(req),
+      });
+
+      clearTimeout(timerId);
+
+      if (!res.ok) {
+        let errorMessage = res.statusText;
+        try {
+          const body = await res.json() as { error?: string };
+          if (body.error) errorMessage = body.error;
+        } catch { /* ignore */ }
+
+        return {
+          ok: false,
+          error: { error: errorMessage, status: res.status },
+        };
+      }
+
+      const data = await res.json() as AssistantChatResponse;
+      return { ok: true, data };
+    } catch (err: unknown) {
+      clearTimeout(timerId);
+      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      return {
+        ok: false,
+        error: {
+          error: isAbort ? 'Request timed out' : 'Network error — please check your connection',
+          status: isAbort ? 408 : 0,
+        },
+      };
+    }
+  }
+
+  async getMessages(conversationId: string): Promise<
+    | { ok: true; data: { messages: AssistantMessage[] } }
+    | { ok: false; error: NormyApiError }
+  > {
+    const controller = new AbortController();
+    const timerId = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      const res = await fetch(`${this.baseUrl}/assistant/conversations/${conversationId}/messages`, {
+        method: 'GET',
+        signal: controller.signal,
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+      });
+
+      clearTimeout(timerId);
+
+      if (!res.ok) {
+        let errorMessage = res.statusText;
+        try {
+          const body = await res.json() as { error?: string };
+          if (body.error) errorMessage = body.error;
+        } catch { /* ignore */ }
+
+        return {
+          ok: false,
+          error: { error: errorMessage, status: res.status },
+        };
+      }
+
+      const data = await res.json() as { messages: AssistantMessage[] };
+      return { ok: true, data };
+    } catch (err: unknown) {
+      clearTimeout(timerId);
+      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      return {
+        ok: false,
+        error: {
+          error: isAbort ? 'Request timed out' : 'Network error',
+          status: isAbort ? 408 : 0,
+        },
+      };
+    }
+  }
+
+  async rateMessage(messageId: string, rating: 'helpful' | 'unhelpful'): Promise<
+    | { ok: true; data: { success: boolean } }
+    | { ok: false; error: NormyApiError }
+  > {
+    const controller = new AbortController();
+    const timerId = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      const res = await fetch(`${this.baseUrl}/assistant/messages/${messageId}/rate`, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({ rating }),
+      });
+
+      clearTimeout(timerId);
+
+      if (!res.ok) {
+        let errorMessage = res.statusText;
+        try {
+          const body = await res.json() as { error?: string };
+          if (body.error) errorMessage = body.error;
+        } catch { /* ignore */ }
+
+        return {
+          ok: false,
+          error: { error: errorMessage, status: res.status },
+        };
+      }
+
+      const data = await res.json() as { success: boolean };
+      return { ok: true, data };
+    } catch (err: unknown) {
+      clearTimeout(timerId);
+      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      return {
+        ok: false,
+        error: {
+          error: isAbort ? 'Request timed out' : 'Network error',
           status: isAbort ? 408 : 0,
         },
       };

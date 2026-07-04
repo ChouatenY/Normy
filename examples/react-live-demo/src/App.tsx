@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './index.css';
-import { NormyProvider } from '@normy-validation/react';
+import { NormyProvider, NormyAssistant } from '@normy-validation/react';
 import { CancellationForm } from './components/CancellationForm';
 import { JobApplicationForm } from './components/JobApplicationForm';
 import { FeedbackForm } from './components/FeedbackForm';
@@ -315,6 +315,10 @@ export default function App() {
                     {activeTab === 'feedback' && <FeedbackForm />}
                     {activeTab === 'government' && <GovernmentForm />}
                     {activeTab === 'survey' && <SurveyForm />}
+                    <NormyAssistant
+                      welcomePlaceholder="Need help? Ask a question about the active field..."
+                      knowledge="General Policies: All subscription cancellations take effect at the end of the current billing period. Job Application: We hire globally, but require fluent English; you can submit code samples or links to GitHub projects. Government Forms: Address fields must match your official ID or passport exactly; PO Boxes are not accepted. User Survey: Your responses help us shape the roadmap."
+                    />
                   </NormyProvider>
                 ) : (
                   <div className="v-feedback warning" style={{ borderColor: 'rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.05)' }}>

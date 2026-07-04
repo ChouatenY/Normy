@@ -8,6 +8,10 @@ import { InteractiveDocs } from '../components/InteractiveDocs.js';
 import { PlaygroundView } from '../components/PlaygroundView.js';
 import { CodeBlock } from '../components/CodeBlock.js';
 import { LiquidMetalButton } from '../components/LiquidMetalButton.js';
+import { Hero } from '../components/ui/hero-1.js';
+import { InteractiveFolderGallery } from '../components/ui/interactive-folder-gallery.js';
+import { AiHeroBackground } from '../components/ui/ai-hero-background.js';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // Active Form Components
 import { CancellationForm } from '../components/CancellationForm.js';
@@ -34,7 +38,7 @@ export default function AppMain() {
   const [landingSection, setLandingSection] = useState<'sandbox' | 'docs'>('sandbox');
 
   // Form Live Demo active tab (for non-logged-in users)
-  const [activeFormTab, setActiveFormTab] = useState<'cancel' | 'job' | 'feedback' | 'gov' | 'survey'>('cancel');
+  const [activeFormTab, setActiveFormTab] = useState<'cancel' | 'job' | 'feedback' | 'gov' | 'survey' | null>(null);
 
   // Dashboard Section routing state (for logged-in users)
   const [activeSection, setActiveSection] = useState<ActiveSection>('overview');
@@ -282,9 +286,8 @@ export default function AppMain() {
   // --- Render Landing Page (Unauthenticated State) ---
   if (!user) {
     return (
-      <div className="app-shell" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <div className="app-shell">
         
-        {/* ══ Header Strip ══ */}
         <header className="top-nav">
           <div className="nav-logo" onClick={() => setLandingSection('sandbox')} style={{ cursor: 'pointer' }}>
             <img
@@ -301,58 +304,62 @@ export default function AppMain() {
             <span className="nav-badge">Open Source</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            {/* Toggle views between live forms demo and API docs */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            {/* Toggle views between live forms demo and API docs — liquid metal */}
             {landingSection === 'sandbox' ? (
-              <button 
-                className="btn btn-glass" 
+              <LiquidMetalButton 
+                label="API & SDK Docs" 
                 onClick={() => setLandingSection('docs')}
-                style={{ fontSize: '0.8125rem', padding: '6px 16px' }}
-              >
-                API & SDK Docs
-              </button>
+                width={150}
+                height={34}
+              />
             ) : (
-              <button 
-                className="btn btn-glass" 
+              <LiquidMetalButton 
+                label="Live Sandbox" 
                 onClick={() => setLandingSection('sandbox')}
-                style={{ fontSize: '0.8125rem', padding: '6px 16px' }}
-              >
-                Live Sandbox
-              </button>
+                width={140}
+                height={34}
+              />
             )}
 
-            <LiquidMetalButton 
-              label="Console Login" 
+            {/* Console Login — round profile icon button */}
+            <LiquidMetalButton
               onClick={() => { setAuthMode('login'); setShowAuthModal(true); }}
-              width={150}
+              width={34}
               height={34}
+              icon={
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              }
             />
 
-            {/* Shimmering Round theme switcher button */}
-            <button
+            {/* Theme switcher — round liquid metal button with SVG sun/moon */}
+            <LiquidMetalButton
               onClick={toggleTheme}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #111 0%, #333 50%, #111 100%)',
-                backgroundSize: '200% 200%',
-                animation: 'lm-shimmer 4s linear infinite',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontSize: '0.8125rem',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
-                transition: 'transform 0.15s ease'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
-            >
-              {theme === 'dark' ? '☀️' : '🌙'}
-            </button>
+              width={34}
+              height={34}
+              icon={
+                theme === 'dark' ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                )
+              }
+            />
           </div>
         </header>
 
@@ -370,152 +377,167 @@ export default function AppMain() {
           ) : (
             /* --- Standard SDK Sandbox Landing Page Layout --- */
             <div>
-              {/* Hero Banner with SVG backdrop animation */}
-              <div className="hero-wrapper">
-                <svg className="hero-svg-backdrop" viewBox="0 0 1000 360" fill="none">
-                  <path className="energy-path" d="M -100 180 Q 250 80 500 180 T 1100 180" stroke="var(--energy-stroke)" strokeWidth="1.5" fill="none" />
-                  <path className="energy-path-delayed" d="M -100 180 Q 250 280 500 180 T 1100 180" stroke="var(--energy-bg-stroke)" strokeWidth="1" fill="none" />
-                  <path className="energy-path-fast" d="M -100 180 Q 250 180 500 180 T 1100 180" stroke="var(--energy-bg-stroke)" strokeWidth="1" fill="none" />
-                </svg>
+              {/* Hero Banner rebuilt with component */}
+              <Hero
+                theme={theme}
+                eyebrow="AI-Powered Form Validation v0.1.0"
+                title="Say goodbye to regex form errors."
+                subtitle="Normy analyzes user input context and semantics in real time. Wrap fields with our SDK to suggest immediate helpful improvements, score answers, and guide users to write great text content."
+                ctaLabel="Try Interactive Sandbox"
+                onCtaClick={() => {
+                  const element = document.getElementById('sandbox-tabs');
+                  if (element) {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              />
 
-                <div className="hero-content">
-                  <div className="hero-eyebrow">
-                    <span className="hero-tag">AI-Powered Form Validation</span>
-                    <span className="hero-divider" />
-                    <span className="hero-tag">v0.1.0</span>
-                  </div>
-                  <h1 className="hero-title">Say goodbye to regex form errors.</h1>
-                  <p className="hero-desc">
-                    Normy analyzes user input context and semantics in real time. Wrap fields with our SDK to suggest immediate helpful improvements, score answers, and guide users to write great text content.
+              {/* ── Interactive Folder Gallery ── */}
+              <motion.div 
+                id="sandbox-tabs" 
+                initial={{ opacity: 0, y: 100 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                style={{ 
+                  position: "relative", 
+                  width: "100%", 
+                  overflow: "hidden", 
+                  minHeight: "900px", 
+                  display: "flex", 
+                  flexDirection: "column",
+                  alignItems: "center", 
+                  paddingTop: "120px",
+                }}
+              >
+                {/* 3D Background behind the folder gallery */}
+                <AiHeroBackground intensity={activeFormTab ? 'high' : 'normal'} />
+
+                {/* Top gradient overlay — fades from dark to transparent, matching hero bottom */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  height: '200px',
+                  background: 'linear-gradient(to bottom, #000000 0%, transparent 100%)',
+                  zIndex: 2,
+                  pointerEvents: 'none',
+                }} />
+
+                {/* Section Header */}
+                <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', marginBottom: '40px', padding: '0 20px' }}>
+                  <h2 style={{ fontSize: '3rem', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: '16px', background: 'linear-gradient(to right, #fff, #888)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    Experience the Sandbox
+                  </h2>
+                  <p style={{ color: '#888', fontSize: '1.1rem', maxWidth: '600px', margin: '0 auto', lineHeight: 1.6 }}>
+                    Select a template below to witness the AI validation engine in real-time. 
+                    <br/><span style={{ color: '#bbb' }}>Drag a card or click to open the folder.</span>
                   </p>
                 </div>
-              </div>
-
-              {/* Tab Selector */}
-              <div className="tab-nav">
-                {[
-                  { id: 'cancel', num: '01', label: 'Subscription Cancellation' },
-                  { id: 'job', num: '02', label: 'Job Application' },
-                  { id: 'feedback', num: '03', label: 'Customer Feedback' },
-                  { id: 'gov', num: '04', label: 'Public Service Request' },
-                  { id: 'survey', num: '05', label: 'Structured Survey' },
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    onClick={() => setActiveFormTab(t.id as any)}
-                    className={`tab-btn ${activeFormTab === t.id ? 'active' : ''}`}
-                  >
-                    <span className="tab-num">{t.num}</span>
-                    {t.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* Live Form Grid / Flowchart pipeline */}
-              <div className="content-grid">
                 
-                {/* Active Form Card Wrapper */}
-                <div className="card">
-                  <div className="card-header">
-                    <span className="card-label">Live Integration sandbox</span>
-                    <h2 className="card-title">
-                      {activeFormTab === 'cancel' && 'Cancellation Feedback Form'}
-                      {activeFormTab === 'job' && 'Software Engineer Job Application'}
-                      {activeFormTab === 'feedback' && 'Customer Experience Rating'}
-                      {activeFormTab === 'gov' && 'Road Infrastructure Repair Request'}
-                      {activeFormTab === 'survey' && 'Technology Stack Survey'}
-                    </h2>
-                    <p className="card-desc">
-                      {activeFormTab === 'cancel' && 'Validates the depth and clarity of subscription cancellation reasons.'}
-                      {activeFormTab === 'job' && 'Evaluates summary structure, professional tone, and required experience.'}
-                      {activeFormTab === 'feedback' && 'Validates user-submitted descriptions for spam, gibberish, or short strings.'}
-                      {activeFormTab === 'gov' && 'Ensures the description contains sufficient context for public dispatchers.'}
-                      {activeFormTab === 'survey' && 'Checks if the listed stack matches development tools.'}
-                    </p>
-                  </div>
-                  <div className="card-body">
-                    {/* Wrap forms in NormyProvider pointing to local test credentials */}
-                    <NormyProvider
-                      apiKey="nrm_live_demo"
-                      projectId="00000000-0000-0000-0000-000000000000"
-                      apiUrl={apiHostUrl}
-                      showBadge={false}
-                    >
-                      {activeFormTab === 'cancel' && <CancellationForm />}
-                      {activeFormTab === 'job' && <JobApplicationForm />}
-                      {activeFormTab === 'feedback' && <FeedbackForm />}
-                      {activeFormTab === 'gov' && <GovernmentForm />}
-                      {activeFormTab === 'survey' && <SurveyForm />}
-                    </NormyProvider>
-                  </div>
+                {/* Horizontal flex container: folder gallery + active form side by side */}
+                <div style={{ 
+                  position: "relative", 
+                  width: "100%", 
+                  flex: 1, 
+                  display: "flex", 
+                  alignItems: "flex-start", 
+                  justifyContent: "center", 
+                  zIndex: 10,
+                  gap: "32px",
+                  padding: "0 24px",
+                }}>
+                  {/* Folder gallery — shifts left when a form is selected */}
+                  <motion.div
+                    animate={{
+                      flex: activeFormTab ? "0 0 320px" : "1 1 auto",
+                      opacity: activeFormTab ? 0.85 : 1,
+                    }}
+                    transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "500px" }}
+                  >
+                    <InteractiveFolderGallery 
+                      onSelectForm={(id) => setActiveFormTab(id as any)}
+                      selectedFormId={activeFormTab} 
+                    />
+                  </motion.div>
+
+                  {/* Animated Form Display — slides in from the right */}
+                  <AnimatePresence>
+                    {activeFormTab && (
+                      <motion.div
+                        key={activeFormTab}
+                        initial={{ opacity: 0, x: "100%", scale: 0.95 }}
+                        animate={{ opacity: 1, x: 0, scale: 1 }}
+                        exit={{ opacity: 0, x: "100%", scale: 0.95 }}
+                        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                        style={{
+                          flex: "1 1 auto",
+                          maxWidth: "800px",
+                          zIndex: 20,
+                        }}
+                      >
+                        {/* Back button */}
+                        <button 
+                          onClick={() => setActiveFormTab(null)}
+                          style={{
+                            marginBottom: "16px",
+                            background: "rgba(255,255,255,0.05)",
+                            border: "1px solid rgba(255,255,255,0.1)",
+                            color: "var(--text-sec)",
+                            padding: "6px 16px",
+                            borderRadius: "99px",
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                          }}
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                          Back to Templates
+                        </button>
+
+                        {/* Form Card */}
+                        <div className="card">
+                          <div className="card-header">
+                            <span className="card-label">Live Integration sandbox</span>
+                            <h2 className="card-title">
+                              {activeFormTab === 'cancel' && 'Cancellation Feedback Form'}
+                              {activeFormTab === 'job' && 'Software Engineer Job Application'}
+                              {activeFormTab === 'feedback' && 'Customer Experience Rating'}
+                              {activeFormTab === 'gov' && 'Road Infrastructure Repair Request'}
+                              {activeFormTab === 'survey' && 'Technology Stack Survey'}
+                            </h2>
+                            <p className="card-desc">
+                              {activeFormTab === 'cancel' && 'Validates the depth and clarity of subscription cancellation reasons.'}
+                              {activeFormTab === 'job' && 'Evaluates summary structure, professional tone, and required experience.'}
+                              {activeFormTab === 'feedback' && 'Validates user-submitted descriptions for spam, gibberish, or short strings.'}
+                              {activeFormTab === 'gov' && 'Ensures the description contains sufficient context for public dispatchers.'}
+                              {activeFormTab === 'survey' && 'Checks if the listed stack matches development tools.'}
+                            </p>
+                          </div>
+                          <div className="card-body">
+                            <NormyProvider
+                              apiKey="nrm_live_demo"
+                              projectId="00000000-0000-0000-0000-000000000000"
+                              apiUrl={apiHostUrl}
+                              showBadge={false}
+                            >
+                              {activeFormTab === 'cancel' && <CancellationForm />}
+                              {activeFormTab === 'job' && <JobApplicationForm />}
+                              {activeFormTab === 'feedback' && <FeedbackForm />}
+                              {activeFormTab === 'gov' && <GovernmentForm />}
+                              {activeFormTab === 'survey' && <SurveyForm />}
+                            </NormyProvider>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
-
-                {/* Right Flowchart Pipeline Illustration */}
-                <aside className="sidebar">
-                  <div className="sidebar-block">
-                    <span className="sidebar-label">Runtime pipeline</span>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                      
-                      {/* Step 1 */}
-                      <div style={{
-                        width: '100%', padding: '12px 16px', background: 'var(--surface-2)',
-                        border: '1px solid var(--border)', borderRadius: 6, display: 'flex', gap: 12, alignItems: 'center'
-                      }}>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700 }}>1</div>
-                        <div>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--white)' }}>Input Hook</div>
-                          <div style={{ fontSize: '0.625rem', color: 'var(--text-sec)' }}>Debounces text field change</div>
-                        </div>
-                      </div>
-                      
-                      <div className="flowchart-line" style={{ '--delay': '0s' } as any} />
-
-                      {/* Step 2 */}
-                      <div style={{
-                        width: '100%', padding: '12px 16px', background: 'var(--surface-2)',
-                        border: '1px solid var(--border)', borderRadius: 6, display: 'flex', gap: 12, alignItems: 'center'
-                      }}>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700 }}>2</div>
-                        <div>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--white)' }}>Orchestrator</div>
-                          <div style={{ fontSize: '0.625rem', color: 'var(--text-sec)' }}>Runs local rules & guards</div>
-                        </div>
-                      </div>
-
-                      <div className="flowchart-line" style={{ '--delay': '0.5s' } as any} />
-
-                      {/* Step 3 */}
-                      <div style={{
-                        width: '100%', padding: '12px 16px', background: 'var(--surface-2)',
-                        border: '1px solid var(--border)', borderRadius: 6, display: 'flex', gap: 12, alignItems: 'center'
-                      }}>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700 }}>3</div>
-                        <div>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--white)' }}>Gemini API</div>
-                          <div style={{ fontSize: '0.625rem', color: 'var(--text-sec)' }}>Evaluates context semantic quality</div>
-                        </div>
-                      </div>
-
-                      <div className="flowchart-line" style={{ '--delay': '1s' } as any} />
-
-                      {/* Step 4 */}
-                      <div style={{
-                        width: '100%', padding: '12px 16px', background: 'var(--surface-2)',
-                        border: '1px solid var(--border)', borderRadius: 6, display: 'flex', gap: 12, alignItems: 'center'
-                      }}>
-                        <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6875rem', fontWeight: 700 }}>4</div>
-                        <div>
-                          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--white)' }}>SDK Feedback</div>
-                          <div style={{ fontSize: '0.625rem', color: 'var(--text-sec)' }}>Renders suggestions inline</div>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                </aside>
-
-              </div>
+              </motion.div>
             </div>
           )}
 

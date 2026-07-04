@@ -30,10 +30,20 @@ export { NormyTextarea }    from './components/NormyTextarea.js';
 export { NormyInput }       from './components/NormyInput.js';
 export { NormySelect }      from './components/NormySelect.js';
 export { NormyBadge }       from './components/NormyBadge.js';
+export { NormyAssist }      from './components/NormyAssist.js';
+export { 
+  NormyAssistant, 
+  NormyFloatingAssistant, 
+  NormyHelpButton, 
+  NormyKnowledgeProvider, 
+  useNormyAssistant, 
+  useKnowledgeContext 
+}                           from './components/NormyAssistant.js';
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 export { useNormy }         from './hooks/useNormy.js';
 export { useValidation }    from './hooks/useValidation.js';
+export { useFormValidation } from './hooks/useFormValidation.js';
 
 // ─── Client ───────────────────────────────────────────────────────────────────
 export { NormyClient }      from './client/api.js';
@@ -46,8 +56,10 @@ export type { NormyTextareaProps }    from './components/NormyTextarea.js';
 export type { NormyInputProps }       from './components/NormyInput.js';
 export type { NormySelectProps, NormySelectOption } from './components/NormySelect.js';
 export type { NormyBadgeProps }       from './components/NormyBadge.js';
+export type { NormyAssistProps }      from './components/NormyAssist.js';
 export type { NormyContextValue }     from './context/NormyContext.js';
 export type { UseValidationOptions, UseValidationReturn, UseValidationState, ValidationStatus } from './hooks/useValidation.js';
+export type { UseFormValidationOptions, UseFormValidationReturn } from './hooks/useFormValidation.js';
 export type {
   ValidationMode,
   ValidateRequest,

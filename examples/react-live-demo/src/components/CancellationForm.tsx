@@ -110,6 +110,9 @@ export function CancellationForm() {
           value={elaboration.value}
           onChange={elaboration.handleChange}
           onBlur={elaboration.handleBlur}
+          data-normy-question="What is the primary reason for cancelling your subscription today?"
+          data-normy-label="Elaborate on your decision"
+          data-normy-hint="Could you share details about your decision to cancel? Be as descriptive as you like."
         />
 
         {/* Inline Feedback Toast */}

@@ -47,6 +47,9 @@ export const NormyTextarea = forwardRef<HTMLTextAreaElement, NormyTextareaProps>
           value={value}
           aria-invalid={hasProblem}
           aria-describedby={result ? `${rest.id ?? 'normy'}-toast` : undefined}
+          data-normy-question={question}
+          data-normy-label={label}
+          data-normy-hint={hint}
           onChange={(e) => {
             handleChange(e);
             onValueChange?.(e.target.value);

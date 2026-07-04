@@ -52,6 +52,8 @@ export const NormySelect = forwardRef<HTMLSelectElement, NormySelectProps>(
           value={value}
           aria-invalid={hasProblem}
           aria-describedby={result ? `${rest.id ?? 'normy'}-toast` : undefined}
+          data-normy-question={question}
+          data-normy-label={label}
           onChange={(e) => {
             handleChange(e);
             onValueChange?.(e.target.value);

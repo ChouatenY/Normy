@@ -157,6 +157,9 @@ export function ValidationField({
     'aria-describedby': result || isValidating ? `${id}-feedback` : undefined,
     onChange,
     onBlur: handleBlur,
+    'data-normy-question': question || label,
+    'data-normy-label': label,
+    'data-normy-hint': hint,
   };
 
   return (

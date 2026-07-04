@@ -22,6 +22,8 @@ export interface UseValidationState {
 }
 
 export interface UseValidationOptions {
+  /** Optional unique identifier for tracking global form validity */
+  id?: string | undefined;
   /** The form question / field label sent to the API */
   question: string;
   /** Optional context about the field (e.g. "cancellation reason field"). */
@@ -65,7 +67,15 @@ const IDLE_STATE: UseValidationState = {
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export function useValidation(options: UseValidationOptions): UseValidationReturn {
-  const { client, projectId, defaultMode, pauseMs: contextPauseMs } = useNormy();
+  const {
+    client,
+    projectId,
+    defaultMode,
+    pauseMs: contextPauseMs,
+    registerField,
+    updateField,
+    unregisterField,
+  } = useNormy();
 
   const mode    = options.mode    ?? defaultMode;
   const pauseMs = options.pauseMs ?? contextPauseMs;
@@ -73,6 +83,24 @@ export function useValidation(options: UseValidationOptions): UseValidationRetur
   const [state, setState] = useState<UseValidationState>(IDLE_STATE);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestValueRef = useRef<string>('');
+
+  const fieldId = options.id || options.question;
+
+  // Register/unregister with form validation registry
+  useEffect(() => {
+    registerField(fieldId, { isValid: false, score: 0 });
+    return () => {
+      unregisterField(fieldId);
+    };
+  }, [fieldId, registerField, unregisterField]);
+
+  // Synchronize validation success/score changes to global registry
+  useEffect(() => {
+    updateField(fieldId, {
+      isValid: state.isValid,
+      score: state.result?.score ?? 0,
+    });
+  }, [fieldId, state.isValid, state.result?.score, updateField]);
 
   // Track latest value without re-subscribing to stale closures
   useEffect(() => {

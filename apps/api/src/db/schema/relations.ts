@@ -16,6 +16,9 @@ import { validations } from './validations.js';
 import { validationEvents } from './validation-events.js';
 import { analyticsDaily } from './analytics-daily.js';
 import { providerConfigs } from './provider-configs.js';
+import { knowledgeSources } from './knowledge-sources.js';
+import { assistantConversations } from './assistant-conversations.js';
+import { assistantMessages } from './assistant-messages.js';
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 
@@ -35,6 +38,8 @@ export const projectsRelations = relations(projects, ({ one, many }) => ({
   validationEvents: many(validationEvents),
   analyticsDaily: many(analyticsDaily),
   providerConfigs: many(providerConfigs),
+  knowledgeSources: many(knowledgeSources),
+  assistantConversations: many(assistantConversations),
 }));
 
 // ─── API Keys ─────────────────────────────────────────────────────────────────
@@ -97,3 +102,34 @@ export const providerConfigsRelations = relations(
     }),
   }),
 );
+
+// ─── Knowledge Sources ────────────────────────────────────────────────────────
+
+export const knowledgeSourcesRelations = relations(knowledgeSources, ({ one }) => ({
+  project: one(projects, {
+    fields: [knowledgeSources.projectId],
+    references: [projects.id],
+  }),
+}));
+
+// ─── Assistant Conversations ─────────────────────────────────────────────────
+
+export const assistantConversationsRelations = relations(
+  assistantConversations,
+  ({ one, many }) => ({
+    project: one(projects, {
+      fields: [assistantConversations.projectId],
+      references: [projects.id],
+    }),
+    messages: many(assistantMessages),
+  }),
+);
+
+// ─── Assistant Messages ──────────────────────────────────────────────────────
+
+export const assistantMessagesRelations = relations(assistantMessages, ({ one }) => ({
+  conversation: one(assistantConversations, {
+    fields: [assistantMessages.conversationId],
+    references: [assistantConversations.id],
+  }),
+}));

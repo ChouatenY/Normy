@@ -5,6 +5,16 @@ import { cors } from 'hono/cors';
 import { apiKeyAuth, type AuthContext } from './middleware/auth.js';
 import { rateLimit } from './middleware/rate-limit.js';
 import { validateRoute } from './routes/validate.js';
+import {
+  listKnowledgeSourcesRoute,
+  createKnowledgeSourceRoute,
+  updateKnowledgeSourceRoute,
+  deleteKnowledgeSourceRoute,
+  assistantChatRoute,
+  getConversationMessagesRoute,
+  rateAssistantMessageRoute,
+  listAssistantConversationsRoute,
+} from './routes/assistant.js';
 import { db } from './db/index.js';
 import { env } from './config/env.js';
 import { validations } from './db/schema/validations.js';
@@ -12,6 +22,9 @@ import { validationEvents } from './db/schema/validation-events.js';
 import { users } from './db/schema/users.js';
 import { projects, DEFAULT_PROJECT_SETTINGS } from './db/schema/projects.js';
 import { apiKeys } from './db/schema/api-keys.js';
+import { knowledgeSources } from './db/schema/knowledge-sources.js';
+import { assistantConversations } from './db/schema/assistant-conversations.js';
+import { assistantMessages } from './db/schema/assistant-messages.js';
 import { 
   EmptyValidator, 
   TooShortValidator, 
@@ -20,9 +33,10 @@ import {
   GeminiProvider,
   OrchestratorPipeline,
 } from '@normy/validation-core';
-import { eq } from 'drizzle-orm';
+import { eq, and, desc, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
 import { redis } from './redis/index.js';
+import { GoogleGenAI } from '@google/genai';
 
 // Setup Hono app with custom context types
 const app = new OpenAPIHono<AuthContext>();
@@ -515,6 +529,303 @@ app.openapi(validateRoute, async (c) => {
     feedbackCategory: result.feedbackCategory,
     exampleAnswer: result.exampleAnswer,
   }, 200);
+});
+
+// ─── Assistant Routes ────────────────────────────────────────────────────────
+
+// Apply auth to assistant chat endpoint
+app.use('/assistant/chat', apiKeyAuth, rateLimit);
+
+app.openapi(listKnowledgeSourcesRoute, async (c) => {
+  const projectId = c.req.param('projectId');
+  try {
+    const rows = await db.select().from(knowledgeSources).where(eq(knowledgeSources.projectId, projectId));
+    return c.json({
+      sources: rows.map(r => ({
+        ...r,
+        createdAt: r.createdAt.toISOString(),
+        updatedAt: r.updatedAt.toISOString(),
+      })),
+    }, 200);
+  } catch (err) {
+    console.error('List knowledge sources failed:', err);
+    return c.json({ sources: [] }, 200);
+  }
+});
+
+app.openapi(createKnowledgeSourceRoute, async (c) => {
+  const projectId = c.req.param('projectId');
+  const body = c.req.valid('json');
+  try {
+    const [record] = await db.insert(knowledgeSources).values({
+      projectId,
+      name: body.name,
+      type: body.type,
+      content: body.content,
+      sourceUrl: body.sourceUrl ?? null,
+      isActive: body.isActive ?? true,
+    }).returning();
+    return c.json({
+      source: {
+        ...record,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
+      },
+    }, 201);
+  } catch (err: any) {
+    console.error('Create knowledge source failed:', err);
+    return c.json({ error: err.message || 'Failed to create knowledge source' }, 400);
+  }
+});
+
+app.openapi(updateKnowledgeSourceRoute, async (c) => {
+  const projectId = c.req.param('projectId');
+  const id = c.req.param('id');
+  const body = c.req.valid('json');
+  try {
+    const [record] = await db.update(knowledgeSources).set({
+      ...(body.name !== undefined ? { name: body.name } : {}),
+      ...(body.type !== undefined ? { type: body.type } : {}),
+      ...(body.content !== undefined ? { content: body.content } : {}),
+      ...(body.sourceUrl !== undefined ? { sourceUrl: body.sourceUrl } : {}),
+      ...(body.isActive !== undefined ? { isActive: body.isActive } : {}),
+      updatedAt: new Date(),
+    }).where(and(eq(knowledgeSources.id, id), eq(knowledgeSources.projectId, projectId))).returning();
+
+    if (!record) {
+      return c.json({ error: 'Knowledge source not found' }, 404);
+    }
+    return c.json({
+      source: {
+        ...record,
+        createdAt: record.createdAt.toISOString(),
+        updatedAt: record.updatedAt.toISOString(),
+      },
+    }, 200);
+  } catch (err: any) {
+    console.error('Update knowledge source failed:', err);
+    return c.json({ error: err.message || 'Failed to update knowledge source' }, 400);
+  }
+});
+
+app.openapi(deleteKnowledgeSourceRoute, async (c) => {
+  const projectId = c.req.param('projectId');
+  const id = c.req.param('id');
+  try {
+    const [record] = await db.delete(knowledgeSources).where(and(eq(knowledgeSources.id, id), eq(knowledgeSources.projectId, projectId))).returning();
+    if (!record) {
+      return c.json({ error: 'Knowledge source not found' }, 404);
+    }
+    return c.json({ success: true }, 200);
+  } catch (err: any) {
+    console.error('Delete knowledge source failed:', err);
+    return c.json({ error: err.message || 'Failed to delete knowledge source' }, 400);
+  }
+});
+
+app.openapi(assistantChatRoute, async (c) => {
+  const project = c.get('project');
+  const body = c.req.valid('json');
+
+  // Verify request projectId matches the authenticated API key project
+  if (body.projectId !== project.id) {
+    return c.json({ error: 'Forbidden: Project ID mismatch' }, 403);
+  }
+
+  // 1. Resolve or Create Conversation
+  let conversationId = body.conversationId;
+  if (!conversationId) {
+    conversationId = crypto.randomUUID();
+    try {
+      await db.insert(assistantConversations).values({
+        id: conversationId,
+        projectId: project.id,
+        sessionId: body.sessionId || null,
+      });
+    } catch (dbError) {
+      console.warn('Failed to insert assistant conversation:', dbError);
+    }
+  }
+
+  // 2. Fetch Knowledge Sources from Database
+  let projectKnowledge = '';
+  try {
+    const sources = await db.query.knowledgeSources.findMany({
+      where: (table, { eq, and }) => and(
+        eq(table.projectId, project.id),
+        eq(table.isActive, true)
+      ),
+    });
+    projectKnowledge = sources.map(s => `[Source: ${s.name}]\n${s.content}`).join('\n\n');
+  } catch (dbError) {
+    console.warn('Failed to query knowledge sources:', dbError);
+  }
+
+  // Combine developer inline knowledge and field context
+  const inlineKnowledge = body.knowledge || '';
+  const combinedKnowledge = `${projectKnowledge}\n\n${inlineKnowledge}`.trim();
+
+  const fieldId = body.fieldContext?.fieldId || 'N/A';
+  const fieldQuestion = body.fieldContext?.question || 'N/A';
+  const fieldHelp = body.fieldContext?.helpContext || 'N/A';
+
+  // 3. Retrieve conversation history
+  let historyPrompt = '';
+  if (body.conversationId) {
+    try {
+      const messages = await db.query.assistantMessages.findMany({
+        where: (table, { eq }) => eq(table.conversationId, body.conversationId!),
+        orderBy: (table, { asc }) => [asc(table.createdAt)],
+        limit: 10,
+      });
+      historyPrompt = messages.map(m => `${m.role === 'user' ? 'User' : 'Assistant'}: ${m.content}`).join('\n');
+    } catch (dbError) {
+      console.warn('Failed to retrieve conversation history:', dbError);
+    }
+  }
+
+  // 4. Build prompt
+  const systemPrompt = `You are Normy Assist, an intelligent form assistant.
+Your goal is to help the user fill out the form by explaining questions, terminology, requirements, company policies, documentation, and procedures.
+
+Rules:
+1. Explain the questions and requirements to the user clearly.
+2. NEVER write the answer for the user or generate fake personal information.
+3. If the user asks you to write the answer, reply: "I can explain what the question is asking and show the expected format, but your response should reflect your own situation."
+4. You should answer general language/vocabulary questions, industry terms, and concepts related to the form, fields, or company activity (e.g. explaining what "public works" means on a government form, or defining business/legal concepts) to help the user understand the context. Only reject completely unrelated off-topic questions (e.g., "What is the capital of France?").
+5. Never mention that you are an AI or say "As an AI...". Keep answers friendly, short, and helpful.
+6. STRICT SAFETY AND ETHICS: NEVER answer harmful, unethical, unsafe, malicious, or inappropriate questions. If the user asks anything unsafe, unethical, illegal, or inappropriate, refuse politely: "I cannot assist with that request. I am only able to help explain this form and its related terminology or policies."
+7. STRICT CONTEXT BINDING: You must stay on-topic. If the user asks questions unrelated to the form, company services, fields, vocabulary/terminology, policies, or general vocabulary context of the form, politely refuse: "I'm here to help explain this form and its related documentation or vocabulary. Please ask a question related to the form fields or company policies."
+
+Here is the developer-provided knowledge and documentation:
+${combinedKnowledge || 'No additional documentation provided.'}
+
+Here is the current field context the user is focused on:
+Field ID: ${fieldId}
+Question: ${fieldQuestion}
+Description/Help Context: ${fieldHelp}
+
+Conversation History:
+${historyPrompt}
+
+Current User Message: ${body.message}
+Assistant:`;
+
+  // 5. Invoke Gemini (or fallback offline)
+  let assistantResponse = '';
+  const apiKey = env.GEMINI_API_KEY;
+  if (apiKey) {
+    try {
+      const ai = new GoogleGenAI({ apiKey });
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: systemPrompt,
+      });
+      assistantResponse = response.text || '';
+    } catch (aiError) {
+      console.warn('Gemini API call failed, applying offline fallback:', aiError);
+    }
+  }
+
+  // Offline or error fallback response engine
+  if (!assistantResponse) {
+    const msg = body.message.toLowerCase();
+    if (msg.includes('write') || msg.includes('answer') || msg.includes('fill') || msg.includes('generate')) {
+      assistantResponse = "I can explain what the question is asking and show the expected format, but your response should reflect your own situation.";
+    } else if (fieldQuestion !== 'N/A' && (msg.includes('mean') || msg.includes('explain') || msg.includes('what'))) {
+      assistantResponse = `This question ("${fieldQuestion}") is asking you to provide input. Let me know if you need specific help with terms or policies!`;
+    } else if (fieldHelp !== 'N/A' && (msg.includes('help') || msg.includes('find'))) {
+      assistantResponse = `Based on the form help: ${fieldHelp}`;
+    } else {
+      assistantResponse = "I'm here to help explain this form and its related documentation. Let me know if you have questions about specific fields or policies.";
+    }
+  }
+
+  // Clean response text
+  assistantResponse = assistantResponse.trim();
+
+  // 6. Insert user and assistant messages to DB
+  const userMessageId = crypto.randomUUID();
+  const assistantMessageId = crypto.randomUUID();
+  const now = new Date();
+
+  try {
+    // Log user message
+    await db.insert(assistantMessages).values({
+      id: userMessageId,
+      conversationId,
+      role: 'user',
+      content: body.message,
+      metadata: body.fieldContext || null,
+      createdAt: now,
+    });
+
+    // Log assistant message
+    await db.insert(assistantMessages).values({
+      id: assistantMessageId,
+      conversationId,
+      role: 'assistant',
+      content: assistantResponse,
+      metadata: null,
+      createdAt: new Date(now.getTime() + 100),
+    });
+  } catch (dbError) {
+    console.warn('Failed to persist assistant messages:', dbError);
+  }
+
+  // 7. Respond
+  return c.json({
+    conversationId,
+    messageId: assistantMessageId,
+    response: assistantResponse,
+    createdAt: new Date().toISOString(),
+  }, 200);
+});
+
+app.openapi(getConversationMessagesRoute, async (c) => {
+  const conversationId = c.req.param('conversationId');
+  try {
+    const rows = await db.select().from(assistantMessages).where(eq(assistantMessages.conversationId, conversationId)).orderBy(desc(assistantMessages.createdAt));
+    return c.json({
+      messages: rows.map(r => ({
+        ...r,
+        createdAt: r.createdAt.toISOString(),
+      })),
+    }, 200);
+  } catch (err) {
+    console.error('Get conversation messages failed:', err);
+    return c.json({ messages: [] }, 200);
+  }
+});
+
+app.openapi(rateAssistantMessageRoute, async (c) => {
+  const messageId = c.req.param('messageId');
+  const body = c.req.valid('json');
+  try {
+    await db.update(assistantMessages).set({
+      metadata: sql`jsonb_set(coalesce(metadata, '{}'::jsonb), '{feedbackRating}', ${JSON.stringify(body.rating)}::jsonb)`,
+    }).where(eq(assistantMessages.id, messageId));
+    return c.json({ success: true }, 200);
+  } catch (err: any) {
+    console.error('Rate message failed:', err);
+    return c.json({ error: err.message || 'Failed to rate message' }, 400);
+  }
+});
+
+app.openapi(listAssistantConversationsRoute, async (c) => {
+  const projectId = c.req.param('projectId');
+  try {
+    const rows = await db.select().from(assistantConversations).where(eq(assistantConversations.projectId, projectId)).orderBy(desc(assistantConversations.createdAt));
+    return c.json({
+      conversations: rows.map(r => ({
+        ...r,
+        createdAt: r.createdAt.toISOString(),
+      })),
+    }, 200);
+  } catch (err) {
+    console.error('List assistant conversations failed:', err);
+    return c.json({ conversations: [] }, 200);
+  }
 });
 
 // ─── OpenAPI Docs ─────────────────────────────────────────────────────────────

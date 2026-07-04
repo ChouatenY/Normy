@@ -11,4 +11,7 @@ export type {
   FeedbackCategory,
   NormyApiError,
   NormyApiResult,
+  AssistantChatRequest,
+  AssistantChatResponse,
+  AssistantMessage,
 } from './client/api.js';

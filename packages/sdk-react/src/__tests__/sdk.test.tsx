@@ -239,7 +239,7 @@ describe('NormyClient', () => {
 
     expect(res.ok).toBe(true);
     if (res.ok) {
-      expect(res.data.feedbackCategory).toBe('valid');
+      expect(res.data.feedbackCategory).toBe('NO_ACTION');
     }
   });
 

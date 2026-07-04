@@ -113,13 +113,19 @@ export class GeminiProvider extends BaseAIProvider {
       console.error('Gemini Provider validation failed gracefully:', error);
       const latencyMs = Date.now() - startTime;
       
+      const errStr = String(error).toLowerCase();
+      const isQuotaOrRateLimit = errStr.includes('quota') || errStr.includes('429') || errStr.includes('exhausted') || errStr.includes('limit');
+      const feedback = isQuotaOrRateLimit
+        ? 'Normy AI validation quota or rate limit exceeded. Please try again in a few moments or check your API key status.'
+        : 'We could not evaluate your answer with confidence. Please try again.';
+
       // Fallback response - LOW_CONFIDENCE, never crash the API
       return {
         valid: false,
         score: 0,
         issue: 'LOW_CONFIDENCE',
         feedbackCategory: 'ADD_SPECIFIC_DETAILS',
-        feedback: 'We could not evaluate your answer with confidence. Please try again.',
+        feedback,
         severity: 'error',
         validatedAt: new Date().toISOString(),
         provider: this.name,
