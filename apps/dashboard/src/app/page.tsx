@@ -483,10 +483,41 @@ export default function AppMain() {
                         transition={{ duration: 0.3 }}
                         style={{ display: "flex", width: "100%", justifyContent: "center", minHeight: "500px" }}
                       >
-                        <InteractiveFolderGallery 
-                          onSelectForm={handleSelectForm}
-                          selectedFormId={activeFormTab} 
-                        />
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                          <InteractiveFolderGallery 
+                            onSelectForm={handleSelectForm}
+                            selectedFormId={activeFormTab} 
+                          />
+                          <a 
+                            href="http://localhost:5173" 
+                            target="_blank" 
+                            rel="noreferrer"
+                            style={{
+                              marginTop: "-20px",
+                              padding: "10px 24px",
+                              background: "linear-gradient(to right, #333, #111)",
+                              border: "1px solid rgba(255,255,255,0.1)",
+                              borderRadius: "99px",
+                              color: "#fff",
+                              fontWeight: 600,
+                              textDecoration: "none",
+                              boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+                              transition: "all 0.2s",
+                              zIndex: 60,
+                              position: "relative"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.transform = "translateY(-2px)";
+                              e.currentTarget.style.boxShadow = "0 15px 35px rgba(0,0,0,0.6)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.transform = "translateY(0)";
+                              e.currentTarget.style.boxShadow = "0 10px 30px rgba(0,0,0,0.5)";
+                            }}
+                          >
+                            Deep Dive into Sandbox 🚀
+                          </a>
+                        </div>
                       </motion.div>
                     ) : (
                       <motion.div

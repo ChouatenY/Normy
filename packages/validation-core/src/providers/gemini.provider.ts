@@ -64,13 +64,14 @@ export class GeminiProvider extends BaseAIProvider {
 
             let parsed: any;
             try {
-              // Strip code fences if the model output them despite guidelines
               let cleanText = text.trim();
-              if (cleanText.includes('```')) {
-                cleanText = cleanText.replace(/```json|```/g, '').trim();
+              const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+              if (jsonMatch) {
+                cleanText = jsonMatch[0];
               }
               parsed = JSON.parse(cleanText);
             } catch (e) {
+              console.error('Failed to parse Gemini JSON. Raw response:', text);
               throw new Error('Invalid JSON response from Gemini');
             }
 
@@ -111,13 +112,22 @@ export class GeminiProvider extends BaseAIProvider {
       );
     } catch (error) {
       console.error('Gemini Provider validation failed gracefully:', error);
+      // We log the error completely so it's easier to debug
+      console.error(error);
       const latencyMs = Date.now() - startTime;
       
       const errStr = String(error).toLowerCase();
-      const isQuotaOrRateLimit = errStr.includes('quota') || errStr.includes('429') || errStr.includes('exhausted') || errStr.includes('limit');
-      const feedback = isQuotaOrRateLimit
-        ? 'Normy AI validation quota or rate limit exceeded. Please try again in a few moments or check your API key status.'
-        : 'We could not evaluate your answer with confidence. Please try again.';
+      let feedback = 'We could not evaluate your answer with confidence. Please try again.';
+      
+      if (errStr.includes('quota') || errStr.includes('429') || errStr.includes('exhausted') || errStr.includes('limit')) {
+        feedback = 'Normy AI validation quota or rate limit exceeded. Please try again in a few moments or check your API key status.';
+      } else if (errStr.includes('403') || errStr.includes('leaked') || errStr.includes('permission')) {
+        feedback = 'Your Gemini API key was rejected (Permission Denied / Leaked Key). Please update your GEMINI_API_KEY environment variable.';
+      } else if (errStr.includes('404') || errStr.includes('not found')) {
+        feedback = 'The AI model specified is not available. Please check your model configuration.';
+      } else if (errStr.includes('invalid json')) {
+        feedback = 'The AI produced an invalid response format that could not be parsed.';
+      }
 
       // Fallback response - LOW_CONFIDENCE, never crash the API
       return {

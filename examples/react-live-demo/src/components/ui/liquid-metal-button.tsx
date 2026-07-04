@@ -97,7 +97,7 @@ export function LiquidMetalButton({
           cursor: "pointer",
           outline: "none",
           overflow: "hidden",
-          background: metalGradient,
+          backgroundImage: metalGradient,
           backgroundSize: "400% 100%",
           animation: "lm-shimmer 4s linear infinite",
           boxShadow: outerGlow,
