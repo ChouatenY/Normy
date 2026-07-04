@@ -23,7 +23,7 @@ import { NormyProvider } from '@normy-validation/react';
 import { Features } from '../components/ui/features-6.js';
 import ContributorsWallDemo from '../components/ui/contributors-section.js';
 
-type ActiveSection = 'overview' | 'projects' | 'keys' | 'docs' | 'playground' | 'settings';
+type ActiveSection = 'overview' | 'projects' | 'keys' | 'docs' | 'playground' | 'settings' | 'billing';
 
 export default function AppMain() {
   // Authentication state
@@ -684,7 +684,7 @@ export default function AppMain() {
                     <input type="password" required className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', marginBottom: 16 }}>
                     <LiquidMetalButton label="Sign In" type="submit" />
                   </div>
 
@@ -709,7 +709,7 @@ export default function AppMain() {
                     <input type="password" required className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="At least 6 characters" />
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', width: '100%', marginBottom: 16 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', marginBottom: 16 }}>
                     <LiquidMetalButton label="Create Account" type="submit" />
                   </div>
 
@@ -725,7 +725,7 @@ export default function AppMain() {
                     <label className="input-label">Email Address</label>
                     <input type="email" className="input-field" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e.g. dev@example.com" />
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                     <LiquidMetalButton label="Send Reset Link" type="submit" onClick={() => { setAuthMessage('Password reset link sent!'); setAuthMode('login'); }} />
                     <button onClick={() => setAuthMode('login')} className="btn btn-glass" style={{ width: '100%' }}>Back to Login</button>
                   </div>
@@ -798,6 +798,9 @@ export default function AppMain() {
           <button onClick={() => setActiveSection('settings')} className={`nav-link ${activeSection === 'settings' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
             <span>Settings</span>
           </button>
+          <button onClick={() => setActiveSection('billing')} className={`nav-link ${activeSection === 'billing' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
+            <span>Billing</span>
+          </button>
         </nav>
 
         {/* User profile footer */}
@@ -828,6 +831,7 @@ export default function AppMain() {
               {activeSection === 'docs' && 'Interactive Documentation'}
               {activeSection === 'playground' && 'Developer Sandbox'}
               {activeSection === 'settings' && 'System Configuration'}
+              {activeSection === 'billing' && 'Billing & Credits'}
             </h1>
           </div>
 
@@ -1261,6 +1265,53 @@ export default function AppMain() {
                   Manage Billing
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── Billing & Credits Section ── */}
+        {activeSection === 'billing' && (
+          <div style={{ maxWidth: 900 }}>
+            <div className="card-glass" style={{ marginBottom: 24, borderLeft: '4px solid #4CAF50' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)', marginBottom: 8 }}>Test API Credits</h3>
+              <p style={{ color: 'var(--text-sec)', fontSize: '0.875rem', marginBottom: 20 }}>
+                You have been granted free test credits for sandbox and localhost development.
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 24, background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
+                <div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Available Balance</div>
+                  <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#4CAF50' }}>$5.00</div>
+                </div>
+                <button 
+                  className="btn btn-primary"
+                  onClick={() => alert("We're still working on hosted billing! In the meantime, please use the Bring Your Own Key (BYOK) system. Check the Documentation tab for implementation structures.")}
+                >
+                  Refill Account
+                </button>
+              </div>
+            </div>
+
+            <div className="card-glass">
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)', marginBottom: 8 }}>Bring Your Own Key (BYOK)</h3>
+              <p style={{ color: 'var(--text-sec)', fontSize: '0.875rem', marginBottom: 20, lineHeight: 1.5 }}>
+                Bypass Normy's hosted billing entirely by supplying your own OpenAI, Gemini, or Anthropic API keys. We will proxy your validations directly to your provider and never bill you for token usage.
+              </p>
+              
+              <div className="input-group">
+                <label className="input-label">Google Gemini API Key</label>
+                <input type="password" placeholder="AIzaSy..." className="input-field" disabled />
+              </div>
+              <div className="input-group">
+                <label className="input-label">OpenAI API Key</label>
+                <input type="password" placeholder="sk-..." className="input-field" disabled />
+              </div>
+              
+              <button 
+                className="btn btn-glass"
+                onClick={() => alert("BYOK settings UI is under construction. BYOK is currently managed via the database directly.")}
+              >
+                Save Custom Keys
+              </button>
             </div>
           </div>
         )}
