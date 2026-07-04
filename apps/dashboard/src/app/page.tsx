@@ -40,20 +40,13 @@ export default function AppMain() {
 
   // Form Live Demo active tab (for non-logged-in users)
   const [activeFormTab, setActiveFormTab] = useState<'cancel' | 'job' | 'feedback' | 'gov' | 'survey' | null>(null);
-  const [pendingFormTab, setPendingFormTab] = useState<'cancel' | 'job' | 'feedback' | 'gov' | 'survey' | null>(null);
 
   const handleSelectForm = (id: string) => {
-    // Start closing the folder immediately
-    setPendingFormTab(id as any);
-    // Wait for the folder collapse animation to finish, then shift layout and show form
-    setTimeout(() => {
-      setActiveFormTab(id as any);
-    }, 450);
+    setActiveFormTab(id as any);
   };
 
   const handleCloseForm = () => {
     setActiveFormTab(null);
-    setPendingFormTab(null);
   };
 
   // Dashboard Section routing state (for logged-in users)
@@ -468,7 +461,7 @@ export default function AppMain() {
                   </p>
                 </div>
                 
-                {/* Horizontal flex container: folder gallery + active form side by side */}
+                {/* Cross-fade container: folder gallery OR active form */}
                 <div style={{ 
                   position: "relative", 
                   width: "100%", 
@@ -477,67 +470,71 @@ export default function AppMain() {
                   alignItems: "flex-start", 
                   justifyContent: "center", 
                   zIndex: 10,
-                  gap: "32px",
                   padding: "0 24px",
                 }}>
-                  {/* Folder gallery — shifts left when a form is selected */}
-                  <motion.div
-                    animate={{
-                      flex: activeFormTab ? "0 0 320px" : "1 1 auto",
-                      opacity: activeFormTab ? 0.45 : 1,
-                    }}
-                    transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "500px", cursor: activeFormTab ? "pointer" : "default" }}
-                    onClick={() => {
-                      if (activeFormTab) {
-                        handleCloseForm();
-                      }
-                    }}
-                  >
-                    <InteractiveFolderGallery 
-                      onSelectForm={handleSelectForm}
-                      selectedFormId={pendingFormTab || activeFormTab} 
-                    />
-                  </motion.div>
-
-                  {/* Animated Form Display — slides in from the right */}
-                  <AnimatePresence>
-                    {activeFormTab && (
+                  <AnimatePresence mode="wait">
+                    {!activeFormTab ? (
                       <motion.div
-                        key={activeFormTab}
-                        initial={{ opacity: 0, x: "100%", scale: 0.95 }}
-                        animate={{ opacity: 1, x: 0, scale: 1 }}
-                        exit={{ opacity: 0, x: "100%", scale: 0.95 }}
-                        transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                        key="gallery"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.9 }}
+                        transition={{ duration: 0.3 }}
+                        style={{ display: "flex", width: "100%", justifyContent: "center", minHeight: "500px" }}
+                      >
+                        <InteractiveFolderGallery 
+                          onSelectForm={handleSelectForm}
+                          selectedFormId={activeFormTab} 
+                        />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="form"
+                        initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -30, scale: 0.95 }}
+                        transition={{ duration: 0.4 }}
                         style={{
-                          flex: "1 1 auto",
+                          width: "100%",
                           maxWidth: "800px",
                           zIndex: 20,
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center"
                         }}
                       >
                         {/* Back button */}
                         <button 
                           onClick={handleCloseForm}
                           style={{
-                            marginBottom: "16px",
+                            marginBottom: "24px",
                             background: "rgba(255,255,255,0.05)",
                             border: "1px solid rgba(255,255,255,0.1)",
                             color: "var(--text-sec)",
-                            padding: "6px 16px",
+                            padding: "8px 20px",
                             borderRadius: "99px",
-                            fontSize: "13px",
+                            fontSize: "14px",
                             cursor: "pointer",
                             display: "flex",
                             alignItems: "center",
                             gap: "8px",
+                            transition: "all 0.2s",
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.background = "rgba(255,255,255,0.1)";
+                            e.currentTarget.style.color = "#fff";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.background = "rgba(255,255,255,0.05)";
+                            e.currentTarget.style.color = "var(--text-sec)";
                           }}
                         >
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
                           Back to Templates
                         </button>
 
                         {/* Form Card */}
-                        <div className="card">
+                        <div className="card" style={{ width: "100%" }}>
                           <div className="card-header">
                             <span className="card-label">Live Integration sandbox</span>
                             <h2 className="card-title">

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 
 export interface FormDocument {
@@ -20,31 +20,14 @@ const defaultDocuments: FormDocument[] = [
 
 export interface InteractiveFolderGalleryProps {
   documents?: FormDocument[];
-  folderName?: string;
-  dragHintText?: string;
   onSelectForm?: (id: string) => void;
   selectedFormId?: string | null;
 }
 
 export function InteractiveFolderGallery({
   documents = defaultDocuments,
-  folderName = "Test Forms",
-  dragHintText = "Drag any card down to close",
   onSelectForm,
-  selectedFormId = null,
 }: InteractiveFolderGalleryProps) {
-  const [isFolderOpen, setIsFolderOpen] = useState(false);
-  const [hoverFolder, setHoverFolder] = useState(false);
-
-  // If a form is selected, we animate the entire gallery to the side
-  const isSelected = selectedFormId !== null;
-
-  useEffect(() => {
-    if (isSelected) {
-      setIsFolderOpen(false);
-      setHoverFolder(false);
-    }
-  }, [isSelected]);
 
   return (
     <motion.div
@@ -58,87 +41,23 @@ export function InteractiveFolderGallery({
         justifyContent: "center",
       }}
     >
-      <div style={{ position: "relative", width: "100%", minHeight: "500px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+      <div style={{ position: "relative", width: "100%", minHeight: "450px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
         
-        <div style={{ position: "relative", width: "400px", height: "500px", display: "flex", justifyContent: "center", zIndex: 0 }}>
-          
-          {/* Back of the Folder */}
-          <motion.div
-            style={{
-              position: "absolute",
-              bottom: "24px",
-              width: "320px",
-              height: "224px",
-              filter: "drop-shadow(0 20px 25px rgba(0,0,0,0.5))",
-            }}
-            animate={{ opacity: isFolderOpen ? 0 : 1, scale: isFolderOpen ? 0.9 : 1 }}
-          >
-            {/* Folder Tab */}
-            <div style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "128px",
-              height: "40px",
-              background: "linear-gradient(to top, #1e1e1e, #2a2a2a)",
-              borderRadius: "12px 12px 0 0",
-              borderTop: "1px solid rgba(255,255,255,0.1)",
-              borderLeft: "1px solid rgba(255,255,255,0.1)",
-              borderRight: "1px solid rgba(255,255,255,0.1)",
-            }} />
-            {/* Folder Body Back */}
-            <div style={{
-              position: "absolute",
-              top: "32px",
-              left: 0,
-              right: 0,
-              bottom: 0,
-              background: "linear-gradient(to bottom, #1e1e1e, #0a0a0a)",
-              borderRadius: "0 12px 12px 12px",
-              border: "1px solid rgba(255,255,255,0.1)",
-              boxShadow: "inset 0 0 40px rgba(0,0,0,0.8)",
-            }} />
-            <div style={{
-              position: "absolute",
-              top: "40px",
-              left: "8px",
-              right: "8px",
-              bottom: "8px",
-              background: "#000",
-              borderRadius: "8px",
-              boxShadow: "inset 0 2px 10px rgba(0,0,0,0.8)",
-              pointerEvents: "none"
-            }} />
-          </motion.div>
-
-          {/* Document Cards */}
+          {/* Document Cards - Spread out by default */}
           <div style={{ position: "absolute", bottom: "40px", zIndex: 10, display: "flex", justifyContent: "center" }}>
             {documents.map((doc, i) => {
               const offset = i - 2;
 
-              const stackY = hoverFolder ? offset * -5 + 20 : offset * -5;
-              const stackX = hoverFolder ? offset * 30 : offset * 3;
-              const stackRotate = hoverFolder ? offset * 8 : offset * 3;
-              const stackScale = 1 - Math.abs(offset) * 0.03;
-
-              const openY = -140;
+              const openY = -100;
               const openX = offset * 135;
-              const openRotate = offset * 2; // slight fan out when open
+              const openRotate = offset * 2; // slight fan out
               const openScale = 1.05;
 
               return (
                 <motion.div
                   key={doc.id}
-                  drag={isFolderOpen ? true : false}
-                  dragSnapToOrigin={true}
-                  onDragEnd={(_e: any, info: any) => {
-                    if (info.offset.y > 100 && isFolderOpen) {
-                      setIsFolderOpen(false);
-                      setHoverFolder(false);
-                    }
-                  }}
                   onClick={() => {
-                    if (isFolderOpen && onSelectForm) {
+                    if (onSelectForm) {
                       onSelectForm(doc.id);
                     }
                   }}
@@ -152,28 +71,21 @@ export function InteractiveFolderGallery({
                     overflow: "hidden",
                     border: "1px solid rgba(255,255,255,0.2)",
                     transformOrigin: "bottom center",
-                    cursor: isFolderOpen ? "grab" : "default",
-                    pointerEvents: isFolderOpen ? "auto" : "none",
+                    cursor: "pointer",
+                    pointerEvents: "auto",
                     background: "#fdfdfd",
                     color: "#000",
                     display: "flex",
                     flexDirection: "column",
                   }}
-                  whileDrag={isFolderOpen ? { cursor: "grabbing" } : {}}
-                  animate={!isFolderOpen ? {
-                    y: stackY,
-                    x: stackX,
-                    rotate: stackRotate,
-                    scale: stackScale,
-                    zIndex: i + 10
-                  } : {
+                  animate={{
                     y: openY,
                     x: openX,
                     rotate: openRotate,
                     scale: openScale,
                     zIndex: 50
                   }}
-                  whileHover={isFolderOpen ? { scale: openScale + 0.05, y: openY - 20, zIndex: 100 } : {}}
+                  whileHover={{ scale: openScale + 0.05, y: openY - 20, zIndex: 100 }}
                   transition={{ type: "spring", stiffness: 350, damping: 30 }}
                 >
                   {/* Paper Document Design */}
@@ -188,10 +100,17 @@ export function InteractiveFolderGallery({
                     <div style={{ fontSize: "13px", color: "#555", lineHeight: 1.5 }}>
                       {doc.desc}
                     </div>
-                    <div style={{ flex: 1 }} />
+                    {/* Wireframe UI */}
+                    <div style={{ flex: 1, marginTop: "12px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                      <div style={{ height: "14px", width: "100%", background: "#f0f0f0", borderRadius: "4px" }} />
+                      <div style={{ height: "14px", width: "85%", background: "#f0f0f0", borderRadius: "4px" }} />
+                      <div style={{ height: "14px", width: "95%", background: "#f0f0f0", borderRadius: "4px" }} />
+                      <div style={{ height: "14px", width: "70%", background: "#f0f0f0", borderRadius: "4px" }} />
+                    </div>
                     <div style={{ 
                       width: "100%", 
                       height: "32px", 
+                      marginTop: "16px",
                       borderRadius: "6px", 
                       backgroundColor: "rgba(0,0,0,0.05)", 
                       display: "flex", 
@@ -201,91 +120,13 @@ export function InteractiveFolderGallery({
                       fontWeight: 600,
                       color: "#444"
                     }}>
-                      Select Form
+                      Select Template
                     </div>
                   </div>
                 </motion.div>
               );
             })}
           </div>
-
-          {/* Front of the Folder */}
-          <motion.div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              width: "340px",
-              height: "176px",
-              filter: "drop-shadow(0 -20px 40px rgba(0,0,0,0.8))",
-              cursor: "pointer",
-              zIndex: 20,
-              pointerEvents: "auto",
-              transformOrigin: "bottom center"
-            }}
-            animate={{ 
-              opacity: isFolderOpen ? 0 : 1, 
-              rotateX: hoverFolder ? -35 : 0, 
-              y: hoverFolder ? 30 : 0,
-              pointerEvents: isFolderOpen ? "none" : "auto" 
-            }}
-            onMouseEnter={() => setHoverFolder(true)}
-            onMouseLeave={() => setHoverFolder(false)}
-            onClick={() => setIsFolderOpen(true)}
-          >
-            <div style={{
-              width: "100%",
-              height: "100%",
-              background: "linear-gradient(to bottom, #2a2a2a, #111)",
-              borderRadius: "16px",
-              border: "1px solid rgba(255,255,255,0.2)",
-              boxShadow: "inset 0 2px 10px rgba(255,255,255,0.1)",
-              position: "relative",
-              overflow: "hidden",
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "center",
-              paddingBottom: "32px"
-            }}>
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: "1px", background: "linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent)" }} />
-              
-              <div style={{
-                padding: "10px 20px",
-                background: "#000",
-                borderRadius: "8px",
-                border: "1px solid rgba(0,0,0,0.8)",
-                boxShadow: "inset 0 2px 4px rgba(255,255,255,0.1)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}>
-                <span style={{ color: "rgba(255,255,255,0.9)", fontSize: "14px", fontWeight: 600, letterSpacing: "1px" }}>
-                  {folderName}
-                </span>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Drag hint text */}
-        <motion.div
-          animate={{ opacity: isFolderOpen ? 1 : 0, y: isFolderOpen ? 0 : 50 }}
-          style={{
-            position: "absolute",
-            bottom: "40px",
-            padding: "12px 24px",
-            borderRadius: "99px",
-            background: "rgba(255,255,255,0.05)",
-            border: "1px solid rgba(255,255,255,0.1)",
-            color: "rgba(255,255,255,0.5)",
-            fontSize: "14px",
-            fontWeight: 500,
-            textTransform: "uppercase",
-            letterSpacing: "2px",
-            pointerEvents: "none"
-          }}
-        >
-          {dragHintText}
-        </motion.div>
 
       </div>
     </motion.div>
