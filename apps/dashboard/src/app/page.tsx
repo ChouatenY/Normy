@@ -22,6 +22,7 @@ import { SurveyForm } from '../components/SurveyForm.js';
 import { NormyProvider } from '@normy-validation/react';
 import { Features } from '../components/ui/features-6.js';
 import ContributorsWallDemo from '../components/ui/contributors-section.js';
+import { LayoutDashboard, FolderKanban, KeyRound, BookOpenText, CodeXml, Settings2, CreditCard, Sun, Moon, AlertCircle } from 'lucide-react';
 
 type ActiveSection = 'overview' | 'projects' | 'keys' | 'docs' | 'playground' | 'settings' | 'billing';
 
@@ -57,6 +58,7 @@ export default function AppMain() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
 
   // Project modal / form state
   const [showProjModal, setShowProjModal] = useState(false);
@@ -76,6 +78,13 @@ export default function AppMain() {
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+
+  // UI States for Custom Modals
+  const [alertConfig, setAlertConfig] = useState<{title: string, message: string} | null>(null);
+  const [confirmConfig, setConfirmConfig] = useState<{title: string, message: string, onConfirm: () => void} | null>(null);
+
+  const showAlert = (title: string, message: string) => setAlertConfig({ title, message });
+  const showConfirm = (title: string, message: string, onConfirm: () => void) => setConfirmConfig({ title, message, onConfirm });
 
   // API host determination
   const apiHostUrl = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://localhost:3001';
@@ -107,11 +116,13 @@ export default function AppMain() {
   }, [selectedProject]);
 
   const loadProjects = async () => {
+    setIsLoadingProjects(true);
     const list = await DbService.getProjects(user?.id || 'default_user');
     setProjects(list);
     if (list.length > 0 && !selectedProject) {
       setSelectedProject(list[0] ?? null);
     }
+    setIsLoadingProjects(false);
   };
 
   const loadApiKeys = async (projId: string) => {
@@ -214,13 +225,13 @@ export default function AppMain() {
   };
 
   const handleDeleteProject = async (id: string) => {
-    if (confirm('Are you sure you want to delete this project? All associated API keys will be deleted.')) {
+    showConfirm('Delete Project', 'Are you sure you want to delete this project? All associated API keys will be deleted.', async () => {
       await DbService.deleteProject(id);
       if (selectedProject?.id === id) {
         setSelectedProject(null);
       }
       await loadProjects();
-    }
+    });
   };
 
   // --- API Key Handlers ---
@@ -235,21 +246,21 @@ export default function AppMain() {
   };
 
   const handleRevokeKey = async (id: string) => {
-    if (confirm('Are you sure you want to revoke this API key? Applications using this key will immediately fail validation.')) {
+    showConfirm('Revoke API Key', 'Are you sure you want to revoke this API key? Applications using this key will immediately fail validation.', async () => {
       await DbService.revokeApiKey(id);
       if (selectedProject) {
         await loadApiKeys(selectedProject.id);
       }
-    }
+    });
   };
 
   const handleDeleteKey = async (id: string) => {
-    if (confirm('Are you sure you want to permanently delete this key record?')) {
+    showConfirm('Delete API Key', 'Are you sure you want to permanently delete this key record?', async () => {
       await DbService.deleteApiKey(id);
       if (selectedProject) {
         await loadApiKeys(selectedProject.id);
       }
-    }
+    });
   };
 
   // --- Profile Settings ---
@@ -740,12 +751,12 @@ export default function AppMain() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <LiquidMetalButton
                     label="GitHub"
-                    onClick={() => alert('OAuth flow is ready. Integration config missing.')}
+                    onClick={() => showAlert('OAuth Integration', 'OAuth flow is ready. Integration config missing.')}
                     icon={<GitHubLogo />}
                   />
                   <LiquidMetalButton
                     label="Google"
-                    onClick={() => alert('OAuth flow is ready. Integration config missing.')}
+                    onClick={() => showAlert('OAuth Integration', 'OAuth flow is ready. Integration config missing.')}
                     icon={<GoogleLogo />}
                   />
                 </div>
@@ -779,27 +790,27 @@ export default function AppMain() {
           <span style={{ fontSize: '0.9375rem', fontWeight: 800, letterSpacing: '-0.02em' }}>NORMY CONSOLE</span>
         </div>
 
-        <nav style={{ flex: 1 }}>
-          <button onClick={() => setActiveSection('overview')} className={`nav-link ${activeSection === 'overview' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
-            <span>Overview</span>
+        <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <button onClick={() => setActiveSection('overview')} className={`nav-link ${activeSection === 'overview' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <LayoutDashboard size={16} /> <span>Overview</span>
           </button>
-          <button onClick={() => setActiveSection('projects')} className={`nav-link ${activeSection === 'projects' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
-            <span>Projects</span>
+          <button onClick={() => setActiveSection('projects')} className={`nav-link ${activeSection === 'projects' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <FolderKanban size={16} /> <span>Projects</span>
           </button>
-          <button onClick={() => setActiveSection('keys')} className={`nav-link ${activeSection === 'keys' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
-            <span>API Keys</span>
+          <button onClick={() => setActiveSection('keys')} className={`nav-link ${activeSection === 'keys' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <KeyRound size={16} /> <span>API Keys</span>
           </button>
-          <button onClick={() => setActiveSection('docs')} className={`nav-link ${activeSection === 'docs' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
-            <span>Documentation</span>
+          <button onClick={() => setActiveSection('docs')} className={`nav-link ${activeSection === 'docs' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <BookOpenText size={16} /> <span>Documentation</span>
           </button>
-          <button onClick={() => setActiveSection('playground')} className={`nav-link ${activeSection === 'playground' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
-            <span>Playground</span>
+          <button onClick={() => setActiveSection('playground')} className={`nav-link ${activeSection === 'playground' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <CodeXml size={16} /> <span>Playground</span>
           </button>
-          <button onClick={() => setActiveSection('settings')} className={`nav-link ${activeSection === 'settings' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
-            <span>Settings</span>
+          <button onClick={() => setActiveSection('settings')} className={`nav-link ${activeSection === 'settings' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Settings2 size={16} /> <span>Settings</span>
           </button>
-          <button onClick={() => setActiveSection('billing')} className={`nav-link ${activeSection === 'billing' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}>
-            <span>Billing</span>
+          <button onClick={() => setActiveSection('billing')} className={`nav-link ${activeSection === 'billing' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <CreditCard size={16} /> <span>Billing</span>
           </button>
         </nav>
 
@@ -846,17 +857,7 @@ export default function AppMain() {
                     const p = projects.find(p => p.id === e.target.value);
                     if (p) setSelectedProject(p);
                   }}
-                  style={{
-                    background: 'var(--surface-1)',
-                    color: 'var(--text)',
-                    border: '1px solid var(--border)',
-                    borderRadius: 6,
-                    padding: '6px 12px',
-                    fontSize: '0.8125rem',
-                    fontWeight: 600,
-                    outline: 'none',
-                    cursor: 'pointer'
-                  }}
+                  className="header-select"
                 >
                   {projects.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>
@@ -868,27 +869,12 @@ export default function AppMain() {
             {/* Shimmering Liquid Metal theme switcher button for Authenticated console */}
             <button
               onClick={toggleTheme}
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #111 0%, #333 50%, #111 100%)',
-                backgroundSize: '200% 200%',
-                animation: 'lm-shimmer 4s linear infinite',
-                border: '1px solid rgba(255, 255, 255, 0.25)',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                fontSize: '0.8125rem',
-                boxShadow: '0 2px 6px rgba(0,0,0,0.5)',
-                transition: 'transform 0.15s ease'
-              }}
-              onMouseEnter={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}
+              className="btn-liquid-metal"
+              style={{ padding: '2px', borderRadius: '50%', width: 36, height: 36, display: 'flex' }}
             >
-              {theme === 'dark' ? '☀️' : '🌙'}
+              <div className="btn-liquid-metal-inner" style={{ padding: 0, borderRadius: '50%', width: '100%', height: '100%', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {theme === 'dark' ? '☀️' : '🌙'}
+              </div>
             </button>
           </div>
         </div>
@@ -924,24 +910,35 @@ export default function AppMain() {
 
             {/* Metrics cards */}
             <div className="analytics-grid">
-              <div className="card-glass stat-card">
-                <span className="stat-label">Total Projects</span>
-                <div className="stat-val">{projects.length}</div>
-              </div>
-              <div className="card-glass stat-card">
-                <span className="stat-label">Total Validations</span>
-                <div className="stat-val">
-                  {projects.reduce((acc, curr) => acc + curr.validationCount, 0)}
-                </div>
-              </div>
-              <div className="card-glass stat-card">
-                <span className="stat-label">Average Score</span>
-                <div className="stat-val">91.4/100</div>
-              </div>
-              <div className="card-glass stat-card">
-                <span className="stat-label">Cache Hit Ratio</span>
-                <div className="stat-val">68.2%</div>
-              </div>
+              {isLoadingProjects ? (
+                <>
+                  <div className="card-glass stat-card skeleton skeleton-card" style={{ minHeight: 110 }}></div>
+                  <div className="card-glass stat-card skeleton skeleton-card" style={{ minHeight: 110 }}></div>
+                  <div className="card-glass stat-card skeleton skeleton-card" style={{ minHeight: 110 }}></div>
+                  <div className="card-glass stat-card skeleton skeleton-card" style={{ minHeight: 110 }}></div>
+                </>
+              ) : (
+                <>
+                  <div className="card-glass stat-card">
+                    <span className="stat-label">Total Projects</span>
+                    <div className="stat-val">{projects.length}</div>
+                  </div>
+                  <div className="card-glass stat-card">
+                    <span className="stat-label">Total Validations</span>
+                    <div className="stat-val">
+                      {projects.reduce((acc, curr) => acc + curr.validationCount, 0)}
+                    </div>
+                  </div>
+                  <div className="card-glass stat-card">
+                    <span className="stat-label">Average Score</span>
+                    <div className="stat-val">91.4/100</div>
+                  </div>
+                  <div className="card-glass stat-card">
+                    <span className="stat-label">Cache Hit Ratio</span>
+                    <div className="stat-val">68.2%</div>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Detailed analytics layout */}
@@ -1073,6 +1070,16 @@ export default function AppMain() {
         {/* ── API Keys Section ── */}
         {activeSection === 'keys' && (
           <div>
+            <div className="card-glass" style={{ marginBottom: 24, borderLeft: '4px solid var(--teal)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(90deg, rgba(76,175,145,0.05) 0%, rgba(255,255,255,0.01) 100%)' }}>
+              <div>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--white)', marginBottom: 4 }}>Need to set Custom AI Keys?</h4>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-sec)' }}>Use the Bring Your Own Key (BYOK) system to connect your custom providers directly to your workspace.</p>
+              </div>
+              <button className="btn btn-primary" onClick={() => setActiveSection('billing')}>
+                Setup BYOK
+              </button>
+            </div>
+
             {selectedProject ? (
               <div>
                 {/* Generate New API Key Panel */}
@@ -1128,7 +1135,7 @@ export default function AppMain() {
                         <button 
                           onClick={() => {
                             navigator.clipboard.writeText(generatedKey);
-                            alert('API Key copied to clipboard!');
+                            showAlert('Clipboard', 'API Key copied to clipboard!');
                           }} 
                           className="btn btn-glass" 
                           style={{ padding: '6px 12px', fontSize: '0.8125rem' }}
@@ -1271,44 +1278,77 @@ export default function AppMain() {
 
         {/* ── Billing & Credits Section ── */}
         {activeSection === 'billing' && (
-          <div style={{ maxWidth: 900 }}>
-            <div className="card-glass" style={{ marginBottom: 24, borderLeft: '4px solid #4CAF50' }}>
-              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)', marginBottom: 8 }}>Test API Credits</h3>
-              <p style={{ color: 'var(--text-sec)', fontSize: '0.875rem', marginBottom: 20 }}>
-                You have been granted free test credits for sandbox and localhost development.
-              </p>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 24, background: 'rgba(0,0,0,0.2)', borderRadius: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--white)' }}>Current Usage & Billing</h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
+              {/* Card 1: Balance Left */}
+              <div className="card-glass" style={{ borderTop: '4px solid #4CAF50', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Available Balance</div>
-                  <div style={{ fontSize: '2.5rem', fontWeight: 800, color: '#4CAF50' }}>$5.00</div>
+                  <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: 1 }}>Test API Credits Left</h3>
+                  <div style={{ fontSize: '3rem', fontWeight: 800, color: '#4CAF50', margin: '12px 0' }}>$5.00</div>
+                  <p style={{ color: 'var(--text-sec)', fontSize: '0.8125rem' }}>
+                    Free sandbox development credits for testing integrations.
+                  </p>
                 </div>
-                <button 
-                  className="btn btn-primary"
-                  onClick={() => alert("We're still working on hosted billing! In the meantime, please use the Bring Your Own Key (BYOK) system. Check the Documentation tab for implementation structures.")}
-                >
-                  Refill Account
-                </button>
+              </div>
+
+              {/* Card 2: Used This Month */}
+              <div className="card-glass" style={{ borderTop: '4px solid var(--border-hi)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div>
+                  <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: 1 }}>Used This Month</h3>
+                  <div style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--white)', margin: '12px 0' }}>$0.00</div>
+                  <p style={{ color: 'var(--text-sec)', fontSize: '0.8125rem' }}>
+                    Calculated based on ~0 total validations across all projects.
+                  </p>
+                </div>
+              </div>
+
+              {/* Card 3: Refill & Auto-payment */}
+              <div className="card-glass" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)' }}>
+                <div>
+                  <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--white)', marginBottom: 12 }}>Auto-Refill Settings</h3>
+                  <div style={{ padding: 12, background: 'rgba(0,0,0,0.3)', borderRadius: 6, border: '1px solid var(--border)', marginBottom: 16 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <div style={{ width: 32, height: 20, background: '#1a1f36', borderRadius: 4, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.6rem', color: '#fff', fontWeight: 'bold' }}>VISA</div>
+                        <span style={{ fontSize: '0.8125rem', color: 'var(--text-sec)' }}>Ending in 4242</span>
+                      </div>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--teal)' }}>Active</span>
+                    </div>
+                  </div>
+                  <p style={{ color: 'var(--text-sec)', fontSize: '0.8125rem', marginBottom: 20 }}>
+                    Automatically refill $20.00 when balance falls below $5.00.
+                  </p>
+                </div>
+                
+                <div onClick={() => showAlert("Billing Integration", "We're still working on hosted billing! In the meantime, please use the Bring Your Own Key (BYOK) system. Check the Documentation tab for implementation structures.")}>
+                  <LiquidMetalButton label="Refill Balance Now" />
+                </div>
               </div>
             </div>
 
-            <div className="card-glass">
+            {/* BYOK Section */}
+            <div className="card-glass" style={{ maxWidth: 800 }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)', marginBottom: 8 }}>Bring Your Own Key (BYOK)</h3>
-              <p style={{ color: 'var(--text-sec)', fontSize: '0.875rem', marginBottom: 20, lineHeight: 1.5 }}>
+              <p style={{ color: 'var(--text-sec)', fontSize: '0.875rem', marginBottom: 24, lineHeight: 1.5 }}>
                 Bypass Normy's hosted billing entirely by supplying your own OpenAI, Gemini, or Anthropic API keys. We will proxy your validations directly to your provider and never bill you for token usage.
               </p>
               
-              <div className="input-group">
-                <label className="input-label">Google Gemini API Key</label>
-                <input type="password" placeholder="AIzaSy..." className="input-field" disabled />
-              </div>
-              <div className="input-group">
-                <label className="input-label">OpenAI API Key</label>
-                <input type="password" placeholder="sk-..." className="input-field" disabled />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
+                <div className="input-group">
+                  <label className="input-label">Google Gemini API Key</label>
+                  <input type="password" placeholder="AIzaSy..." className="input-field" disabled />
+                </div>
+                <div className="input-group">
+                  <label className="input-label">OpenAI API Key</label>
+                  <input type="password" placeholder="sk-..." className="input-field" disabled />
+                </div>
               </div>
               
               <button 
                 className="btn btn-glass"
-                onClick={() => alert("BYOK settings UI is under construction. BYOK is currently managed via the database directly.")}
+                onClick={() => showAlert("BYOK Configuration", "BYOK settings UI is under construction. BYOK is currently managed via the database directly.")}
               >
                 Save Custom Keys
               </button>
@@ -1418,6 +1458,41 @@ export default function AppMain() {
           </div>
         </div>
       )}
+
+      {/* ── Custom Modals ── */}
+      <AnimatePresence>
+        {alertConfig && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000, padding: 24
+          }}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="card-glass" style={{ maxWidth: 400, width: '100%', padding: 24, textAlign: 'center' }}>
+              <div style={{ color: 'var(--blue)', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                <AlertCircle size={48} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)', marginBottom: 8 }}>{alertConfig.title}</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-sec)', marginBottom: 24, lineHeight: 1.5 }}>{alertConfig.message}</p>
+              <button className="btn btn-primary" onClick={() => setAlertConfig(null)} style={{ width: '100%' }}>Dismiss</button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {confirmConfig && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000, padding: 24
+          }}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="card-glass" style={{ maxWidth: 400, width: '100%', padding: 24, textAlign: 'center' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)', marginBottom: 8 }}>{confirmConfig.title}</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-sec)', marginBottom: 24, lineHeight: 1.5 }}>{confirmConfig.message}</p>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="btn btn-glass" onClick={() => setConfirmConfig(null)} style={{ flex: 1 }}>Cancel</button>
+                <button className="btn btn-primary" onClick={() => { confirmConfig.onConfirm(); setConfirmConfig(null); }} style={{ flex: 1, background: 'var(--red)', borderColor: 'var(--red)', color: '#fff' }}>Confirm</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

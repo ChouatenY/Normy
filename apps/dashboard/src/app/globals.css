@@ -170,6 +170,60 @@ html, body {
   box-shadow: 0 0 0 2px rgba(255,255,255,0.05);
 }
 
+select.input-field, .header-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%23a0a0a0%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  padding-right: 40px;
+  cursor: pointer;
+}
+
+.header-select {
+  background-color: var(--surface-1);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 36px 8px 12px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  outline: none;
+  transition: all 0.2s ease;
+}
+.header-select:hover {
+  border-color: var(--border-hi);
+}
+
+/* Skeleton Loading Animation */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--glass-bg) 25%, rgba(255,255,255,0.05) 50%, var(--glass-bg) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 2s infinite linear;
+  border-radius: var(--radius-sm);
+}
+.light-theme .skeleton {
+  background: linear-gradient(90deg, var(--glass-bg) 25%, rgba(0,0,0,0.05) 50%, var(--glass-bg) 75%);
+  background-size: 200% 100%;
+}
+.skeleton-text {
+  height: 20px;
+  width: 100%;
+  margin-bottom: 8px;
+}
+.skeleton-title {
+  height: 32px;
+  width: 60%;
+  margin-bottom: 16px;
+}
+.skeleton-card {
+  min-height: 150px;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
