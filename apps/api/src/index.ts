@@ -37,6 +37,7 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
 import { redis } from './redis/index.js';
 import { GoogleGenAI } from '@google/genai';
+import { encrypt, decrypt } from './utils/encryption.js';
 
 // Setup Hono app with custom context types
 const app = new OpenAPIHono<AuthContext>();
@@ -169,6 +170,89 @@ app.post('/projects', async (c) => {
   return c.json({ project }, 201);
 });
 
+app.get('/projects', async (c) => {
+  const unauthorized = requireAdminSecret(c);
+  if (unauthorized) return unauthorized;
+
+  const email = c.req.query('email');
+  if (!email) {
+    return c.json({ error: 'email query parameter is required' }, 400);
+  }
+
+  const owner = await db.query.users.findFirst({
+    where: (table, { eq }) => eq(table.email, email),
+  });
+
+  if (!owner) {
+    return c.json({ projects: [] });
+  }
+
+  const userProjects = await db.query.projects.findMany({
+    where: (table, { eq, isNull, and }) => and(
+      eq(table.userId, owner.id),
+      isNull(table.deletedAt)
+    ),
+    orderBy: (table, { desc }) => [desc(table.createdAt)]
+  });
+
+  return c.json({ projects: userProjects });
+});
+
+app.put('/projects/:projectId', async (c) => {
+  const unauthorized = requireAdminSecret(c);
+  if (unauthorized) return unauthorized;
+
+  const projectId = c.req.param('projectId');
+  const body = await c.req.json().catch(() => null);
+  if (!body) return c.json({ error: 'invalid body' }, 400);
+
+  const [project] = await db.update(projects)
+    .set({
+      name: body.name,
+      slug: body.slug,
+      description: body.description,
+      defaultProvider: body.defaultProvider,
+      minScore: body.minScore,
+      updatedAt: new Date()
+    })
+    .where(eq(projects.id, projectId))
+    .returning();
+
+  return c.json({ project });
+});
+
+app.put('/projects/:projectId/byok', async (c) => {
+  const unauthorized = requireAdminSecret(c);
+  if (unauthorized) return unauthorized;
+
+  const projectId = c.req.param('projectId');
+  const body = await c.req.json().catch(() => null) as {
+    provider: 'gemini' | 'openai' | 'anthropic';
+    key: string;
+  } | null;
+
+  if (!body?.provider || !body.key) {
+    return c.json({ error: 'provider and key are required' }, 400);
+  }
+
+  const encryptedKey = encrypt(body.key);
+  const updateData: any = {};
+  if (body.provider === 'gemini') updateData.geminiApiKey = encryptedKey;
+  if (body.provider === 'openai') updateData.openaiApiKey = encryptedKey;
+  if (body.provider === 'anthropic') updateData.anthropicApiKey = encryptedKey;
+
+  const [project] = await db.update(projects)
+    .set({ ...updateData, updatedAt: new Date() })
+    .where(eq(projects.id, projectId))
+    .returning();
+
+  if (!project) {
+    return c.json({ error: 'Project not found' }, 404);
+  }
+
+  return c.json({ success: true }, 200);
+});
+
 app.post('/api-keys', async (c) => {
   const unauthorized = requireAdminSecret(c);
   if (unauthorized) return unauthorized;
@@ -290,11 +374,22 @@ app.openapi(validateRoute, async (c) => {
                  providerName === 'openai' ? !!(project as any).openaiApiKey :
                  providerName === 'anthropic' ? !!(project as any).anthropicApiKey : false;
 
-  const activeProviderKey = isBYOK ? 
+  const rawEncryptedKey = isBYOK ? 
     (providerName === 'gemini' ? (project as any).geminiApiKey :
      providerName === 'openai' ? (project as any).openaiApiKey :
-     providerName === 'anthropic' ? (project as any).anthropicApiKey : null) :
-    (providerName === 'gemini' ? env.GEMINI_API_KEY : '');
+     providerName === 'anthropic' ? (project as any).anthropicApiKey : null) : null;
+
+  let activeProviderKey = '';
+  if (isBYOK && rawEncryptedKey) {
+    try {
+      activeProviderKey = decrypt(rawEncryptedKey);
+    } catch (e) {
+      console.error('Failed to decrypt BYOK key', e);
+      return c.json({ error: 'Failed to access configured BYOK provider. Invalid encryption state.' }, 500);
+    }
+  } else {
+    activeProviderKey = providerName === 'gemini' ? env.GEMINI_API_KEY : '';
+  }
 
   if (!isBYOK) {
     // Hosted by Normy, check credits

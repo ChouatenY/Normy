@@ -124,7 +124,7 @@ export default function AppMain() {
 
   const loadProjects = async () => {
     setIsLoadingProjects(true);
-    const list = await DbService.getProjects(user?.id || 'default_user');
+    const list = await DbService.getProjects(user?.email || 'default@example.com');
     setProjects(list);
     if (list.length > 0 && !selectedProject) {
       setSelectedProject(list[0] ?? null);
@@ -224,7 +224,7 @@ export default function AppMain() {
         await loadProjects();
       }
     } else {
-      const created = await DbService.createProject(user?.id || 'default_user', {
+      const created = await DbService.createProject(user?.email || 'default@example.com', {
         name: projName,
         slug: projSlug,
         description: projDesc,
