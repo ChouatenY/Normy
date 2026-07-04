@@ -21,6 +21,7 @@ import { GovernmentForm } from '../components/GovernmentForm.js';
 import { SurveyForm } from '../components/SurveyForm.js';
 import { NormyProvider } from '@normy-validation/react';
 import { Features } from '../components/ui/features-6.js';
+import ContributorsWallDemo from '../components/ui/contributors-section.js';
 
 type ActiveSection = 'overview' | 'projects' | 'keys' | 'docs' | 'playground' | 'settings';
 
@@ -574,6 +575,9 @@ export default function AppMain() {
               </motion.div>
             </div>
           )}
+
+          {/* ── Open Source Contributors ── */}
+          <ContributorsWallDemo />
 
         </main>
 
