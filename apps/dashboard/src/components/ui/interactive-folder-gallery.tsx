@@ -50,7 +50,7 @@ export function InteractiveFolderGallery({
     <motion.div
       style={{
         width: "100%",
-        padding: "80px 0",
+        padding: "20px 0",
         position: "relative",
         display: "flex",
         flexDirection: "column",

@@ -39,6 +39,21 @@ export default function AppMain() {
 
   // Form Live Demo active tab (for non-logged-in users)
   const [activeFormTab, setActiveFormTab] = useState<'cancel' | 'job' | 'feedback' | 'gov' | 'survey' | null>(null);
+  const [pendingFormTab, setPendingFormTab] = useState<'cancel' | 'job' | 'feedback' | 'gov' | 'survey' | null>(null);
+
+  const handleSelectForm = (id: string) => {
+    // Start closing the folder immediately
+    setPendingFormTab(id as any);
+    // Wait for the folder collapse animation to finish, then shift layout and show form
+    setTimeout(() => {
+      setActiveFormTab(id as any);
+    }, 450);
+  };
+
+  const handleCloseForm = () => {
+    setActiveFormTab(null);
+    setPendingFormTab(null);
+  };
 
   // Dashboard Section routing state (for logged-in users)
   const [activeSection, setActiveSection] = useState<ActiveSection>('overview');
@@ -407,7 +422,7 @@ export default function AppMain() {
                   display: "flex", 
                   flexDirection: "column",
                   alignItems: "center", 
-                  paddingTop: "120px",
+                  paddingTop: "60px",
                 }}
               >
                 {/* 3D Background behind the folder gallery */}
@@ -455,11 +470,16 @@ export default function AppMain() {
                       opacity: activeFormTab ? 0.85 : 1,
                     }}
                     transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                    style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "500px" }}
+                    style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "500px", cursor: activeFormTab ? "pointer" : "default" }}
+                    onClick={() => {
+                      if (activeFormTab) {
+                        handleCloseForm();
+                      }
+                    }}
                   >
                     <InteractiveFolderGallery 
-                      onSelectForm={(id) => setActiveFormTab(id as any)}
-                      selectedFormId={activeFormTab} 
+                      onSelectForm={handleSelectForm}
+                      selectedFormId={pendingFormTab || activeFormTab} 
                     />
                   </motion.div>
 
@@ -480,7 +500,7 @@ export default function AppMain() {
                       >
                         {/* Back button */}
                         <button 
-                          onClick={() => setActiveFormTab(null)}
+                          onClick={handleCloseForm}
                           style={{
                             marginBottom: "16px",
                             background: "rgba(255,255,255,0.05)",
