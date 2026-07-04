@@ -37,6 +37,7 @@ export default function AppMain() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [authMessage, setAuthMessage] = useState<string | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(false);
 
   // BYOK Form state
   const [showByokForm, setShowByokForm] = useState(false);
@@ -139,12 +140,15 @@ export default function AppMain() {
   // --- Auth Handlers ---
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAuthLoading) return;
+    setIsAuthLoading(true);
     setAuthError(null);
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: { data: { name } }
     });
+    setIsAuthLoading(false);
     if (error) {
       setAuthError(error.message);
     } else {
@@ -155,8 +159,11 @@ export default function AppMain() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isAuthLoading) return;
+    setIsAuthLoading(true);
     setAuthError(null);
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    setIsAuthLoading(false);
     if (error) {
       setAuthError(error.message);
     } else {
@@ -705,7 +712,7 @@ export default function AppMain() {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', marginBottom: 16 }}>
-                    <LiquidMetalButton label="Sign In" type="submit" />
+                    <LiquidMetalButton label={isAuthLoading ? "Loading..." : "Sign In"} type="submit" />
                   </div>
 
                   <div style={{ fontSize: '0.8125rem', color: 'var(--text-sec)', textAlign: 'center' }}>
@@ -730,7 +737,7 @@ export default function AppMain() {
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', marginBottom: 16 }}>
-                    <LiquidMetalButton label="Create Account" type="submit" />
+                    <LiquidMetalButton label={isAuthLoading ? "Loading..." : "Create Account"} type="submit" />
                   </div>
 
                   <div style={{ fontSize: '0.8125rem', color: 'var(--text-sec)', textAlign: 'center' }}>
@@ -774,6 +781,41 @@ export default function AppMain() {
             </div>
           </div>
         )}
+
+      {/* ── Custom Modals ── */}
+      <AnimatePresence>
+        {alertConfig && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000, padding: 24
+          }}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="card-glass" style={{ maxWidth: 400, width: '100%', padding: 24, textAlign: 'center' }}>
+              <div style={{ color: 'var(--blue)', marginBottom: 16, display: 'flex', justifyContent: 'center' }}>
+                <AlertCircle size={48} />
+              </div>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)', marginBottom: 8 }}>{alertConfig.title}</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-sec)', marginBottom: 24, lineHeight: 1.5 }}>{alertConfig.message}</p>
+              <button className="btn btn-primary" onClick={() => setAlertConfig(null)} style={{ width: '100%' }}>Dismiss</button>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {confirmConfig && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} style={{
+            position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(12px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000, padding: 24
+          }}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} exit={{ scale: 0.95 }} className="card-glass" style={{ maxWidth: 400, width: '100%', padding: 24, textAlign: 'center' }}>
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)', marginBottom: 8 }}>{confirmConfig.title}</h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-sec)', marginBottom: 24, lineHeight: 1.5 }}>{confirmConfig.message}</p>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="btn btn-glass" onClick={() => setConfirmConfig(null)} style={{ flex: 1 }}>Cancel</button>
+                <button className="btn btn-primary" onClick={() => { confirmConfig.onConfirm(); setConfirmConfig(null); }} style={{ flex: 1, background: 'var(--red)', borderColor: 'var(--red)', color: '#fff' }}>Confirm</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       </div>
     );
