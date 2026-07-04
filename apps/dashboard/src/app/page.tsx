@@ -22,7 +22,8 @@ import { SurveyForm } from '../components/SurveyForm.js';
 import { NormyProvider } from '@normy-validation/react';
 import { Features } from '../components/ui/features-6.js';
 import ContributorsWallDemo from '../components/ui/contributors-section.js';
-import { LayoutDashboard, FolderKanban, KeyRound, BookOpenText, CodeXml, Settings2, CreditCard, Sun, Moon, AlertCircle } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, KeyRound, BookOpenText, CodeXml, Settings2, CreditCard, Sun, Moon, AlertCircle, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { CustomSelect } from '../components/ui/custom-select.js';
 
 type ActiveSection = 'overview' | 'projects' | 'keys' | 'docs' | 'playground' | 'settings' | 'billing';
 
@@ -777,18 +778,16 @@ export default function AppMain() {
       
       {/* ── Navigation Sidebar ── */}
       <aside className="sidebar" style={{ width: isSidebarCollapsed ? 80 : 260, transition: 'width 0.3s ease', overflow: 'hidden' }}>
-        <div className="sidebar-logo" style={{ justifyContent: isSidebarCollapsed ? 'center' : 'flex-start', cursor: 'pointer' }} onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
-          <img
-            src="/logo.png"
-            alt="Normy logo"
-            style={{
-              height: 20,
-              width: 'auto',
-              filter: theme === 'light' ? 'invert(1)' : 'none',
-              transition: 'filter 0.3s ease'
-            }}
-          />
-          {!isSidebarCollapsed && <span style={{ fontSize: '0.9375rem', fontWeight: 800, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>NORMY CONSOLE</span>}
+        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: isSidebarCollapsed ? 'center' : 'space-between', paddingBottom: 24, borderBottom: '1px solid var(--border)', marginBottom: 24 }}>
+          {!isSidebarCollapsed && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <img src="/logo.png" alt="Normy logo" style={{ height: 20, width: 'auto', filter: theme === 'light' ? 'invert(1)' : 'none' }} />
+              <span style={{ fontSize: '0.9375rem', fontWeight: 800, letterSpacing: '-0.02em', whiteSpace: 'nowrap', color: 'var(--white)' }}>NORMY CONSOLE</span>
+            </div>
+          )}
+          <button onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)} style={{ background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '50%', width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-sec)', cursor: 'pointer' }}>
+            {isSidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+          </button>
         </div>
 
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -835,7 +834,7 @@ export default function AppMain() {
       </aside>
 
       {/* ── Main Panel View ── */}
-      <main className="main-content">
+      <main className="main-content" style={{ marginLeft: isSidebarCollapsed ? 80 : 260, transition: 'margin-left 0.3s ease' }}>
         
         {/* Header Strip */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
@@ -854,20 +853,17 @@ export default function AppMain() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {/* Active Project Dropdown */}
             {projects.length > 0 && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, zIndex: 100 }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-sec)' }}>Active:</span>
-                <select
+                <CustomSelect
                   value={selectedProject?.id || ''}
-                  onChange={(e) => {
-                    const p = projects.find(p => p.id === e.target.value);
+                  onChange={(val) => {
+                    const p = projects.find(p => p.id === val);
                     if (p) setSelectedProject(p);
                   }}
-                  className="header-select"
-                >
-                  {projects.map(p => (
-                    <option key={p.id} value={p.id}>{p.name}</option>
-                  ))}
-                </select>
+                  options={projects.map(p => ({ label: p.name, value: p.id }))}
+                  style={{ minWidth: 200 }}
+                />
               </div>
             )}
 
@@ -1121,17 +1117,13 @@ export default function AppMain() {
                       />
                     </div>
 
-                    <div className="input-group" style={{ width: 180, marginBottom: 0 }}>
+                    <div className="input-group" style={{ width: 180, marginBottom: 0, zIndex: 50 }}>
                       <label className="input-label">Environment</label>
-                      <select
-                        className="input-field"
+                      <CustomSelect
                         value={newKeyEnv}
-                        onChange={(e) => setNewKeyEnv(e.target.value as any)}
-                        style={{ cursor: 'pointer' }}
-                      >
-                        <option value="development">Development</option>
-                        <option value="production">Production</option>
-                      </select>
+                        onChange={(val) => setNewKeyEnv(val as any)}
+                        options={[{label: 'Development', value: 'development'}, {label: 'Production', value: 'production'}]}
+                      />
                     </div>
 
                     <button type="submit" className="btn btn-primary" style={{ height: 44 }}>
@@ -1338,7 +1330,7 @@ export default function AppMain() {
                     </div>
                   </div>
                   <p style={{ color: 'var(--text-sec)', fontSize: '0.8125rem', marginBottom: 20 }}>
-                    Automatically refill $20.00 when balance falls below $5.00.
+                    Auto refill $20 when below $5.
                   </p>
                 </div>
                 
@@ -1352,26 +1344,66 @@ export default function AppMain() {
             <div className="card-glass" style={{ maxWidth: 800 }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--white)', marginBottom: 8 }}>Bring Your Own Key (BYOK)</h3>
               <p style={{ color: 'var(--text-sec)', fontSize: '0.875rem', marginBottom: 24, lineHeight: 1.5 }}>
-                Bypass Normy's hosted billing entirely by supplying your own OpenAI, Gemini, or Anthropic API keys. We will proxy your validations directly to your provider and never bill you for token usage.
+                Bypass Normy's hosted billing entirely by supplying your own API keys. We proxy your validations directly to your provider and never bill you for token usage. Click the star icon to set your prominent default provider.
               </p>
               
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, marginBottom: 24 }}>
-                <div className="input-group">
-                  <label className="input-label">Google Gemini API Key</label>
-                  <input type="password" placeholder="AIzaSy..." className="input-field" disabled />
-                </div>
-                <div className="input-group">
-                  <label className="input-label">OpenAI API Key</label>
-                  <input type="password" placeholder="sk-..." className="input-field" disabled />
-                </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 24, marginBottom: 24 }}>
+                {['gemini', 'openai', 'anthropic'].map((provider) => {
+                  const title = provider === 'gemini' ? 'Google Gemini' : provider === 'openai' ? 'OpenAI' : 'Anthropic';
+                  const isProminent = selectedProject?.defaultProvider === provider;
+                  const savedKey = (selectedProject as any)?.[`${provider}ApiKey`];
+                  
+                  return (
+                    <div key={provider} style={{ display: 'flex', alignItems: 'flex-end', gap: 16 }}>
+                      <div className="input-group" style={{ flex: 1, marginBottom: 0 }}>
+                        <label className="input-label">{title} API Key</label>
+                        <input 
+                          type="password" 
+                          placeholder={savedKey ? "••••••••••••••••••••••••" : `Enter ${title} Key...`}
+                          className="input-field"
+                          id={`byok-${provider}`}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <button 
+                          className="btn btn-glass"
+                          onClick={async () => {
+                            const val = (document.getElementById(`byok-${provider}`) as HTMLInputElement).value;
+                            if (val && selectedProject) {
+                              const update = { [`${provider}ApiKey`]: val };
+                              const updated = await DbService.updateProject(selectedProject.id, update);
+                              if (updated) setSelectedProject(updated);
+                              showAlert('BYOK Updated', `Successfully saved custom API key for ${title}.`);
+                              (document.getElementById(`byok-${provider}`) as HTMLInputElement).value = '';
+                            }
+                          }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          title="Set as Prominent Provider"
+                          onClick={async () => {
+                            if (selectedProject) {
+                              const updated = await DbService.updateProject(selectedProject.id, { defaultProvider: provider as any });
+                              if (updated) setSelectedProject(updated);
+                              showAlert('Prominent Provider Updated', `Validations will now route through ${title} by default.`);
+                            }
+                          }}
+                          style={{
+                            width: 44, height: 44, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            background: isProminent ? 'var(--teal)' : 'var(--glass-bg)',
+                            border: `1px solid ${isProminent ? 'var(--teal)' : 'var(--glass-border)'}`,
+                            color: isProminent ? '#fff' : 'var(--text-sec)',
+                            cursor: 'pointer', transition: 'all 0.2s'
+                          }}
+                        >
+                          <Star size={18} fill={isProminent ? '#fff' : 'none'} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              
-              <button 
-                className="btn btn-glass"
-                onClick={() => showAlert("BYOK Configuration", "BYOK settings UI is under construction. BYOK is currently managed via the database directly.")}
-              >
-                Save Custom Keys
-              </button>
             </div>
           </div>
         )}

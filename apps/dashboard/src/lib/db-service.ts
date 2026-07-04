@@ -9,6 +9,9 @@ export interface Project {
   status: 'active' | 'suspended';
   validationCount: number;
   createdAt: string;
+  geminiApiKey?: string;
+  openaiApiKey?: string;
+  anthropicApiKey?: string;
 }
 
 export interface ApiKey {
