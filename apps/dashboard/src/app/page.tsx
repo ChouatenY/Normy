@@ -22,7 +22,7 @@ import { SurveyForm } from '../components/SurveyForm.js';
 import { NormyProvider } from '@normy-validation/react';
 import { Features } from '../components/ui/features-6.js';
 import ContributorsWallDemo from '../components/ui/contributors-section.js';
-import { LayoutDashboard, FolderKanban, KeyRound, BookOpenText, CodeXml, Settings2, CreditCard, Sun, Moon, AlertCircle, ChevronLeft, ChevronRight, Star, PanelLeftClose, Plus, Edit2, Trash2 } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, KeyRound, BookOpenText, CodeXml, Settings2, CreditCard, AlertCircle, Plus, Edit2, Trash2, PanelLeftClose, Star } from 'lucide-react';
 import { CustomSelect } from '../components/ui/custom-select.js';
 
 type ActiveSection = 'overview' | 'projects' | 'keys' | 'docs' | 'playground' | 'settings' | 'billing';
@@ -842,7 +842,7 @@ export default function AppMain() {
       </aside>
 
       {/* ── Main Panel View ── */}
-      <main className="main-content" style={{ marginLeft: isSidebarCollapsed ? 80 : 260, transition: 'margin-left 0.3s ease' }}>
+      <main className="main-content" style={{ marginLeft: isSidebarCollapsed ? 80 : 260, width: isSidebarCollapsed ? 'calc(100vw - 80px)' : 'calc(100vw - 260px)', boxSizing: 'border-box', overflowX: 'hidden', transition: 'margin-left 0.3s ease, width 0.3s ease' }}>
         
         {/* Header Strip */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40 }}>
@@ -1338,12 +1338,12 @@ export default function AppMain() {
                     </div>
                   </div>
                   <p style={{ color: 'var(--text-sec)', fontSize: '0.8125rem', marginBottom: 20 }}>
-                    Auto refill $20 when below $5.
+                    Auto: $20 / Trigger: &lt; $5
                   </p>
                 </div>
                 
                 <div onClick={() => showAlert("Billing Integration", "We're still working on hosted billing! In the meantime, please use the Bring Your Own Key (BYOK) system. Check the Documentation tab for implementation structures.")}>
-                  <LiquidMetalButton label="Refill Balance Now" />
+                  <LiquidMetalButton label="Refill" />
                 </div>
               </div>
             </div>

@@ -17,7 +17,7 @@ export interface Project {
   validationCount: number;
   createdAt: string;
   byokKeys?: ByokKey[];
-  activeByokId?: string;
+  activeByokId?: string | undefined;
 }
 
 export interface ApiKey {
