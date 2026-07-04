@@ -53,6 +53,7 @@ export default function AppMain() {
 
   // Dashboard Section routing state (for logged-in users)
   const [activeSection, setActiveSection] = useState<ActiveSection>('overview');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Application Data state
   const [projects, setProjects] = useState<Project[]>([]);
@@ -775,8 +776,8 @@ export default function AppMain() {
     <div className="dashboard-shell">
       
       {/* ── Navigation Sidebar ── */}
-      <aside className="sidebar">
-        <div className="sidebar-logo">
+      <aside className="sidebar" style={{ width: isSidebarCollapsed ? 80 : 260, transition: 'width 0.3s ease', overflow: 'hidden' }}>
+        <div className="sidebar-logo" style={{ justifyContent: isSidebarCollapsed ? 'center' : 'flex-start', cursor: 'pointer' }} onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}>
           <img
             src="/logo.png"
             alt="Normy logo"
@@ -787,45 +788,49 @@ export default function AppMain() {
               transition: 'filter 0.3s ease'
             }}
           />
-          <span style={{ fontSize: '0.9375rem', fontWeight: 800, letterSpacing: '-0.02em' }}>NORMY CONSOLE</span>
+          {!isSidebarCollapsed && <span style={{ fontSize: '0.9375rem', fontWeight: 800, letterSpacing: '-0.02em', whiteSpace: 'nowrap' }}>NORMY CONSOLE</span>}
         </div>
 
         <nav style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <button onClick={() => setActiveSection('overview')} className={`nav-link ${activeSection === 'overview' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <LayoutDashboard size={16} /> <span>Overview</span>
+          <button onClick={() => setActiveSection('overview')} className={`nav-link ${activeSection === 'overview' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}>
+            <LayoutDashboard size={16} style={{ minWidth: 16 }} /> {!isSidebarCollapsed && <span>Overview</span>}
           </button>
-          <button onClick={() => setActiveSection('projects')} className={`nav-link ${activeSection === 'projects' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <FolderKanban size={16} /> <span>Projects</span>
+          <button onClick={() => setActiveSection('projects')} className={`nav-link ${activeSection === 'projects' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}>
+            <FolderKanban size={16} style={{ minWidth: 16 }} /> {!isSidebarCollapsed && <span>Projects</span>}
           </button>
-          <button onClick={() => setActiveSection('keys')} className={`nav-link ${activeSection === 'keys' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <KeyRound size={16} /> <span>API Keys</span>
+          <button onClick={() => setActiveSection('keys')} className={`nav-link ${activeSection === 'keys' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}>
+            <KeyRound size={16} style={{ minWidth: 16 }} /> {!isSidebarCollapsed && <span>API Keys</span>}
           </button>
-          <button onClick={() => setActiveSection('docs')} className={`nav-link ${activeSection === 'docs' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <BookOpenText size={16} /> <span>Documentation</span>
+          <button onClick={() => setActiveSection('docs')} className={`nav-link ${activeSection === 'docs' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}>
+            <BookOpenText size={16} style={{ minWidth: 16 }} /> {!isSidebarCollapsed && <span>Documentation</span>}
           </button>
-          <button onClick={() => setActiveSection('playground')} className={`nav-link ${activeSection === 'playground' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <CodeXml size={16} /> <span>Playground</span>
+          <button onClick={() => setActiveSection('playground')} className={`nav-link ${activeSection === 'playground' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}>
+            <CodeXml size={16} style={{ minWidth: 16 }} /> {!isSidebarCollapsed && <span>Playground</span>}
           </button>
-          <button onClick={() => setActiveSection('settings')} className={`nav-link ${activeSection === 'settings' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <Settings2 size={16} /> <span>Settings</span>
+          <button onClick={() => setActiveSection('settings')} className={`nav-link ${activeSection === 'settings' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}>
+            <Settings2 size={16} style={{ minWidth: 16 }} /> {!isSidebarCollapsed && <span>Settings</span>}
           </button>
-          <button onClick={() => setActiveSection('billing')} className={`nav-link ${activeSection === 'billing' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <CreditCard size={16} /> <span>Billing</span>
+          <button onClick={() => setActiveSection('billing')} className={`nav-link ${activeSection === 'billing' ? 'active' : ''}`} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 12, justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}>
+            <CreditCard size={16} style={{ minWidth: 16 }} /> {!isSidebarCollapsed && <span>Billing</span>}
           </button>
         </nav>
 
         {/* User profile footer */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8125rem', color: 'var(--black)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}>
+            <div style={{ minWidth: 32, width: 32, height: 32, borderRadius: '50%', background: 'var(--border-hi)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.8125rem', color: 'var(--black)' }}>
               {name.charAt(0).toUpperCase() || 'U'}
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name || 'Developer'}</div>
-              <div style={{ fontSize: '0.6875rem', color: 'var(--text-sec)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
-            </div>
+            {!isSidebarCollapsed && (
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'var(--white)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name || 'Developer'}</div>
+                <div style={{ fontSize: '0.6875rem', color: 'var(--text-sec)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.email}</div>
+              </div>
+            )}
           </div>
-          <button onClick={handleSignOut} className="btn btn-glass" style={{ width: '100%', fontSize: '0.75rem', padding: '6px 12px' }}>Sign Out</button>
+          <button onClick={handleSignOut} className="btn btn-glass" style={{ width: '100%', fontSize: '0.75rem', padding: '6px 12px' }}>
+            {isSidebarCollapsed ? 'Exit' : 'Sign Out'}
+          </button>
         </div>
       </aside>
 
@@ -866,16 +871,31 @@ export default function AppMain() {
               </div>
             )}
 
-            {/* Shimmering Liquid Metal theme switcher button for Authenticated console */}
-            <button
+            {/* Theme switcher — exact match to navbar */}
+            <LiquidMetalButton
               onClick={toggleTheme}
-              className="btn-liquid-metal"
-              style={{ padding: '2px', borderRadius: '50%', width: 36, height: 36, display: 'flex' }}
-            >
-              <div className="btn-liquid-metal-inner" style={{ padding: 0, borderRadius: '50%', width: '100%', height: '100%', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {theme === 'dark' ? '☀️' : '🌙'}
-              </div>
-            </button>
+              width={34}
+              height={34}
+              icon={
+                theme === 'dark' ? (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="5"/>
+                    <line x1="12" y1="1" x2="12" y2="3"/>
+                    <line x1="12" y1="21" x2="12" y2="23"/>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+                    <line x1="1" y1="12" x2="3" y2="12"/>
+                    <line x1="21" y1="12" x2="23" y2="12"/>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+                  </svg>
+                ) : (
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                  </svg>
+                )
+              }
+            />
           </div>
         </div>
 
@@ -1070,7 +1090,7 @@ export default function AppMain() {
         {/* ── API Keys Section ── */}
         {activeSection === 'keys' && (
           <div>
-            <div className="card-glass" style={{ marginBottom: 24, borderLeft: '4px solid var(--teal)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(90deg, rgba(76,175,145,0.05) 0%, rgba(255,255,255,0.01) 100%)' }}>
+            <div className="card-glass" style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(90deg, rgba(76,175,145,0.05) 0%, rgba(255,255,255,0.01) 100%)' }}>
               <div>
                 <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--white)', marginBottom: 4 }}>Need to set Custom AI Keys?</h4>
                 <p style={{ fontSize: '0.8125rem', color: 'var(--text-sec)' }}>Use the Bring Your Own Key (BYOK) system to connect your custom providers directly to your workspace.</p>
@@ -1283,7 +1303,7 @@ export default function AppMain() {
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 24 }}>
               {/* Card 1: Balance Left */}
-              <div className="card-glass" style={{ borderTop: '4px solid #4CAF50', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div className="card-glass" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
                   <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: 1 }}>Test API Credits Left</h3>
                   <div style={{ fontSize: '3rem', fontWeight: 800, color: '#4CAF50', margin: '12px 0' }}>$5.00</div>
@@ -1294,7 +1314,7 @@ export default function AppMain() {
               </div>
 
               {/* Card 2: Used This Month */}
-              <div className="card-glass" style={{ borderTop: '4px solid var(--border-hi)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <div className="card-glass" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                 <div>
                   <h3 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--text-sec)', textTransform: 'uppercase', letterSpacing: 1 }}>Used This Month</h3>
                   <div style={{ fontSize: '3rem', fontWeight: 800, color: 'var(--white)', margin: '12px 0' }}>$0.00</div>
