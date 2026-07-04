@@ -20,6 +20,9 @@ export interface Project {
   status: 'active' | 'suspended';
   validationCount: number;
   createdAt: string;
+  geminiApiKey?: string | null;
+  openaiApiKey?: string | null;
+  anthropicApiKey?: string | null;
 }
 
 export interface ApiKey {
@@ -34,7 +37,7 @@ export interface ApiKey {
   createdAt: string;
 }
 
-export function resetMockDatabase(empty = false) {
+export function resetMockDatabase() {
   // Deprecated since we are using the live API
   console.log('resetMockDatabase called but mock DB is disabled.');
 }
@@ -45,14 +48,16 @@ export class DbService {
   }
 
   static async createProject(email: string, data: Partial<Project>): Promise<Project> {
-    const proj = await createProjectAction({
+    const payload: any = {
       name: data.name || 'Untitled Project',
       ownerEmail: email,
-      slug: data.slug,
-      description: data.description,
       defaultProvider: data.defaultProvider,
       minScore: data.minScore,
-    });
+    };
+    if (data.slug) payload.slug = data.slug;
+    if (data.description) payload.description = data.description;
+    
+    const proj = await createProjectAction(payload);
     if (!proj) throw new Error('Failed to create project');
     return proj;
   }

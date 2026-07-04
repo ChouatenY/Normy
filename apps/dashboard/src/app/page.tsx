@@ -1447,14 +1447,12 @@ export default function AppMain() {
                         return;
                       }
                       if (selectedProject) {
-                        let updatedKeys = [...(selectedProject.byokKeys || [])];
-                        if (byokForm.id) {
-                          updatedKeys = updatedKeys.map(k => k.id === byokForm.id ? { ...byokForm, id: k.id! } : k);
-                        } else {
-                          updatedKeys.push({ ...byokForm, id: 'byok_' + Math.random().toString(36).substr(2, 9) });
+                        if (byokForm.provider !== 'gemini' && byokForm.provider !== 'openai' && byokForm.provider !== 'anthropic') {
+                          return;
                         }
-                        const updated = await DbService.updateProject(selectedProject.id, { byokKeys: updatedKeys });
-                        if (updated) setSelectedProject(updated);
+                        await DbService.updateByok(selectedProject.id, byokForm.provider, byokForm.key);
+                        // Refresh projects list to get updated API key existence
+                        await loadProjects();
                         setShowByokForm(false);
                         showAlert('Success', 'BYOK Key saved successfully.');
                       }
@@ -1464,24 +1462,29 @@ export default function AppMain() {
               )}
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {(selectedProject?.byokKeys || []).length === 0 && !showByokForm && (
+                {!selectedProject?.geminiApiKey && !selectedProject?.openaiApiKey && !selectedProject?.anthropicApiKey && !showByokForm && (
                   <div style={{ padding: 32, textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: 12, border: '1px dashed var(--border-hi)' }}>
                     <p style={{ color: 'var(--text-sec)', fontSize: '0.875rem' }}>No custom keys configured yet.</p>
                   </div>
                 )}
-                {(selectedProject?.byokKeys || []).map((key) => {
-                  const isProminent = selectedProject?.activeByokId === key.id;
-                  const providerName = key.provider === 'gemini' ? 'Google Gemini' : key.provider === 'openai' ? 'OpenAI' : 'Anthropic';
+                {['gemini', 'openai', 'anthropic'].map((providerId) => {
+                  const hasKey = providerId === 'gemini' ? !!selectedProject?.geminiApiKey :
+                                 providerId === 'openai' ? !!selectedProject?.openaiApiKey : !!selectedProject?.anthropicApiKey;
+                  
+                  if (!hasKey) return null;
+                  
+                  const isProminent = selectedProject?.defaultProvider === providerId;
+                  const providerName = providerId === 'gemini' ? 'Google Gemini' : providerId === 'openai' ? 'OpenAI' : 'Anthropic';
                   return (
-                    <div key={key.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, background: 'var(--surface-1)', border: '1px solid var(--border)', borderRadius: 12 }}>
+                    <div key={providerId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, background: 'var(--surface-1)', border: '1px solid var(--border)', borderRadius: 12 }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--white)' }}>{key.title}</span>
+                          <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--white)' }}>{providerName} Key</span>
                           <span style={{ fontSize: '0.625rem', background: 'var(--surface-3)', padding: '2px 6px', borderRadius: 4, color: 'var(--text-sec)', textTransform: 'uppercase', fontWeight: 700 }}>{providerName}</span>
                           {isProminent && <span style={{ fontSize: '0.625rem', background: 'rgba(76,175,145,0.1)', color: 'var(--teal)', border: '1px solid rgba(76,175,145,0.2)', padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase', fontWeight: 700 }}>Prominent</span>}
                         </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', fontFamily: 'var(--mono)' }}>
-                          ••••••••••••••••{key.key.slice(-4)}
+                          •••••••••••••••• (Encrypted)
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 8 }}>
@@ -1489,9 +1492,9 @@ export default function AppMain() {
                           title="Set as Prominent Key"
                           onClick={async () => {
                             if (selectedProject) {
-                              const updated = await DbService.updateProject(selectedProject.id, { activeByokId: key.id, defaultProvider: key.provider });
+                              const updated = await DbService.updateProject(selectedProject.id, { defaultProvider: providerId as 'gemini' | 'openai' | 'anthropic' });
                               if (updated) setSelectedProject(updated);
-                              showAlert('Prominent Provider Updated', `${key.title} is now your prominent default key.`);
+                              showAlert('Prominent Provider Updated', `${providerName} is now your prominent default key.`);
                             }
                           }}
                           className={isProminent ? 'btn-liquid-metal' : 'btn btn-glass'}
@@ -1513,20 +1516,8 @@ export default function AppMain() {
                             <Star size={16} fill="none" />
                           )}
                         </button>
-                        <button className="btn btn-glass" style={{ padding: 0, width: 36, height: 36 }} onClick={() => { setByokForm(key); setShowByokForm(true); }}>
+                        <button className="btn btn-glass" style={{ padding: 0, width: 36, height: 36 }} onClick={() => { setByokForm({ provider: providerId, title: providerName, key: '' }); setShowByokForm(true); }}>
                           <Edit2 size={16} />
-                        </button>
-                        <button className="btn btn-glass" style={{ padding: 0, width: 36, height: 36, color: '#ef4444' }} onClick={async () => {
-                          if (selectedProject) {
-                            const updatedKeys = selectedProject.byokKeys!.filter(k => k.id !== key.id);
-                            const updated = await DbService.updateProject(selectedProject.id, { 
-                              byokKeys: updatedKeys,
-                              ...(selectedProject.activeByokId === key.id ? { activeByokId: undefined } : {})
-                            });
-                            if (updated) setSelectedProject(updated);
-                          }
-                        }}>
-                          <Trash2 size={16} />
                         </button>
                       </div>
                     </div>
