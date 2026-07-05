@@ -87,3 +87,23 @@ export async function deleteApiKeyAction(id: string): Promise<boolean> {
   });
   return res.ok;
 }
+
+export async function validateInputAction(data: { projectId: string; question: string; answer: string; provider: string; apiKey: string }) {
+  const res = await fetch(`${API_URL}/validate`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${data.apiKey}`,
+    },
+    body: JSON.stringify({
+      projectId: data.projectId,
+      question: data.question,
+      answer: data.answer,
+      provider: data.provider
+    }),
+  });
+  if (!res.ok) {
+    throw new Error(await res.text());
+  }
+  return await res.json();
+}

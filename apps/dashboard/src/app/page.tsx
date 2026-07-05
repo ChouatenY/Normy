@@ -1056,36 +1056,55 @@ export default function AppMain() {
                   Recent Activity Log
                 </h3>
                 <div className="table-container">
-                  <table className="data-table">
-                    <thead>
-                      <tr>
-                        <th>Field / Context</th>
-                        <th>Score</th>
-                        <th>Status</th>
-                        <th>Time</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td>Job Application Summary</td>
-                        <td>94/100</td>
-                        <td><span style={{ color: 'var(--teal)', fontWeight: 600 }}>VALID</span></td>
-                        <td>2 mins ago</td>
-                      </tr>
-                      <tr>
-                        <td>Cancellation Explanation</td>
-                        <td>42/100</td>
-                        <td><span style={{ color: 'var(--red)', fontWeight: 600 }}>FLAGGED</span></td>
-                        <td>12 mins ago</td>
-                      </tr>
-                      <tr>
-                        <td>Feedback Content</td>
-                        <td>88/100</td>
-                        <td><span style={{ color: 'var(--teal)', fontWeight: 600 }}>VALID</span></td>
-                        <td>1 hr ago</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                  {projects.length === 0 || projects.reduce((acc, curr) => acc + curr.validationCount, 0) === 0 ? (
+                    <div style={{ padding: '48px 24px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                      <p style={{ color: 'var(--text-sec)', marginBottom: 24, fontSize: '0.9375rem', lineHeight: 1.6, maxWidth: 300 }}>
+                        {projects.length === 0 
+                          ? "You haven't created a project yet. Start by creating a project to generate your API keys."
+                          : "No activity yet. Connect your application using the React or Vanilla JS SDK to see live AI evaluations flow in."}
+                      </p>
+                      {projects.length === 0 ? (
+                        <button onClick={openCreateProject} className="btn btn-primary">
+                          + Create Project
+                        </button>
+                      ) : (
+                        <button onClick={() => setActiveSection('docs')} className="btn btn-glass">
+                          View Setup Docs
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>Field / Context</th>
+                          <th>Score</th>
+                          <th>Status</th>
+                          <th>Time</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>Job Application Summary</td>
+                          <td>94/100</td>
+                          <td><span style={{ color: 'var(--teal)', fontWeight: 600 }}>VALID</span></td>
+                          <td>2 mins ago</td>
+                        </tr>
+                        <tr>
+                          <td>Cancellation Explanation</td>
+                          <td>42/100</td>
+                          <td><span style={{ color: 'var(--red)', fontWeight: 600 }}>FLAGGED</span></td>
+                          <td>12 mins ago</td>
+                        </tr>
+                        <tr>
+                          <td>Feedback Content</td>
+                          <td>88/100</td>
+                          <td><span style={{ color: 'var(--teal)', fontWeight: 600 }}>VALID</span></td>
+                          <td>1 hr ago</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </div>
 
@@ -1093,35 +1112,43 @@ export default function AppMain() {
                 <h3 style={{ fontSize: '1rem', fontWeight: 700, marginBottom: 16, color: 'var(--white)' }}>
                   Top Issue Types
                 </h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 4 }}>
-                      <span>Too Short / Vague</span>
-                      <span>54%</span>
+                {projects.length === 0 || projects.reduce((acc, curr) => acc + curr.validationCount, 0) === 0 ? (
+                  <div style={{ padding: '32px 16px', textAlign: 'center' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', lineHeight: 1.6 }}>
+                      Once Normy begins analyzing your users' input, it will automatically group and display the most common failure reasons here (e.g., Too Short, Gibberish, Off-Topic).
+                    </p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 4 }}>
+                        <span>Too Short / Vague</span>
+                        <span>54%</span>
+                      </div>
+                      <div style={{ height: 4, background: 'var(--border)', borderRadius: 2 }}>
+                        <div style={{ width: '54%', height: '100%', background: 'var(--white)', borderRadius: 2 }} />
+                      </div>
                     </div>
-                    <div style={{ height: 4, background: 'var(--border)', borderRadius: 2 }}>
-                      <div style={{ width: '54%', height: '100%', background: 'var(--white)', borderRadius: 2 }} />
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 4 }}>
+                        <span>Spam / Random text</span>
+                        <span>28%</span>
+                      </div>
+                      <div style={{ height: 4, background: 'var(--border)', borderRadius: 2 }}>
+                        <div style={{ width: '28%', height: '100%', background: 'var(--white)', borderRadius: 2 }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 4 }}>
+                        <span>Out of Context</span>
+                        <span>18%</span>
+                      </div>
+                      <div style={{ height: 4, background: 'var(--border)', borderRadius: 2 }}>
+                        <div style={{ width: '18%', height: '100%', background: 'var(--white)', borderRadius: 2 }} />
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 4 }}>
-                      <span>Spam / Random text</span>
-                      <span>28%</span>
-                    </div>
-                    <div style={{ height: 4, background: 'var(--border)', borderRadius: 2 }}>
-                      <div style={{ width: '28%', height: '100%', background: 'var(--white)', borderRadius: 2 }} />
-                    </div>
-                  </div>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8125rem', marginBottom: 4 }}>
-                      <span>Out of Context</span>
-                      <span>18%</span>
-                    </div>
-                    <div style={{ height: 4, background: 'var(--border)', borderRadius: 2 }}>
-                      <div style={{ width: '18%', height: '100%', background: 'var(--white)', borderRadius: 2 }} />
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
             </>

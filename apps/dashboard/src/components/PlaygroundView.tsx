@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { CodeBlock } from './CodeBlock.js';
+import { validateInputAction } from '../app/actions.js';
 
 interface PlaygroundViewProps {
   apiKey?: string;
@@ -21,28 +22,15 @@ export function PlaygroundView({ apiKey = 'nrm_test_default_key', projectId = 'p
     setResult(null);
     setToastMessage(null);
 
-    const apiUrl = process.env.NEXT_PUBLIC_NORMY_API_URL || 'http://localhost:3001';
-
     try {
-      const response = await fetch(`${apiUrl}/validate`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          projectId,
-          question,
-          answer,
-          provider,
-        }),
+      const data = await validateInputAction({
+        projectId,
+        question,
+        answer,
+        provider,
+        apiKey
       });
 
-      if (!response.ok) {
-        throw new Error(`API returned ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
       setResult(data);
       if (data.feedback) {
         setToastMessage(data.feedback);
