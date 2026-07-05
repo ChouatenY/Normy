@@ -142,6 +142,23 @@ export default function AppMain() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isAuthLoading) return;
+    if (password.length < 6) {
+      setAuthError('Password must be at least 6 characters.');
+      return;
+    }
+    if (!/[A-Za-z]/.test(password)) {
+      setAuthError('Password must contain at least one letter.');
+      return;
+    }
+    if (!/[0-9]/.test(password)) {
+      setAuthError('Password must contain at least one number.');
+      return;
+    }
+    if (!/[^A-Za-z0-9]/.test(password)) {
+      setAuthError('Password must contain at least one special character.');
+      return;
+    }
+    
     setIsAuthLoading(true);
     setAuthError(null);
     const { error } = await supabase.auth.signUp({
@@ -155,6 +172,18 @@ export default function AppMain() {
     } else {
       setAuthMessage('Registration successful! Please log in.');
       setAuthMode('login');
+    }
+  };
+
+  const handleOAuthLogin = async (provider: 'google' | 'github') => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+    if (error) {
+      showAlert('OAuth Error', error.message);
     }
   };
 
@@ -768,12 +797,12 @@ export default function AppMain() {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
                   <LiquidMetalButton
                     label="GitHub"
-                    onClick={() => showAlert('OAuth Integration', 'OAuth flow is ready. Integration config missing.')}
+                    onClick={() => handleOAuthLogin('github')}
                     icon={<GitHubLogo />}
                   />
                   <LiquidMetalButton
                     label="Google"
-                    onClick={() => showAlert('OAuth Integration', 'OAuth flow is ready. Integration config missing.')}
+                    onClick={() => handleOAuthLogin('google')}
                     icon={<GoogleLogo />}
                   />
                 </div>
