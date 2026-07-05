@@ -95,7 +95,8 @@ export default function AppMain() {
   const showConfirm = (title: string, message: string, onConfirm: () => void) => setConfirmConfig({ title, message, onConfirm });
 
   // API host determination
-  const apiHostUrl = typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:3001` : 'http://localhost:3001';
+  // We use an empty string so the React SDK fetches from /validate, hitting our Next.js API route proxy!
+  const apiHostUrl = '';
 
   // Load user session
   useEffect(() => {
@@ -125,31 +126,19 @@ export default function AppMain() {
 
   const loadProjects = async () => {
     setIsLoadingProjects(true);
-    try {
-      const list = await DbService.getProjects(user?.email || 'default@example.com');
-      setProjects(list || []);
-      if (list && list.length > 0 && !selectedProject) {
-        setSelectedProject(list[0] ?? null);
-      } else if (!list || list.length === 0) {
-        setActiveSection('projects');
-      }
-    } catch (error) {
-      console.error('Failed to load projects:', error);
-      setProjects([]);
+    const list = await DbService.getProjects(user?.email || 'default@example.com');
+    setProjects(list || []);
+    if (list && list.length > 0 && !selectedProject) {
+      setSelectedProject(list[0] ?? null);
+    } else if (!list || list.length === 0) {
       setActiveSection('projects');
-    } finally {
-      setIsLoadingProjects(false);
     }
+    setIsLoadingProjects(false);
   };
 
   const loadApiKeys = async (projId: string) => {
-    try {
-      const list = await DbService.getApiKeys(projId);
-      setApiKeys(list || []);
-    } catch (error) {
-      console.error('Failed to load api keys:', error);
-      setApiKeys([]);
-    }
+    const list = await DbService.getApiKeys(projId);
+    setApiKeys(list || []);
   };
 
   // --- Auth Handlers ---
