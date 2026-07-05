@@ -125,19 +125,31 @@ export default function AppMain() {
 
   const loadProjects = async () => {
     setIsLoadingProjects(true);
-    const list = await DbService.getProjects(user?.email || 'default@example.com');
-    setProjects(list);
-    if (list.length > 0 && !selectedProject) {
-      setSelectedProject(list[0] ?? null);
-    } else if (list.length === 0) {
+    try {
+      const list = await DbService.getProjects(user?.email || 'default@example.com');
+      setProjects(list || []);
+      if (list && list.length > 0 && !selectedProject) {
+        setSelectedProject(list[0] ?? null);
+      } else if (!list || list.length === 0) {
+        setActiveSection('projects');
+      }
+    } catch (error) {
+      console.error('Failed to load projects:', error);
+      setProjects([]);
       setActiveSection('projects');
+    } finally {
+      setIsLoadingProjects(false);
     }
-    setIsLoadingProjects(false);
   };
 
   const loadApiKeys = async (projId: string) => {
-    const list = await DbService.getApiKeys(projId);
-    setApiKeys(list);
+    try {
+      const list = await DbService.getApiKeys(projId);
+      setApiKeys(list || []);
+    } catch (error) {
+      console.error('Failed to load api keys:', error);
+      setApiKeys([]);
+    }
   };
 
   // --- Auth Handlers ---
