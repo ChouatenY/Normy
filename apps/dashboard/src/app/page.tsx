@@ -129,9 +129,6 @@ export default function AppMain() {
     setProjects(list);
     if (list.length > 0 && !selectedProject) {
       setSelectedProject(list[0] ?? null);
-      if (activeSection === 'sandbox') {
-        setActiveSection('overview');
-      }
     } else if (list.length === 0) {
       setActiveSection('projects');
     }
