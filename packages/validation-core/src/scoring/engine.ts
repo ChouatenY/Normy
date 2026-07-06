@@ -1,5 +1,5 @@
-import type { ValidationSeverity, ScoringConfig, ValidationResult, ValidationIssue, AIProviderName } from '../types/index.js';
-import { DEFAULT_SCORING_CONFIG, ISSUE_TO_CATEGORY } from '../types/index.js';
+import type { ValidationSeverity, ScoringConfig, ValidationResult, ValidationIssue, AIProviderName } from '@normy-validation/core';
+import { DEFAULT_SCORING_CONFIG, ISSUE_TO_CATEGORY } from '@normy-validation/core';
 
 export class ScoringEngine {
   private config: ScoringConfig;

@@ -7,7 +7,7 @@
  * Scoring must be deterministic given the same inputs — no randomness.
  */
 
-export type { ScoringConfig, ValidationSeverity } from '../types/index.js';
-export { DEFAULT_SCORING_CONFIG } from '../types/index.js';
+export type { ScoringConfig, ValidationSeverity } from '@normy-validation/core';
+export { DEFAULT_SCORING_CONFIG } from '@normy-validation/core';
 
 export { ScoringEngine } from './engine.js';

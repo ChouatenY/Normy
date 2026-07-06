@@ -4,7 +4,7 @@ import type {
   AIProvider, 
   ValidationRequest, 
   ValidationResult 
-} from '../types/index.js';
+} from '@normy-validation/core';
 import { ScoringEngine } from '../scoring/engine.js';
 
 export class OrchestratorPipeline implements ValidationPipeline {

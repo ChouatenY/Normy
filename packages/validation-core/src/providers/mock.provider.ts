@@ -1,6 +1,6 @@
 import { BaseAIProvider } from './base.js';
-import type { ValidationRequest, ValidationResult, AIProviderName } from '../types/index.js';
-import { ISSUE_TO_CATEGORY } from '../types/index.js';
+import type { ValidationRequest, ValidationResult, AIProviderName } from '@normy-validation/core';
+import { ISSUE_TO_CATEGORY } from '@normy-validation/core';
 
 export class MockAIProvider extends BaseAIProvider {
   readonly name: AIProviderName;

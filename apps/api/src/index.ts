@@ -32,7 +32,7 @@ import {
   SpamValidator, 
   GeminiProvider,
   OrchestratorPipeline,
-} from '@normy/validation-core';
+} from '@normy-validation/validation-core';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
 import { redis } from './redis/index.js';

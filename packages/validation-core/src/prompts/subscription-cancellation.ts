@@ -1,5 +1,5 @@
 import { BasePrompt } from './base.js';
-import type { ValidationRequest } from '../types/index.js';
+import type { ValidationRequest } from '@normy-validation/core';
 
 export class SubscriptionCancellationPrompt extends BasePrompt {
   readonly id = 'subscription-cancellation';

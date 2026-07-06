@@ -13,7 +13,6 @@
     "lint": "echo \"No linter configured yet\""
   },
   "dependencies": {
-    "@normy/shared": "workspace:*",
     "@normy/ui": "workspace:*",
     "@normy-validation/react": "workspace:*",
     "@radix-ui/react-slot": "^1.0.2",
@@ -26,7 +25,8 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwind-merge": "^2.3.0",
-    "three": "^0.164.0"
+    "three": "^0.164.0",
+    "@normy-validation/shared": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

@@ -1,4 +1,4 @@
-import type { ValidationRequest } from '../types/index.js';
+import type { ValidationRequest } from '@normy-validation/core';
 
 export const geminiValidationPrompt = {
   id: 'gemini-validation-v1',

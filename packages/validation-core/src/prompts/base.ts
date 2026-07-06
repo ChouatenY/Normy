@@ -1,4 +1,4 @@
-import type { PromptTemplate, ValidationRequest } from '../types/index.js';
+import type { PromptTemplate, ValidationRequest } from '@normy-validation/core';
 
 export abstract class BasePrompt implements PromptTemplate {
   abstract readonly id: string;

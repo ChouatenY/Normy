@@ -1,5 +1,5 @@
 {
-  "name": "@normy/validation-core",
+  "name": "@normy-validation/validation-core",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -23,8 +23,9 @@
   },
   "dependencies": {
     "@google/genai": "^2.9.0",
-    "@normy/shared": "workspace:*",
-    "zod": "^3.23.0"
+    "zod": "^3.23.0",
+    "@normy-validation/shared": "workspace:*",
+    "@normy-validation/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.19.6",

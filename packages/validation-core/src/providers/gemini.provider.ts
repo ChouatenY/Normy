@@ -1,7 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import { BaseAIProvider } from './base.js';
-import type { ValidationRequest, ValidationResult, AIProviderName, ProviderConfig, ValidationIssue } from '../types/index.js';
-import { ISSUE_TO_CATEGORY } from '../types/index.js';
+import type { ValidationRequest, ValidationResult, AIProviderName, ProviderConfig, ValidationIssue } from '@normy-validation/core';
+import { ISSUE_TO_CATEGORY } from '@normy-validation/core';
 import { getPromptTemplate } from '../prompts/index.js';
 
 export class GeminiProvider extends BaseAIProvider {

@@ -1,4 +1,4 @@
-import type { AIProvider, AIProviderName, ValidationRequest, ValidationResult, ProviderConfig } from '../types/index.js';
+import type { AIProvider, AIProviderName, ValidationRequest, ValidationResult, ProviderConfig } from '@normy-validation/core';
 
 export abstract class BaseAIProvider implements AIProvider {
   abstract readonly name: AIProviderName;

@@ -12,6 +12,6 @@
  * This two-tier approach minimises AI token spend while maintaining coverage.
  */
 
-export type { ValidationPipeline } from '../types/index.js';
+export type { ValidationPipeline } from '@normy-validation/core';
 
 export { OrchestratorPipeline } from './orchestrator.js';

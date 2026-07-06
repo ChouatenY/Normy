@@ -1,4 +1,4 @@
-import type { PromptTemplate } from '../types/index.js';
+import type { PromptTemplate } from '@normy-validation/core';
 import { QualityV1Prompt } from './quality-v1.js';
 import { QualityV2Prompt } from './quality-v2.js';
 import { GovernmentPrompt } from './government.js';
@@ -7,7 +7,7 @@ import { JobApplicationPrompt } from './job-application.js';
 import { SurveyPrompt } from './survey.js';
 import { SubscriptionCancellationPrompt } from './subscription-cancellation.js';
 
-export type { PromptTemplate } from '../types/index.js';
+export type { PromptTemplate } from '@normy-validation/core';
 export { BasePrompt } from './base.js';
 export { QualityV1Prompt } from './quality-v1.js';
 export { QualityV2Prompt } from './quality-v2.js';

@@ -1,5 +1,5 @@
 {
-  "name": "@normy/js",
+  "name": "@normy-validation/js",
   "version": "0.1.0",
   "description": "Vanilla JavaScript SDK for Normy — framework-agnostic AI form validation",
   "license": "MIT",
