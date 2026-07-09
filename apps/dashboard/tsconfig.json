@@ -8,10 +8,14 @@
     "incremental": true,
     "noEmit": true,
     "noUncheckedSideEffectImports": false,
+    "moduleResolution": "bundler",
+    "module": "ESNext",
     "plugins": [{ "name": "next" }],
     "baseUrl": ".",
     "paths": {
-      "@normy-validation/react": ["../../packages/sdk-react/src/index.ts"]
+      "@normy-validation/react": ["../../packages/sdk-react/src/index.ts"],
+      "@normy-validation/core": ["../../packages/core/src/index.ts"],
+      "@normy/ui": ["../../packages/ui/src/index.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

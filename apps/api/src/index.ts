@@ -5,6 +5,7 @@ import { cors } from 'hono/cors';
 import { apiKeyAuth, type AuthContext } from './middleware/auth.js';
 import { rateLimit } from './middleware/rate-limit.js';
 import { validateRoute } from './routes/validate.js';
+import { telemetryBatchRoute } from './routes/telemetry.js';
 import {
   listKnowledgeSourcesRoute,
   createKnowledgeSourceRoute,
@@ -15,6 +16,7 @@ import {
   rateAssistantMessageRoute,
   listAssistantConversationsRoute,
 } from './routes/assistant.js';
+import { providerRoutes } from './routes/providers.js';
 import { db } from './db/index.js';
 import { env } from './config/env.js';
 import { validations } from './db/schema/validations.js';
@@ -38,6 +40,8 @@ import crypto from 'node:crypto';
 import { redis } from './redis/index.js';
 import { GoogleGenAI } from '@google/genai';
 import { encrypt, decrypt } from './utils/encryption.js';
+import type { AIProvider } from '@normy-validation/core';
+import { ProviderService } from './services/provider.service.js';
 
 // Setup Hono app with custom context types
 const app = new OpenAPIHono<AuthContext>();
@@ -133,6 +137,8 @@ app.post('/projects', async (c) => {
     description?: string;
     ownerEmail?: string;
     ownerName?: string;
+    defaultProvider?: 'gemini' | 'openai' | 'anthropic';
+    minScore?: number;
   } | null;
 
   if (!body?.name || !body.ownerEmail) {
@@ -158,12 +164,21 @@ app.post('/projects', async (c) => {
     }).returning();
   }
 
+  let finalSlug = projectSlug;
+  const existingProject = await db.query.projects.findFirst({
+    where: (table, { eq }) => eq(table.slug, finalSlug),
+  });
+  if (existingProject) {
+    finalSlug = `${finalSlug}-${Math.random().toString(36).substring(2, 6)}`;
+  }
+
   const [project] = await db.insert(projects).values({
     name: body.name!,
-    slug: projectSlug,
+    slug: finalSlug,
     description: body.description ?? null,
     userId: owner!.id,
-    defaultProvider: 'gemini',
+    defaultProvider: body.defaultProvider || 'gemini',
+    minScore: body.minScore || 70,
     settings: DEFAULT_PROJECT_SETTINGS,
   }).returning();
 
@@ -251,6 +266,140 @@ app.put('/projects/:projectId/byok', async (c) => {
   }
 
   return c.json({ success: true }, 200);
+});
+
+app.get('/analytics', async (c) => {
+  const unauthorized = requireAdminSecret(c);
+  if (unauthorized) return unauthorized;
+
+  const projectId = c.req.query('projectId');
+  if (!projectId) return c.json({ error: 'Missing projectId' }, 400);
+
+  // Fetch all validations for this project — for moderate-scale projects
+  // this is efficient enough. For high-volume, switch to analytics_daily.
+  const stats = await db.query.validations.findMany({
+    where: (v, { eq: e }) => e(v.projectId, projectId),
+    orderBy: (v, { desc: d }) => [d(v.createdAt)],
+  });
+
+  const totalValidations = stats.length;
+
+  if (totalValidations === 0) {
+    return c.json({
+      analytics: {
+        totalValidations: 0,
+        averageScore: 0,
+        averageConfidence: 0,
+        aiRequests: 0,
+        aiRequestsAvoided: 0,
+        cacheHitRate: 0,
+        averageLatency: 0,
+        localValidatorUsage: 0,
+        hostedUsage: 0,
+        byokUsage: 0,
+        costSavings: 0,
+        timeline: [],
+        providerBreakdown: { gemini: 0, openai: 0, anthropic: 0, local: 0, cache: 0 },
+        issueBreakdown: {},
+      },
+    });
+  }
+
+  // ── Core metrics ──────────────────────────────────────────────────
+  const sumScore = stats.reduce((a, v) => a + (v.score ?? 0), 0);
+  const averageScore = sumScore / totalValidations;
+
+  const sumConfidence = stats.reduce((a, v) => a + (v.confidence ?? 0), 0);
+  const averageConfidence = sumConfidence / totalValidations;
+
+  const sumLatency = stats.reduce((a, v) => a + (v.latencyMs ?? 0), 0);
+  const averageLatency = sumLatency / totalValidations;
+
+  // ── Pipeline stage breakdown ──────────────────────────────────────
+  const localShortCircuits = stats.filter(s => s.pipelineStage === 'local_validator');
+  const cacheHits = stats.filter(s => s.resolvedBy === 'cache');
+  const aiCalls = stats.filter(s => s.pipelineStage === 'ai_provider' && s.resolvedBy !== 'cache');
+
+  const aiRequests = aiCalls.length;
+  const aiRequestsAvoided = localShortCircuits.length + cacheHits.length;
+  const cacheHitRate = (cacheHits.length / totalValidations) * 100;
+  const localValidatorUsage = (localShortCircuits.length / totalValidations) * 100;
+
+  // ── Provider breakdown (hosted vs BYOK) ───────────────────────────
+  const providerBreakdown: Record<string, number> = { gemini: 0, openai: 0, anthropic: 0, local: 0, cache: 0 };
+  for (const s of stats) {
+    if (s.resolvedBy === 'cache') {
+      providerBreakdown['cache']++;
+    } else if (s.pipelineStage === 'local_validator') {
+      providerBreakdown['local']++;
+    } else if (s.provider) {
+      providerBreakdown[s.provider] = (providerBreakdown[s.provider] ?? 0) + 1;
+    }
+  }
+
+  // BYOK = any AI request using a project-level key; Hosted = server default key
+  // For now, all AI requests count as hosted unless the project has BYOK keys set
+  const project = await db.query.projects.findFirst({
+    where: (p, { eq: e }) => e(p.id, projectId),
+  });
+  const hasByokKeys = !!(project?.geminiApiKey || project?.openaiApiKey || project?.anthropicApiKey);
+  const hostedUsage = hasByokKeys ? 0 : aiRequests;
+  const byokUsage = hasByokKeys ? aiRequests : 0;
+
+  // ── Issue breakdown ───────────────────────────────────────────────
+  const issueBreakdown: Record<string, number> = {};
+  for (const s of stats) {
+    const issue = s.issue ?? 'UNKNOWN';
+    issueBreakdown[issue] = (issueBreakdown[issue] ?? 0) + 1;
+  }
+
+  // ── Cost savings estimate ─────────────────────────────────────────
+  // Average AI token cost: ~$0.002 per 1K tokens. Average request ~800 tokens.
+  const avgTokenCost = 0.0016; // $0.002 * 0.8
+  const totalTokens = stats.reduce((a, v) => a + (v.tokenCount ?? 0), 0);
+  const actualAiCost = totalTokens > 0 ? (totalTokens / 1000) * 0.002 : aiRequests * avgTokenCost;
+  const costSavings = aiRequestsAvoided * avgTokenCost;
+
+  // ── Timeline (last 30 days, bucketed by date) ─────────────────────
+  const timelineBuckets = new Map<string, { count: number; sumScore: number; sumLatency: number }>();
+  for (const s of stats) {
+    const dateKey = new Date(s.createdAt).toISOString().slice(0, 10);
+    const bucket = timelineBuckets.get(dateKey) ?? { count: 0, sumScore: 0, sumLatency: 0 };
+    bucket.count++;
+    bucket.sumScore += s.score ?? 0;
+    bucket.sumLatency += s.latencyMs ?? 0;
+    timelineBuckets.set(dateKey, bucket);
+  }
+
+  const timeline = Array.from(timelineBuckets.entries())
+    .sort(([a], [b]) => a.localeCompare(b))
+    .slice(-30)
+    .map(([date, b]) => ({
+      date,
+      validations: b.count,
+      averageScore: Math.round((b.sumScore / b.count) * 10) / 10,
+      averageLatency: Math.round(b.sumLatency / b.count),
+    }));
+
+  return c.json({
+    analytics: {
+      totalValidations,
+      averageScore: Math.round(averageScore * 10) / 10,
+      averageConfidence,
+      aiRequests,
+      aiRequestsAvoided,
+      cacheHitRate: Math.round(cacheHitRate * 10) / 10,
+      averageLatency: Math.round(averageLatency),
+      localValidatorUsage: Math.round(localValidatorUsage * 10) / 10,
+      hostedUsage,
+      byokUsage,
+      costSavings: Math.round(costSavings * 10000) / 10000,
+      actualAiCost: Math.round(actualAiCost * 10000) / 10000,
+      timeline,
+      providerBreakdown,
+      issueBreakdown,
+    },
+  });
 });
 
 app.post('/api-keys', async (c) => {
@@ -344,7 +493,7 @@ app.delete('/api-keys/:id', async (c) => {
   });
 
   if (!record) {
-    return c.json({ error: 'API key not found' }, 404);
+    return c.json({ error: 'API key not found', code: 'INVALID_API_KEY' }, 404);
   }
 
   return c.json({ deleted: true, apiKey: record });
@@ -361,7 +510,7 @@ app.openapi(validateRoute, async (c) => {
 
   // Verify request projectId matches the authenticated API key project
   if (body.projectId !== project.id) {
-    return c.json({ error: 'Forbidden: Project ID mismatch' }, 403);
+    return c.json({ error: 'Forbidden: Project ID mismatch', code: 'PROJECT_NOT_FOUND' }, 403);
   }
 
   const sessionId = c.req.header('x-session-id') || null;
@@ -369,36 +518,25 @@ app.openapi(validateRoute, async (c) => {
   const providerName = (project as any).defaultProvider || env.AI_PROVIDER || 'gemini';
   const apiKeyEnv = c.get('apiKeyEnvironment');
 
-  // BYOK & Billing Check
-  const isBYOK = providerName === 'gemini' ? !!(project as any).geminiApiKey :
-                 providerName === 'openai' ? !!(project as any).openaiApiKey :
-                 providerName === 'anthropic' ? !!(project as any).anthropicApiKey : false;
+  // Resolve Provider via Service
+  let aiProvider: AIProvider;
+  let providerMode: 'hosted' | 'byok';
 
-  const rawEncryptedKey = isBYOK ? 
-    (providerName === 'gemini' ? (project as any).geminiApiKey :
-     providerName === 'openai' ? (project as any).openaiApiKey :
-     providerName === 'anthropic' ? (project as any).anthropicApiKey : null) : null;
-
-  let activeProviderKey = '';
-  if (isBYOK && rawEncryptedKey) {
-    try {
-      activeProviderKey = decrypt(rawEncryptedKey);
-    } catch (e) {
-      console.error('Failed to decrypt BYOK key', e);
-      return c.json({ error: 'Failed to access configured BYOK provider. Invalid encryption state.' }, 500);
-    }
-  } else {
-    activeProviderKey = providerName === 'gemini' ? env.GEMINI_API_KEY : '';
-  }
-
-  if (!isBYOK) {
-    // Hosted by Normy, check credits
-    const balanceStr = apiKeyEnv === 'production' ? (project as any).liveCreditsBalance : (project as any).testCreditsBalance;
-    const balance = parseFloat(balanceStr as string || '0');
-    if (isNaN(balance) || balance <= 0) {
-      return c.json({ error: `Insufficient ${apiKeyEnv} credits. Please top up your balance or provide your own API key (BYOK).` }, 402);
+  try {
+    const res = ProviderService.resolveProvider(project, apiKeyEnv);
+    aiProvider = res.provider;
+    providerMode = res.mode;
+  } catch (e: any) {
+    if (e.message === 'INVALID_CONFIGURATION') {
+      return c.json({ error: 'Failed to access configured BYOK provider. Invalid encryption state.', code: 'INVALID_CONFIGURATION' }, 500);
+    } else if (e.message === 'RATE_LIMITED') {
+      return c.json({ error: `Insufficient ${apiKeyEnv} credits. Please top up your balance or provide your own API key (BYOK).`, code: 'RATE_LIMITED' }, 402);
+    } else {
+      return c.json({ error: e.message, code: 'INVALID_CONFIGURATION' }, 501);
     }
   }
+
+  const PIPELINE_VERSION = '1.0.0';
 
   // 1. Check Redis Cache
   const cacheKey = `validation_cache:${crypto.createHash('sha256').update(
@@ -406,7 +544,8 @@ app.openapi(validateRoute, async (c) => {
       question: body.question,
       answer: body.answer,
       provider: providerName,
-      promptVersion
+      promptVersion,
+      pipelineVersion: PIPELINE_VERSION,
     })
   ).digest('hex')}`;
 
@@ -467,6 +606,15 @@ app.openapi(validateRoute, async (c) => {
       feedback: cachedResult.feedback,
       feedbackCategory: cachedResult.feedbackCategory,
       exampleAnswer: cachedResult.exampleAnswer,
+      source: 'cache',
+      resolvedBy: 'cache',
+      metadata: {
+        cached: true,
+        latencyMs: 0,
+        provider: providerName,
+        pipelineVersion: PIPELINE_VERSION,
+        promptVersion,
+      }
     }, 200);
   }
 
@@ -486,21 +634,12 @@ app.openapi(validateRoute, async (c) => {
     new SpamValidator(),
   ];
   
-  if (providerName !== 'gemini') {
-    return c.json({
-      error: `Provider "${providerName}" is configured but not active in this deployment. Switch the project default provider to gemini or deploy a real provider adapter.`,
-    }, 501);
-  }
 
-  const provider = new GeminiProvider({
-    provider: 'gemini',
-    apiKey: activeProviderKey || '',
-  });
   
   const pipeline = new OrchestratorPipeline(
     'api-validation-pipeline',
     validators,
-    provider
+    aiProvider
   );
 
   // 4. Retrieve previous score for user improvement tracking
@@ -555,11 +694,11 @@ app.openapi(validateRoute, async (c) => {
     feedback: result.feedback,
     severity: result.severity,
     valid: result.valid,
-    pipelineStage: result.provider === 'local' ? 'local_validator' : 'ai_provider',
-    resolvedBy: result.provider === 'local' ? 'local_validator' : result.provider,
-    provider: result.provider === 'local' ? null : result.provider,
-    model: result.provider === 'local' ? null : 'gemini-2.5-flash',
-    latencyMs,
+    pipelineStage: result.source === 'local' ? 'local_validator' : 'ai_provider',
+    resolvedBy: result.resolvedBy ?? result.provider,
+    provider: result.source === 'local' ? null : result.provider as any,
+    model: result.source === 'local' ? null : 'gemini-2.5-flash',
+    latencyMs: result.metadata?.latencyMs ?? latencyMs,
     tokenCount: (result.tokenUsage?.inputTokens ?? 0) + (result.tokenUsage?.outputTokens ?? 0),
     confidence: result.confidence,
     promptVersion,
@@ -597,12 +736,12 @@ app.openapi(validateRoute, async (c) => {
         latencyMs,
         provider: 'gemini',
         model: 'gemini-2.5-flash',
-        billedToUser: !isBYOK,
+        billedToUser: providerMode === 'hosted',
       },
     }).catch(err => console.error('Failed to log token_analytics event:', err));
 
     // Deduct cost from project balance
-    if (!isBYOK) {
+    if (providerMode === 'hosted') {
       const balanceField = apiKeyEnv === 'production' ? 'liveCreditsBalance' : 'testCreditsBalance';
       const currentBalance = parseFloat((project as any)[balanceField] as string || '0');
       const newBalance = Math.max(0, currentBalance - cost).toFixed(4);
@@ -647,7 +786,6 @@ app.openapi(validateRoute, async (c) => {
     }
   }
 
-  // 10. Respond
   return c.json({
     valid: result.valid,
     score: result.score,
@@ -657,7 +795,51 @@ app.openapi(validateRoute, async (c) => {
     feedback: result.feedback,
     feedbackCategory: result.feedbackCategory,
     exampleAnswer: result.exampleAnswer,
+    explanation: result.explanation,
+    source: result.source,
+    resolvedBy: result.resolvedBy,
+    metadata: {
+      ...result.metadata,
+      pipelineVersion: PIPELINE_VERSION,
+      promptVersion,
+    },
   }, 200);
+});
+
+// ─── Telemetry Routes ────────────────────────────────────────────────────────
+
+app.use('/telemetry/batch', apiKeyAuth);
+
+app.openapi(telemetryBatchRoute, async (c) => {
+  const project = c.get('project');
+  const body = c.req.valid('json');
+
+  if (body.projectId !== project.id) {
+    return c.json({ error: 'Forbidden: Project ID mismatch' } as any, 403);
+  }
+
+  if (body.events.length === 0) {
+    return c.json({ success: true } as any, 202);
+  }
+
+  try {
+    const insertValues = body.events.map(ev => ({
+      projectId: project.id,
+      type: ev.type as any,
+      validationId: ev.validationId || null,
+      sessionId: ev.sessionId || null,
+      fieldName: ev.fieldName || null,
+      payload: ev.payload || {},
+      createdAt: ev.createdAt ? new Date(ev.createdAt) : new Date(),
+    }));
+
+    await db.insert(validationEvents).values(insertValues);
+
+    return c.json({ success: true } as any, 202);
+  } catch (err: any) {
+    console.error('Telemetry batch insert failed:', err);
+    return c.json({ error: 'Failed to insert telemetry' } as any, 400);
+  }
 });
 
 // ─── Assistant Routes ────────────────────────────────────────────────────────
@@ -956,6 +1138,10 @@ app.openapi(listAssistantConversationsRoute, async (c) => {
     return c.json({ conversations: [] }, 200);
   }
 });
+
+// ─── Provider Management Routes ───────────────────────────────────────────────
+
+app.route('/providers', providerRoutes);
 
 // ─── OpenAPI Docs ─────────────────────────────────────────────────────────────
 

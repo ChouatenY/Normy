@@ -2,37 +2,60 @@
 
 import type { Project, ApiKey } from '../lib/db-service.js';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
-const API_SECRET = process.env.API_SECRET || '';
+import { getApiUrl, getApiSecret } from '../lib/env.js';
 
 const getHeaders = () => ({
   'Content-Type': 'application/json',
-  'x-admin-secret': API_SECRET,
+  'x-admin-secret': getApiSecret(),
 });
 
 export async function getProjectsAction(email: string): Promise<Project[]> {
-  const res = await fetch(`${API_URL}/projects?email=${encodeURIComponent(email)}`, {
-    headers: getHeaders(),
-    cache: 'no-store',
-  });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.projects || [];
+  const targetUrl = `${getApiUrl()}/projects?email=${encodeURIComponent(email)}`;
+  console.log(`[ACTION getProjects] fetching: ${targetUrl}`);
+  try {
+    const res = await fetch(targetUrl, {
+      headers: getHeaders(),
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      console.error(`[ACTION getProjects] FAILED: HTTP ${res.status} ${res.statusText}`);
+      const text = await res.text().catch(() => 'no-body');
+      console.error(`[ACTION getProjects] Response body: ${text}`);
+      return [];
+    }
+    const data = await res.json();
+    return data.projects || [];
+  } catch (error: any) {
+    console.error(`[ACTION getProjects] EXCEPTION: ${error.message}`, error);
+    return [];
+  }
 }
 
 export async function createProjectAction(data: { name: string; ownerEmail: string; slug?: string; description?: string; defaultProvider?: string; minScore?: number }): Promise<Project | null> {
-  const res = await fetch(`${API_URL}/projects`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify(data),
-  });
-  if (!res.ok) return null;
-  const json = await res.json();
-  return json.project;
+  const targetUrl = `${getApiUrl()}/projects`;
+  console.log(`[ACTION createProject] fetching: ${targetUrl}`);
+  try {
+    const res = await fetch(targetUrl, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) {
+      console.error(`[ACTION createProject] FAILED: HTTP ${res.status} ${res.statusText}`);
+      const text = await res.text().catch(() => 'no-body');
+      console.error(`[ACTION createProject] Response body: ${text}`);
+      return null;
+    }
+    const json = await res.json();
+    return json.project;
+  } catch (error: any) {
+    console.error(`[ACTION createProject] EXCEPTION: ${error.message}`, error);
+    return null;
+  }
 }
 
 export async function updateProjectAction(id: string, data: Partial<Project>): Promise<Project | null> {
-  const res = await fetch(`${API_URL}/projects/${id}`, {
+  const res = await fetch(`${getApiUrl()}/projects/${id}`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify(data),
@@ -43,7 +66,7 @@ export async function updateProjectAction(id: string, data: Partial<Project>): P
 }
 
 export async function updateByokAction(projectId: string, provider: string, key: string): Promise<boolean> {
-  const res = await fetch(`${API_URL}/projects/${projectId}/byok`, {
+  const res = await fetch(`${getApiUrl()}/projects/${projectId}/byok`, {
     method: 'PUT',
     headers: getHeaders(),
     body: JSON.stringify({ provider, key }),
@@ -52,7 +75,7 @@ export async function updateByokAction(projectId: string, provider: string, key:
 }
 
 export async function getApiKeysAction(projectId: string): Promise<ApiKey[]> {
-  const res = await fetch(`${API_URL}/api-keys?projectId=${projectId}`, {
+  const res = await fetch(`${getApiUrl()}/api-keys?projectId=${projectId}`, {
     headers: getHeaders(),
     cache: 'no-store',
   });
@@ -62,7 +85,7 @@ export async function getApiKeysAction(projectId: string): Promise<ApiKey[]> {
 }
 
 export async function createApiKeyAction(projectId: string, name: string, environment: 'development' | 'production'): Promise<{ apiKey: string } | null> {
-  const res = await fetch(`${API_URL}/api-keys`, {
+  const res = await fetch(`${getApiUrl()}/api-keys`, {
     method: 'POST',
     headers: getHeaders(),
     body: JSON.stringify({ projectId, name, environment }),
@@ -72,7 +95,7 @@ export async function createApiKeyAction(projectId: string, name: string, enviro
 }
 
 export async function revokeApiKeyAction(id: string): Promise<boolean> {
-  const res = await fetch(`${API_URL}/api-keys/${id}`, {
+  const res = await fetch(`${getApiUrl()}/api-keys/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
@@ -81,7 +104,7 @@ export async function revokeApiKeyAction(id: string): Promise<boolean> {
 
 export async function deleteApiKeyAction(id: string): Promise<boolean> {
   // We use the same delete route to revoke/delete for now
-  const res = await fetch(`${API_URL}/api-keys/${id}`, {
+  const res = await fetch(`${getApiUrl()}/api-keys/${id}`, {
     method: 'DELETE',
     headers: getHeaders(),
   });
@@ -89,7 +112,7 @@ export async function deleteApiKeyAction(id: string): Promise<boolean> {
 }
 
 export async function validateInputAction(data: { projectId: string; question: string; answer: string; provider: string; apiKey: string }) {
-  const res = await fetch(`${API_URL}/validate`, {
+  const res = await fetch(`${getApiUrl()}/validate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -106,4 +129,24 @@ export async function validateInputAction(data: { projectId: string; question: s
     throw new Error(await res.text());
   }
   return await res.json();
+}
+
+export async function getAnalyticsAction(projectId: string) {
+  const targetUrl = `${getApiUrl()}/analytics?projectId=${projectId}`;
+  console.log(`[ACTION getAnalytics] fetching: ${targetUrl}`);
+  try {
+    const res = await fetch(targetUrl, {
+      headers: getHeaders(),
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      console.error(`[ACTION getAnalytics] FAILED: HTTP ${res.status} ${res.statusText}`);
+      return null;
+    }
+    const data = await res.json();
+    return data.analytics || null;
+  } catch (error: any) {
+    console.error(`[ACTION getAnalytics] EXCEPTION: ${error.message}`, error);
+    return null;
+  }
 }

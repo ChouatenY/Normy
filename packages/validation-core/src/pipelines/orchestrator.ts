@@ -46,6 +46,13 @@ export class OrchestratorPipeline implements ValidationPipeline {
             feedback: localCheckResult.feedback ?? 'Validation failed locally.',
             provider: 'local',
             latencyMs,
+            source: 'local',
+            resolvedBy: validator.id,
+            metadata: {
+              cached: false,
+              latencyMs,
+              provider: 'local'
+            }
           };
           if (localCheckResult.confidence !== undefined) {
             params.confidence = localCheckResult.confidence;
@@ -73,6 +80,13 @@ export class OrchestratorPipeline implements ValidationPipeline {
         feedback: aiResult.feedback,
         provider: this.provider.name,
         latencyMs,
+        source: this.provider.name,
+        resolvedBy: this.provider.name,
+        metadata: {
+          cached: false,
+          latencyMs,
+          provider: this.provider.name
+        },
         ...(aiResult.tokenUsage ? { tokenUsage: aiResult.tokenUsage } : {}),
         ...(aiResult.exampleAnswer !== undefined ? { exampleAnswer: aiResult.exampleAnswer } : {}),
       };
@@ -95,6 +109,13 @@ export class OrchestratorPipeline implements ValidationPipeline {
         provider: this.provider.name,
         latencyMs,
         confidence: 0,
+        source: 'offline',
+        resolvedBy: 'offline',
+        metadata: {
+          cached: false,
+          latencyMs,
+          provider: this.provider.name
+        }
       };
       if (request.minScore !== undefined) {
         params.minScore = request.minScore;

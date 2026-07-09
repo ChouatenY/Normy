@@ -113,6 +113,25 @@ export interface ValidationResult {
   };
   /** Generic example answer if the response was low quality. */
   readonly exampleAnswer?: string | null;
+  /** A structured explanation of why the validation result was reached. */
+  readonly explanation?: {
+    readonly problem?: string;
+    readonly suggestion?: string;
+    readonly detail?: string;
+  };
+  /** High-level source of the validation result */
+  readonly source?: 'local' | 'cache' | AIProviderName | 'offline';
+  /** The specific entity that resolved the validation */
+  readonly resolvedBy?: string;
+  /** Additional metadata for the SDK to surface */
+  readonly metadata?: {
+    readonly resolvedBy?: string;
+    readonly provider?: string;
+    readonly cached?: boolean;
+    readonly latencyMs?: number;
+    readonly pipelineVersion?: string;
+    readonly promptVersion?: string;
+  };
 }
 
 // ─── AI Provider Interface ────────────────────────────────────────────────────
@@ -125,6 +144,9 @@ export interface ValidationResult {
 export interface AIProvider {
   readonly name: AIProviderName;
   validate(request: ValidationRequest): Promise<ValidationResult>;
+  healthCheck(): Promise<{ ok: boolean; error?: string }>;
+  estimateCost(request: ValidationRequest): number;
+  getCapabilities(): { models: string[]; maxTokens: number; supportedFeatures: string[] };
 }
 
 // ─── Provider Configuration ───────────────────────────────────────────────────

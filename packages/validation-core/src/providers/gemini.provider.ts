@@ -106,6 +106,7 @@ export class GeminiProvider extends BaseAIProvider {
                 outputTokens,
               },
               exampleAnswer: parsed.exampleAnswer ?? null,
+              explanation: parsed.explanation ?? undefined,
             };
           })()
         )
@@ -148,5 +149,44 @@ export class GeminiProvider extends BaseAIProvider {
         exampleAnswer: null,
       };
     }
+  }
+
+  async healthCheck(): Promise<{ ok: boolean; error?: string }> {
+    try {
+      const model = this.config.model ?? 'gemini-2.5-flash';
+      // simple connectivity check
+      const response = await this.ai.models.generateContent({
+        model,
+        contents: 'ping',
+      });
+      if (response.text) {
+        return { ok: true };
+      }
+      return { ok: false, error: 'Empty response from Gemini' };
+    } catch (e: any) {
+      const errStr = String(e).toLowerCase();
+      let error = 'Authentication failed';
+      if (errStr.includes('quota') || errStr.includes('429')) error = 'Quota exceeded';
+      else if (errStr.includes('404')) error = 'Model not found';
+      else if (errStr.includes('timeout')) error = 'Timeout';
+      else if (e instanceof Error) error = e.message;
+      return { ok: false, error };
+    }
+  }
+
+  estimateCost(request: ValidationRequest): number {
+    // Very rough heuristic based on character count mapped to tokens
+    const charCount = request.question.length + request.answer.length + (request.fieldContext?.length ?? 0);
+    const estimatedTokens = Math.ceil(charCount / 4);
+    // Assumption: $0.15 per 1M tokens -> 0.00000015 per token
+    return estimatedTokens * 0.00000015;
+  }
+
+  getCapabilities(): { models: string[]; maxTokens: number; supportedFeatures: string[] } {
+    return {
+      models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'],
+      maxTokens: 1048576, // Gemini 1.5 context window
+      supportedFeatures: ['structured_json', 'system_instructions', 'function_calling']
+    };
   }
 }

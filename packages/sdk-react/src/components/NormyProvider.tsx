@@ -1,9 +1,10 @@
-import React, { useMemo, useState, useEffect, useCallback } from 'react';
+import React, { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import { NormyContext, type FieldValidationState } from '../context/NormyContext.js';
-import { NormyClient } from '../client/api.js';
+import { NormyClient, type TelemetryEvent } from '../client/api.js';
 import { NormyBadge } from './NormyBadge.js';
 import { AssistantContext, type ActiveFieldContext } from './NormyAssistant.js';
-import type { ValidationMode } from '../types.js';
+import type { ValidationMode, ValidationSeverity } from '../types.js';
+import { createNotificationPolicy, type NotificationPolicyName, type NotificationTreatment } from '../notification/policy.js';
 
 export interface NormyProviderProps {
   /** Your Normy API key (nrm_live_... or nrm_test_...) */
@@ -24,6 +25,15 @@ export interface NormyProviderProps {
   /** Override the API base URL. Useful for self-hosted instances. */
   apiUrl?: string | undefined;
   /**
+   * Global notification policy name.
+   * @default 'balanced'
+   */
+  notificationPolicy?: NotificationPolicyName | undefined;
+  /**
+   * Custom notification rule overrides for 'custom' policy.
+   */
+  notificationRules?: Partial<Record<ValidationSeverity, NotificationTreatment>> | undefined;
+  /**
    * Automatically show the "Validated by Normy" liquid glass badge at the bottom of the form container.
    * @default true
    */
@@ -33,6 +43,11 @@ export interface NormyProviderProps {
    * @default 'Ctrl+/'
    */
   assistantShortcut?: string | undefined;
+  /**
+   * Optional debug mode. Outputs validation logs to the console if true.
+   * @default false
+   */
+  debug?: boolean | undefined;
   children: React.ReactNode;
 }
 
@@ -41,15 +56,20 @@ export function NormyProvider({
   projectId,
   defaultMode = 'onPause',
   pauseMs = 2000,
+  notificationPolicy = 'balanced',
+  notificationRules,
   apiUrl,
   showBadge = true,
   assistantShortcut = 'Ctrl+/',
+  debug = false,
   children,
 }: NormyProviderProps) {
   const client = useMemo(
     () => new NormyClient({ apiKey, baseUrl: apiUrl }),
     [apiKey, apiUrl]
   );
+
+  const policy = useMemo(() => createNotificationPolicy(notificationPolicy, notificationRules), [notificationPolicy, notificationRules]);
 
   const [isOpen, setIsOpen] = useState(false);
   const [activeField, setActiveField] = useState<ActiveFieldContext | null>(null);
@@ -82,7 +102,35 @@ export function NormyProvider({
     });
   }, []);
 
-  // 1. Listen for custom keyboard shortcuts
+  // 1. Telemetry Queue
+  const telemetryQueue = useRef<TelemetryEvent[]>([]);
+  const flushTelemetry = useCallback(() => {
+    if (telemetryQueue.current.length === 0) return;
+    const events = [...telemetryQueue.current];
+    telemetryQueue.current = [];
+    client.sendTelemetryBatch({ projectId, events }).catch(err => {
+      console.warn('[Normy] Failed to flush telemetry batch', err);
+      // Optional: re-queue events if failed
+    });
+    if (debug) console.log(`[Normy] Flushed ${events.length} telemetry events.`);
+  }, [client, projectId, debug]);
+
+  const trackEvent = useCallback((event: Omit<TelemetryEvent, 'createdAt'>) => {
+    telemetryQueue.current.push({ ...event, createdAt: new Date().toISOString() });
+    if (telemetryQueue.current.length >= 10) {
+      flushTelemetry();
+    }
+  }, [flushTelemetry]);
+
+  useEffect(() => {
+    const interval = setInterval(flushTelemetry, 5000);
+    return () => {
+      clearInterval(interval);
+      flushTelemetry();
+    };
+  }, [flushTelemetry]);
+
+  // 2. Listen for custom keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       const parts = assistantShortcut.toLowerCase().split('+');
@@ -166,12 +214,16 @@ export function NormyProvider({
       projectId,
       defaultMode,
       pauseMs,
+      notificationPolicyName: notificationPolicy,
+      notificationPolicy: policy,
       fields,
       registerField,
       updateField,
       unregisterField,
+      trackEvent,
+      debug,
     }),
-    [client, projectId, defaultMode, pauseMs, fields, registerField, updateField, unregisterField]
+    [client, projectId, defaultMode, pauseMs, notificationPolicy, policy, fields, registerField, updateField, unregisterField, trackEvent, debug]
   );
 
   const assistantValue = useMemo(

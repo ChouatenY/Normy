@@ -17,6 +17,7 @@
     "@normy-validation/react": "workspace:*",
     "@radix-ui/react-slot": "^1.0.2",
     "@supabase/supabase-js": "^2.108.2",
+    "@normy-validation/core": "workspace:*",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "framer-motion": "^11.2.6",

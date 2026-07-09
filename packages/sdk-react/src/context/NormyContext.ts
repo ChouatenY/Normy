@@ -1,6 +1,7 @@
 import { createContext } from 'react';
-import type { NormyClient } from '../client/api.js';
+import type { NormyClient, TelemetryEvent } from '../client/api.js';
 import type { ValidationMode } from '../types.js';
+import type { NotificationStrategy, NotificationPolicyName } from '../notification/policy.js';
 
 export interface FieldValidationState {
   isValid: boolean;
@@ -16,6 +17,9 @@ export interface NormyContextValue {
   readonly defaultMode: ValidationMode;
   /** Default debounce in ms for onPause mode */
   readonly pauseMs: number;
+  /** Global notification policy */
+  readonly notificationPolicyName: NotificationPolicyName;
+  readonly notificationPolicy: NotificationStrategy;
 
   /** Tracked fields on the form and their validation states */
   readonly fields: Record<string, FieldValidationState>;
@@ -25,6 +29,11 @@ export interface NormyContextValue {
   readonly updateField: (id: string, update: FieldValidationState) => void;
   /** Unregister a field's validation state */
   readonly unregisterField: (id: string) => void;
+  
+  /** Track a telemetry event which will be batched and sent */
+  readonly trackEvent: (event: Omit<TelemetryEvent, 'createdAt'>) => void;
+  /** Whether debug mode is enabled */
+  readonly debug: boolean;
 }
 
 export const NormyContext = createContext<NormyContextValue | null>(null);

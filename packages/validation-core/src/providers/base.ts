@@ -13,6 +13,10 @@ export abstract class BaseAIProvider implements AIProvider {
    */
   abstract validate(request: ValidationRequest): Promise<ValidationResult>;
 
+  abstract healthCheck(): Promise<{ ok: boolean; error?: string }>;
+  abstract estimateCost(request: ValidationRequest): number;
+  abstract getCapabilities(): { models: string[]; maxTokens: number; supportedFeatures: string[] };
+
   /**
    * Helper to execute an operation with retries.
    */

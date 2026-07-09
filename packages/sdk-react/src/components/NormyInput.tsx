@@ -26,8 +26,8 @@ export const NormyInput = forwardRef<HTMLInputElement, NormyInputProps>(
     { question, validationMode, pauseMs, label, hint, successDismissMs, onValueChange, style, ...rest },
     ref
   ) {
-    const { value, status, result, isValidating, apiError, handleChange, handleBlur } =
-      useValidation({ question, mode: validationMode, pauseMs });
+    const { value, status, result, isValidating, apiError, handleChange, handleBlur, handleFocus } =
+      useValidation({ id: rest.id, question, mode: validationMode, pauseMs });
 
     const hasProblem = status === 'error';
 
@@ -55,6 +55,10 @@ export const NormyInput = forwardRef<HTMLInputElement, NormyInputProps>(
             onValueChange?.(e.target.value);
           }}
           onBlur={handleBlur}
+          onFocus={(e) => {
+            handleFocus();
+            rest.onFocus?.(e);
+          }}
           style={{
             width: '100%',
             boxSizing: 'border-box',

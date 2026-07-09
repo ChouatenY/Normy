@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { ValidateResponse, ValidationSeverity, FeedbackCategory } from '../types.js';
 import { injectNormyToastStyles } from '../styles/toast.css.js';
+import { useNormy } from '../hooks/useNormy.js';
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
@@ -67,6 +68,9 @@ export function NormyToast({
   const [visible, setVisible] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const dismissTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const shownRef = useRef(false);
+
+  const { notificationPolicy, trackEvent } = useNormy();
 
   useEffect(() => {
     injectNormyToastStyles();
@@ -78,6 +82,19 @@ export function NormyToast({
     if (isValidating || result || apiError) {
       setVisible(true);
       setDismissed(false);
+    }
+
+    if (result && !shownRef.current) {
+      shownRef.current = true;
+      trackEvent({
+        type: 'feedback_shown',
+        fieldName: id,
+        payload: { severity: result.severity, autoDismiss: successDismissMs > 0 }
+      });
+    }
+
+    if (!result && shownRef.current) {
+      shownRef.current = false;
     }
 
     // Auto-dismiss on success
@@ -96,7 +113,14 @@ export function NormyToast({
     <button
       type="button"
       aria-label="Dismiss feedback"
-      onClick={() => setDismissed(true)}
+      onClick={() => {
+        setDismissed(true);
+        trackEvent({
+          type: 'feedback_dismissed',
+          fieldName: id,
+          payload: { dismissedBy: 'user' }
+        });
+      }}
       style={{
         border: 'none',
         background: 'transparent',
@@ -150,6 +174,33 @@ export function NormyToast({
   if (!result) return null;
 
   const { severity, feedback, feedbackCategory } = result;
+
+  const treatment = notificationPolicy.getTreatment({
+    severity,
+    score: result.score,
+    issue: result.issue,
+  });
+
+  if (treatment === 'none') {
+    return null;
+  }
+
+  if (treatment === 'checkmark') {
+    return (
+      <div id={id} className={className} style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.25rem', color: SEVERITY_COLORS.success, fontSize: '0.875rem' }}>
+        <span aria-hidden="true" style={{ fontWeight: 700 }}>{ICONS.success}</span>
+        <span>Looks good!</span>
+      </div>
+    );
+  }
+
+  if (treatment === 'inline_hint') {
+    return (
+      <div id={id} className={className} style={{ marginTop: '0.25rem', color: SEVERITY_COLORS[severity], fontSize: '0.875rem' }}>
+        {feedback}
+      </div>
+    );
+  }
 
   return (
     <div

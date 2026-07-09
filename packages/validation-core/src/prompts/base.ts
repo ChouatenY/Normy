@@ -33,7 +33,12 @@ JSON SCHEMA TO RETURN:
   "severity": "success" | "info" | "warning" | "error",
   "feedbackCategory": "EXPAND_RESPONSE" | "ANSWER_THE_QUESTION" | "ADD_SPECIFIC_DETAILS" | "REMOVE_RANDOM_TEXT" | "REMOVE_SPAM" | "EXPLAIN_REASON" | "CLARIFY_RESPONSE" | "NO_ACTION",
   "feedback": "Your helpful feedback message goes here",
-  "exampleAnswer": string | null
+  "exampleAnswer": string | null,
+  "explanation": {
+    "problem": "Brief description of the core issue",
+    "suggestion": "Brief suggestion on how to fix it",
+    "detail": "Any extra context if applicable"
+  } | null
 }
 
 SCORING RULES:

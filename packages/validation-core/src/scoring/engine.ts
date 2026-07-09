@@ -50,6 +50,13 @@ export class ScoringEngine {
     latencyMs: number;
     minScore?: number;
     confidence?: number;
+    source?: 'local' | 'cache' | AIProviderName | 'offline';
+    resolvedBy?: string;
+    metadata?: {
+      readonly cached?: boolean;
+      readonly provider?: string;
+      readonly latencyMs?: number;
+    };
     tokenUsage?: {
       readonly inputTokens: number;
       readonly outputTokens: number;
@@ -72,6 +79,9 @@ export class ScoringEngine {
       provider: params.provider,
       latencyMs: params.latencyMs,
       confidence,
+      source: params.source,
+      resolvedBy: params.resolvedBy,
+      metadata: params.metadata,
       exampleAnswer: params.exampleAnswer ?? null,
       ...(params.tokenUsage ? {
         tokenUsage: {

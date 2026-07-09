@@ -70,3 +70,19 @@ export type {
   NormyApiError,
   NormyApiResult,
 }                                     from './types.js';
+
+// ─── Notification Policy ──────────────────────────────────────────────────────
+export { 
+  createNotificationPolicy,
+  AggressivePolicy,
+  BalancedPolicy,
+  MinimalPolicy,
+  SilentPolicy,
+  CustomPolicy
+} from './notification/policy.js';
+export type { 
+  NotificationTreatment,
+  NotificationPolicyName,
+  NotificationRuleContext,
+  NotificationStrategy
+} from './notification/policy.js';

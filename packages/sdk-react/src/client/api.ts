@@ -52,10 +52,26 @@ export interface ValidateResponse {
   feedback: string;
   feedbackCategory?: FeedbackCategory;
   exampleAnswer?: string | null;
+  explanation?: {
+    problem?: string;
+    suggestion?: string;
+    detail?: string;
+  };
+  source?: 'local' | 'cache' | 'gemini' | 'openai' | 'anthropic' | 'offline';
+  resolvedBy?: string;
+  metadata?: {
+    resolvedBy?: string;
+    provider?: string;
+    cached?: boolean;
+    latencyMs?: number;
+    pipelineVersion?: string;
+    promptVersion?: string;
+  };
 }
 
 export interface NormyApiError {
   error: string;
+  code: string;
   status: number;
 }
 
@@ -108,6 +124,20 @@ export interface AssistantMessage {
 
 // ─── Client ───────────────────────────────────────────────────────────────────
 
+export interface TelemetryEvent {
+  type: string;
+  validationId?: string;
+  sessionId?: string;
+  fieldName?: string;
+  payload?: any;
+  createdAt?: string;
+}
+
+export interface TelemetryBatchRequest {
+  projectId: string;
+  events: TelemetryEvent[];
+}
+
 export interface NormyClientOptions {
   /** Your Normy API key (nrm_live_... or nrm_test_...) */
   apiKey: string;
@@ -126,6 +156,20 @@ export class NormyClient {
     this.apiKey   = options.apiKey;
     this.baseUrl  = (options.baseUrl ?? 'https://api.normy.dev').replace(/\/$/, '');
     this.timeoutMs = options.timeoutMs ?? 10_000;
+  }
+
+  async getCapabilities() {
+    // This could optionally fetch from an endpoint, but for now we return the static platform capabilities
+    return {
+      validate: true,
+      assist: true,
+      shield: false,
+      insights: true,
+      provider: 'gemini',
+      byok: true,
+      offline: true,
+      version: '1.0.0'
+    };
   }
 
   async validate(req: ValidateRequest): Promise<NormyApiResult> {
@@ -147,14 +191,16 @@ export class NormyClient {
 
       if (!res.ok) {
         let errorMessage = res.statusText;
+        let errorCode = 'NETWORK_ERROR';
         try {
-          const body = await res.json() as { error?: string };
+          const body = await res.json() as { error?: string; code?: string };
           if (body.error) errorMessage = body.error;
+          if (body.code) errorCode = body.code;
         } catch { /* ignore */ }
 
         return {
           ok: false,
-          error: { error: errorMessage, status: res.status },
+          error: { error: errorMessage, code: errorCode, status: res.status },
         };
       }
 
@@ -171,6 +217,7 @@ export class NormyClient {
         ok: false,
         error: {
           error: isAbort ? 'Request timed out' : 'Network error — please check your connection',
+          code: 'OFFLINE',
           status: isAbort ? 408 : 0,
         },
       };
@@ -287,6 +334,54 @@ export class NormyClient {
           'Authorization': `Bearer ${this.apiKey}`,
         },
         body: JSON.stringify({ rating }),
+      });
+
+      clearTimeout(timerId);
+
+      if (!res.ok) {
+        let errorMessage = res.statusText;
+        try {
+          const body = await res.json() as { error?: string };
+          if (body.error) errorMessage = body.error;
+        } catch { /* ignore */ }
+
+        return {
+          ok: false,
+          error: { error: errorMessage, status: res.status },
+        };
+      }
+
+      const data = await res.json() as { success: boolean };
+      return { ok: true, data };
+    } catch (err: unknown) {
+      clearTimeout(timerId);
+      const isAbort = err instanceof DOMException && err.name === 'AbortError';
+      return {
+        ok: false,
+        error: {
+          error: isAbort ? 'Request timed out' : 'Network error',
+          status: isAbort ? 408 : 0,
+        },
+      };
+    }
+  }
+
+  async sendTelemetryBatch(req: TelemetryBatchRequest): Promise<
+    | { ok: true; data: { success: boolean } }
+    | { ok: false; error: NormyApiError }
+  > {
+    const controller = new AbortController();
+    const timerId = setTimeout(() => controller.abort(), this.timeoutMs);
+
+    try {
+      const res = await fetch(`${this.baseUrl}/telemetry/batch`, {
+        method: 'POST',
+        signal: controller.signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify(req),
       });
 
       clearTimeout(timerId);

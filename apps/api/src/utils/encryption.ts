@@ -8,7 +8,7 @@ const TAG_LENGTH = 16;
 
 /**
  * Encrypts a plain text string using AES-256-GCM.
- * The output format is: iv:salt:tag:ciphertext (all hex encoded)
+ * The output format is: v1:iv:salt:tag:ciphertext (all hex encoded)
  */
 export function encrypt(text: string): string {
   if (!text) return text;
@@ -33,7 +33,7 @@ export function encrypt(text: string): string {
   const tag = cipher.getAuthTag();
 
   // Return the complete payload string
-  return `${iv.toString('hex')}:${salt.toString('hex')}:${tag.toString('hex')}:${encrypted}`;
+  return `v1:${iv.toString('hex')}:${salt.toString('hex')}:${tag.toString('hex')}:${encrypted}`;
 }
 
 /**
@@ -42,12 +42,18 @@ export function encrypt(text: string): string {
 export function decrypt(ciphertext: string): string {
   if (!ciphertext) return ciphertext;
   
+  let ivHex, saltHex, tagHex, encryptedHex;
   const parts = ciphertext.split(':');
-  if (parts.length !== 4) {
+  
+  if (parts.length === 5 && parts[0] === 'v1') {
+    // New versioned format
+    [, ivHex, saltHex, tagHex, encryptedHex] = parts;
+  } else if (parts.length === 4) {
+    // Legacy unversioned format
+    [ivHex, saltHex, tagHex, encryptedHex] = parts;
+  } else {
     throw new Error('Invalid encrypted text format');
   }
-
-  const [ivHex, saltHex, tagHex, encryptedHex] = parts;
   
   const iv = Buffer.from(ivHex, 'hex');
   const salt = Buffer.from(saltHex, 'hex');

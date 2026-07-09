@@ -115,6 +115,17 @@ class MockAuthService {
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
-export const supabase = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : (new MockAuthService() as any);
+let supabaseClient: any;
+
+if (isSupabaseConfigured) {
+  supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+} else {
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error('Supabase URL and Anon Key are required in production.');
+  } else {
+    console.warn('⚠️ SUPABASE NOT CONFIGURED: Falling back to MockAuthService for local development. Do NOT use in production.');
+    supabaseClient = new MockAuthService();
+  }
+}
+
+export const supabase = supabaseClient;

@@ -76,5 +76,21 @@ export class MockAIProvider extends BaseAIProvider {
       confidence: 0.98,
     };
   }
+
+  async healthCheck(): Promise<{ ok: boolean; error?: string }> {
+    return { ok: true };
+  }
+
+  estimateCost(request: ValidationRequest): number {
+    return 0.0001;
+  }
+
+  getCapabilities(): { models: string[]; maxTokens: number; supportedFeatures: string[] } {
+    return {
+      models: ['mock-model-1'],
+      maxTokens: 4096,
+      supportedFeatures: []
+    };
+  }
 }
 

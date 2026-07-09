@@ -16,12 +16,12 @@ export interface AuthContext {
 export const apiKeyAuth = createMiddleware<AuthContext>(async (c, next) => {
   const authHeader = c.req.header('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return c.json({ error: 'Unauthorized: Missing or invalid Authorization header' }, 401);
+    return c.json({ error: 'Unauthorized: Missing or invalid Authorization header', code: 'INVALID_API_KEY' }, 401);
   }
 
   const rawKey = authHeader.substring(7).trim();
   if (!rawKey) {
-    return c.json({ error: 'Unauthorized: Empty token' }, 401);
+    return c.json({ error: 'Unauthorized: Empty token', code: 'INVALID_API_KEY' }, 401);
   }
 
   try {
@@ -35,12 +35,15 @@ export const apiKeyAuth = createMiddleware<AuthContext>(async (c, next) => {
       apiKeyRecord = {
         id: '00000000-0000-0000-0000-000000000000',
         projectId: '00000000-0000-0000-0000-000000000000',
+        environment: 'development',
         project: {
           id: '00000000-0000-0000-0000-000000000000',
           name: 'Demo Project (Bypass)',
           slug: 'demo-project-bypass',
           isActive: true,
           defaultProvider: 'gemini',
+          testCreditsBalance: '500.0000',
+          liveCreditsBalance: '500.0000',
           settings: {
             minScore: 50,
             defaultProvider: 'gemini',
@@ -69,12 +72,15 @@ export const apiKeyAuth = createMiddleware<AuthContext>(async (c, next) => {
           apiKeyRecord = {
             id: '00000000-0000-0000-0000-000000000000',
             projectId: '00000000-0000-0000-0000-000000000000',
+            environment: rawKey.startsWith('nrm_live_') ? 'production' : 'development',
             project: {
               id: '00000000-0000-0000-0000-000000000000',
               name: 'Demo Project (Bypass)',
               slug: 'demo-project-bypass',
               isActive: true,
               defaultProvider: 'gemini',
+              testCreditsBalance: '500.0000',
+              liveCreditsBalance: '500.0000',
               settings: {
                 minScore: 50,
                 defaultProvider: 'gemini',
@@ -89,17 +95,17 @@ export const apiKeyAuth = createMiddleware<AuthContext>(async (c, next) => {
     }
 
     if (!apiKeyRecord) {
-      return c.json({ error: 'Unauthorized: Invalid API key' }, 401);
+      return c.json({ error: 'Unauthorized: Invalid API key', code: 'INVALID_API_KEY' }, 401);
     }
 
     // Check expiration
     if (apiKeyRecord.expiresAt && new Date(apiKeyRecord.expiresAt) < new Date()) {
-      return c.json({ error: 'Unauthorized: API key expired' }, 401);
+      return c.json({ error: 'Unauthorized: API key expired', code: 'INVALID_API_KEY' }, 401);
     }
 
     // Check if project is active
     if (!apiKeyRecord.project || !apiKeyRecord.project.isActive) {
-      return c.json({ error: 'Unauthorized: Project is inactive or suspended' }, 401);
+      return c.json({ error: 'Unauthorized: Project is inactive or suspended', code: 'PROJECT_NOT_FOUND' }, 401);
     }
 
     // Bind to request context
@@ -119,6 +125,6 @@ export const apiKeyAuth = createMiddleware<AuthContext>(async (c, next) => {
     return await next();
   } catch (error) {
     console.error('API key auth error:', error);
-    return c.json({ error: 'Internal server error during authentication' }, 500);
+    return c.json({ error: 'Internal server error during authentication', code: 'NETWORK_ERROR' }, 500);
   }
 });

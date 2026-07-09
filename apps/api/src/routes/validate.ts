@@ -43,6 +43,19 @@ export const ValidateResponseSchema = z.object({
     'NO_ACTION',
   ]).optional(),
   exampleAnswer: z.string().nullable().optional(),
+  explanation: z.object({
+    problem: z.string().optional(),
+    suggestion: z.string().optional(),
+    detail: z.string().optional(),
+  }).optional(),
+  metadata: z.object({
+    resolvedBy: z.string().optional(),
+    provider: z.string().optional(),
+    cached: z.boolean().optional(),
+    latencyMs: z.number().optional(),
+    pipelineVersion: z.string().optional(),
+    promptVersion: z.string().optional(),
+  }).optional(),
 }).openapi('ValidateResponse');
 
 // ─── Route Definition ─────────────────────────────────────────────────────────

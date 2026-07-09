@@ -45,7 +45,8 @@ export const rateLimit = createMiddleware<AuthContext>(async (c, next) => {
 
       if (currentCount > limit) {
         return c.json({ 
-          error: 'Too Many Requests: API rate limit exceeded. Please try again later.' 
+          error: 'Too Many Requests: API rate limit exceeded. Please try again later.',
+          code: 'RATE_LIMITED'
         }, 429);
       }
     }

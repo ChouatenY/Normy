@@ -12,6 +12,7 @@
     "publish:sdk": "turbo build --filter=@normy-validation/react --filter=@normy/js"
   },
   "devDependencies": {
+    "@normy-validation/core": "workspace:*",
     "prettier": "^3.7.4",
     "turbo": "^2.9.18",
     "typescript": "5.9.2"

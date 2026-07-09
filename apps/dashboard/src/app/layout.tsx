@@ -27,6 +27,9 @@ export const metadata: Metadata = {
   },
 };
 
+import { AuthProvider } from '../components/providers/AuthProvider.js';
+import { DataProvider } from '../components/providers/DataProvider.js';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
@@ -35,7 +38,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#000000" />
       </head>
-      <body>{children}</body>
+      <body>
+        <AuthProvider>
+          <DataProvider>
+            {children}
+          </DataProvider>
+        </AuthProvider>
+      </body>
     </html>
   );
 }
