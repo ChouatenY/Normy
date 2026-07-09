@@ -30,7 +30,7 @@ export default function DashboardOverviewPage() {
             Create your first project to get started.
           </p>
           <button 
-            onClick={() => router.push('/dashboard/projects?create=true')} 
+            onClick={() => router.push('/dashboard/projects')} 
             style={{ 
               background: '#fff', color: '#000', border: 'none', padding: '10px 24px', 
               borderRadius: 6, fontWeight: 600, fontSize: '0.9375rem', cursor: 'pointer',

@@ -240,8 +240,20 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </header>
 
-        <div style={{ padding: '0 32px 32px 32px' }}>
+        <div 
+          key={pathname}
+          style={{ 
+            padding: '0 32px 32px 32px',
+            animation: 'pageTransition 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+          }}
+        >
           {children}
+          <style>{`
+            @keyframes pageTransition {
+              from { opacity: 0; transform: translateY(8px); }
+              to { opacity: 1; transform: translateY(0); }
+            }
+          `}</style>
         </div>
       </main>
     </div>
