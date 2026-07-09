@@ -8,6 +8,7 @@ import { useAuth } from '../../components/providers/AuthProvider.js';
 import { useData } from '../../components/providers/DataProvider.js';
 import { CustomSelect } from '../../components/ui/custom-select.js';
 import { TextShimmer } from '../../components/ui/be-ui-text-animation.js';
+import { LiquidMetalButton } from '../../components/LiquidMetalButton.js';
 
 /** Human-readable labels for known route segments */
 const ROUTE_LABELS: Record<string, string> = {
@@ -25,9 +26,32 @@ const ROUTE_LABELS: Record<string, string> = {
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
+  const [showSplash, setShowSplash] = useState(true);
+  const [tipIndex, setTipIndex] = useState(0);
   const pathname = usePathname();
   const { user, loading, signOut } = useAuth();
   const { projects, selectedProject, setSelectedProject } = useData();
+
+  const TIPS = [
+    "Tip: Use the interactive playground to test prompts in real-time.",
+    "Tip: Enforce tone-of-voice checks with custom validation constraints.",
+    "Tip: Set minimum quality scores to auto-reject bad AI outputs.",
+    "Tip: Integrate our SDK directly into your Next.js routes easily.",
+    "Tip: You can bring your own API keys for multiple LLM providers."
+  ];
+
+  React.useEffect(() => {
+    const timer = setTimeout(() => setShowSplash(false), 5000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  React.useEffect(() => {
+    if (!showSplash && !loading) return;
+    const interval = setInterval(() => {
+      setTipIndex(prev => (prev + 1) % TIPS.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [showSplash, loading]);
 
   React.useEffect(() => {
     if (theme === 'light') {
@@ -37,15 +61,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [theme]);
 
-  if (loading) {
+  if (loading || showSplash) {
     return (
       <div style={{ display: 'flex', height: '100vh', width: '100%', alignItems: 'center', justifyContent: 'center', background: 'var(--bg, #000)' }}>
-        {/* Skeleton loading — never show landing page */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-          <div style={{ width: 40, height: 40, border: '3px solid var(--border)', borderTopColor: 'var(--teal)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          <TextShimmer style={{ fontSize: '0.9375rem', fontWeight: 500 }}>Loading session…</TextShimmer>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24, textAlign: 'center' }}>
+          <TextShimmer style={{ fontSize: '2.5rem', fontWeight: 800, letterSpacing: '-0.03em' }}>Loading Normy Dashboard...</TextShimmer>
+          <div style={{ color: 'var(--text-sec)', fontSize: '1.125rem', fontWeight: 500, height: 28, opacity: 0, animation: 'fadeInOut 2s linear infinite' }} key={tipIndex}>
+            {TIPS[tipIndex]}
+          </div>
         </div>
-        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <style>{`
+          @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(4px); }
+            15% { opacity: 1; transform: translateY(0); }
+            85% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-4px); }
+          }
+        `}</style>
       </div>
     );
   }
@@ -93,7 +125,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div style={{ display: 'flex', height: '100vh', width: '100%', background: 'var(--bg, #000)' }}>
       {/* Sidebar */}
       <aside className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`} style={{ width: isSidebarCollapsed ? 80 : 260, borderRight: '1px solid var(--border)', transition: 'width 0.2s', padding: '24px 12px', display: 'flex', flexDirection: 'column' }}>
-        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: isSidebarCollapsed ? 'center' : 'space-between', paddingBottom: 24, /* borderBottom: '1px solid var(--border)', */ marginBottom: 24, cursor: isSidebarCollapsed ? 'pointer' : 'default' }} onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
+        <div className="sidebar-logo" style={{ display: 'flex', alignItems: 'center', justifyContent: isSidebarCollapsed ? 'center' : 'space-between', paddingBottom: 24, borderBottom: 'none' /* '1px solid var(--border)' */, marginBottom: 24, cursor: isSidebarCollapsed ? 'pointer' : 'default' }} onClick={() => isSidebarCollapsed && setIsSidebarCollapsed(false)}>
           {isSidebarCollapsed ? (
             <img src="/logo.png" alt="Normy" style={{ height: 24 }} />
           ) : (
@@ -136,11 +168,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               </div>
             )}
           </div>
-          <button onClick={signOut} className="btn-liquid-metal" style={{ width: '100%', padding: 1, marginTop: 8 }}>
-            <span className="btn-liquid-metal-inner" style={{ padding: '8px 16px', display: 'flex', justifyContent: 'center' }}>
-              {isSidebarCollapsed ? 'Exit' : 'Sign Out'}
-            </span>
-          </button>
+          <div style={{ marginTop: 8 }}>
+            <LiquidMetalButton 
+              label={isSidebarCollapsed ? "Exit" : "Sign Out"}
+              onClick={signOut}
+              width="100%"
+              height={36}
+            />
+          </div>
         </div>
       </aside>
 
@@ -178,9 +213,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             )}
 
             {/* Theme switcher */}
-            <button className="btn-liquid-metal" style={{ padding: 1, width: 34, height: 34, borderRadius: '50%' }} onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}>
-              <span className="btn-liquid-metal-inner" style={{ padding: 0, width: '100%', height: '100%', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {theme === 'dark' ? (
+            <LiquidMetalButton
+              onClick={() => setTheme(t => t === 'dark' ? 'light' : 'dark')}
+              width={34}
+              height={34}
+              icon={
+                theme === 'dark' ? (
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <circle cx="12" cy="12" r="5"/>
                     <line x1="12" y1="1" x2="12" y2="3"/>
@@ -196,9 +234,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                   </svg>
-                )}
-              </span>
-            </button>
+                )
+              }
+            />
           </div>
         </header>
 

@@ -1,4 +1,4 @@
-import type { ElementType, ReactNode } from "react";
+import React, { ElementType, ReactNode } from "react";
 
 export interface TextShimmerProps {
   children: ReactNode;
@@ -28,7 +28,7 @@ export function TextShimmer({
           WebkitBackgroundClip: 'text',
           backgroundClip: 'text',
           color: 'transparent',
-          backgroundImage: 'linear-gradient(110deg, var(--text-sec) 30%, var(--white) 50%, var(--text-sec) 70%)',
+          backgroundImage: 'linear-gradient(110deg, var(--text-muted, #888) 30%, var(--white, #fff) 50%, var(--text-muted, #888) 70%)',
           ...style 
         }}
         className={className}
