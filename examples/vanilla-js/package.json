@@ -7,7 +7,7 @@
     "build": "echo \"Building...\""
   },
   "dependencies": {
-    "@normy/js": "workspace:*"
+    "@normy-validation/js": "workspace:*"
   },
   "devDependencies": {}
 }
