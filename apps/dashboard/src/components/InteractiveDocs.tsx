@@ -222,7 +222,7 @@ curl -X POST ${apiHostUrl}/validate \\
   };
 
   return (
-    <div style={{ color: '#fff', lineHeight: 1.6 }}>
+    <div style={{ color: '#fff', lineHeight: 1.6, maxWidth: 1200, margin: '0 auto', width: '100%' }}>
 
       {/* ═══ Header Sticky Controls Panel ═══ */}
       <div style={{

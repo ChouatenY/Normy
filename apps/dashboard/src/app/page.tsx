@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase.js';
@@ -439,9 +439,12 @@ export default function AppMain() {
           
           {landingSection === 'docs' ? (
             /* --- Documentation Layout --- */
-            <div>
-              <div className="docs-header-container">
-                <h2 className="docs-header-title">Developer Integration Kit</h2>
+            <div style={{ padding: '60px 24px', width: '100%', background: 'var(--bg, #000)' }}>
+              <div className="docs-header-container" style={{ textAlign: 'center', marginBottom: 60 }}>
+                <h2 className="docs-header-title" style={{ fontSize: '2.5rem', fontWeight: 800, color: 'var(--white)', letterSpacing: '-0.02em', marginBottom: 12 }}>Developer Integration Kit</h2>
+                <p style={{ color: 'var(--text-sec)', fontSize: '1.125rem', maxWidth: 600, margin: '0 auto' }}>
+                  Everything you need to integrate Normy into your codebase in seconds.
+                </p>
               </div>
               <InteractiveDocs />
             </div>
@@ -549,10 +552,14 @@ export default function AppMain() {
                             onSelectForm={handleSelectForm}
                             selectedFormId={activeFormTab} 
                           />
-                          <a 
-                            href="http://localhost:5173" 
-                            target="_blank" 
-                            rel="noreferrer"
+                          <button 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              showAlert(
+                                "We're still building this! 🚧",
+                                "We are working hard on an amazing interactive Sandbox for the SDK! In the meantime, we encourage you to login or sign up and try using Normy in your own projects—it's fast and easy!"
+                              );
+                            }}
                             style={{
                               marginTop: "-20px",
                               padding: "10px 24px",
@@ -561,6 +568,7 @@ export default function AppMain() {
                               borderRadius: "99px",
                               color: "#fff",
                               fontWeight: 600,
+                              cursor: "pointer",
                               textDecoration: "none",
                               boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
                               transition: "all 0.2s",
@@ -576,8 +584,8 @@ export default function AppMain() {
                               e.currentTarget.style.boxShadow = "0 10px 30px rgba(0,0,0,0.5)";
                             }}
                           >
-                            Deep Dive into Sandbox 🚀
-                          </a>
+                            Deep Dive into SDK 🚀
+                          </button>
                         </div>
                       </motion.div>
                     ) : (
