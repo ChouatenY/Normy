@@ -1,4 +1,4 @@
-import type { Validator, ValidationRequest, ValidationResult, ValidationIssue } from '../types/index.js';
+import type { Validator, ValidationRequest, ValidationResult, ValidationIssue } from '../types.js';
 
 export abstract class BaseValidator implements Validator {
   abstract readonly id: string;

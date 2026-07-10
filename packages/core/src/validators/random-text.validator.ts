@@ -1,5 +1,5 @@
 import { BaseValidator } from './base.js';
-import type { ValidationRequest, ValidationResult, ValidationIssue } from '../types/index.js';
+import type { ValidationRequest, ValidationResult, ValidationIssue } from '../types.js';
 
 export class RandomTextValidator extends BaseValidator {
   readonly id = 'random-text-validator';

@@ -11,7 +11,7 @@
  * Validators are composable and run in order within a Pipeline.
  */
 
-export type { Validator } from '../types/index.js';
+
 
 export { BaseValidator } from './base.js';
 export { EmptyValidator } from './empty.validator.js';

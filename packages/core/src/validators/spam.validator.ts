@@ -1,5 +1,5 @@
 import { BaseValidator } from './base.js';
-import type { ValidationRequest, ValidationResult, ValidationIssue } from '../types/index.js';
+import type { ValidationRequest, ValidationResult, ValidationIssue } from '../types.js';
 
 export class SpamValidator extends BaseValidator {
   readonly id = 'spam-validator';
