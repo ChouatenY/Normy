@@ -81,7 +81,7 @@ export class MockAIProvider extends BaseAIProvider {
     return { ok: true };
   }
 
-  estimateCost(request: ValidationRequest): number {
+  estimateCost(_request: ValidationRequest): number {
     return 0.0001;
   }
 

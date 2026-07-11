@@ -79,10 +79,10 @@ export class ScoringEngine {
       provider: params.provider,
       latencyMs: params.latencyMs,
       confidence,
-      source: params.source,
-      resolvedBy: params.resolvedBy,
-      metadata: params.metadata,
-      exampleAnswer: params.exampleAnswer ?? null,
+      ...(params.source !== undefined && { source: params.source }),
+      ...(params.resolvedBy !== undefined && { resolvedBy: params.resolvedBy }),
+      ...(params.metadata !== undefined && { metadata: params.metadata }),
+      ...(params.exampleAnswer !== undefined && { exampleAnswer: params.exampleAnswer }),
       ...(params.tokenUsage ? {
         tokenUsage: {
           inputTokens: params.tokenUsage.inputTokens,
