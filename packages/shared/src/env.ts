@@ -17,7 +17,7 @@ export const serverEnvSchema = z.object({
   NODE_ENV: z
     .enum(['development', 'production', 'test'])
     .default('development'),
-  PORT: z.coerce.number().int().positive().default(3001),
+  PORT: z.coerce.number().int().positive().default(5005),
 
   // ── Database ─────────────────────────────────────────────────────────────────
   DATABASE_URL: urlSchema.describe(
@@ -60,7 +60,7 @@ export type ServerEnv = z.infer<typeof serverEnvSchema>;
  * Never include secrets here.
  */
 export const clientEnvSchema = z.object({
-  NEXT_PUBLIC_NORMY_API_URL: urlSchema.default('http://localhost:3001'),
+  NEXT_PUBLIC_NORMY_API_URL: urlSchema.default('http://localhost:5005'),
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
