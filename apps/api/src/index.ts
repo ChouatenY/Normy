@@ -32,7 +32,6 @@ import {
   TooShortValidator, 
   RandomTextValidator, 
   SpamValidator, 
-  GeminiProvider,
   OrchestratorPipeline,
 } from '@normy-validation/validation-core';
 import { eq, and, desc, sql } from 'drizzle-orm';

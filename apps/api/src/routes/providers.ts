@@ -44,7 +44,7 @@ providerRoutes.openapi(
       providers: [
         {
           name: 'gemini',
-          status: 'connected',
+          status: 'connected' as const,
           mode: geminiMode,
           model: geminiModel,
           lastTested: null,
@@ -52,13 +52,13 @@ providerRoutes.openapi(
         },
         {
           name: 'openai',
-          status: 'disconnected',
-          mode: 'hosted',
+          status: 'disconnected' as const,
+          mode: 'hosted' as const,
         },
         {
           name: 'anthropic',
-          status: 'disconnected',
-          mode: 'hosted',
+          status: 'disconnected' as const,
+          mode: 'hosted' as const,
         }
       ]
     });
