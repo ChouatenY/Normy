@@ -9,7 +9,7 @@
     "dev": "tsx watch --env-file=.env src/server.ts",
     "build": "tsc --noEmit",
     "check-types": "tsc --noEmit",
-    "start": "tsx src/server.ts",
+    "start": "tsx --env-file=../../.env src/server.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
