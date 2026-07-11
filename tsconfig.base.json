@@ -6,10 +6,6 @@
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "baseUrl": ".",
-    "paths": {
-      "@normy-validation/*": ["packages/*/src/index.ts", "packages/*/src"],
-      "@normy/*": ["packages/*/src/index.ts", "packages/*/src"]
-    },
     "moduleDetection": "force",
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
