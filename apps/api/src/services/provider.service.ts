@@ -42,7 +42,7 @@ export class ProviderService {
       }
     } else {
       // Hosted resolution
-      activeProviderKey = providerName === 'gemini' ? env.GEMINI_API_KEY : '';
+      activeProviderKey = providerName === 'gemini' ? (env.GEMINI_API_KEY || '') : '';
       
       const balanceStr = apiKeyEnv === 'production' ? (project as any).liveCreditsBalance : (project as any).testCreditsBalance;
       const balance = parseFloat(balanceStr as string || '0');

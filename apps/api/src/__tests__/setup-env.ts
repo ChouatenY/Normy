@@ -12,6 +12,7 @@ try {
       const match = line.match(/^\s*([\w.-]+)\s*=\s*(.*)?\s*$/);
       if (match) {
         const key = match[1];
+        if (!key) continue;
         let val = match[2] || '';
         if (val.startsWith('"') && val.endsWith('"')) {
           val = val.substring(1, val.length - 1);

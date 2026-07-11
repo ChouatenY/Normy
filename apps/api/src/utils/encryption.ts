@@ -4,7 +4,6 @@ import { env } from '../config/env.js';
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 const SALT_LENGTH = 64;
-const TAG_LENGTH = 16;
 
 /**
  * Encrypts a plain text string using AES-256-GCM.
@@ -42,15 +41,21 @@ export function encrypt(text: string): string {
 export function decrypt(ciphertext: string): string {
   if (!ciphertext) return ciphertext;
   
-  let ivHex, saltHex, tagHex, encryptedHex;
+  let ivHex: string, saltHex: string, tagHex: string, encryptedHex: string;
   const parts = ciphertext.split(':');
   
   if (parts.length === 5 && parts[0] === 'v1') {
     // New versioned format
-    [, ivHex, saltHex, tagHex, encryptedHex] = parts;
+    ivHex = parts[1] as string;
+    saltHex = parts[2] as string;
+    tagHex = parts[3] as string;
+    encryptedHex = parts[4] as string;
   } else if (parts.length === 4) {
     // Legacy unversioned format
-    [ivHex, saltHex, tagHex, encryptedHex] = parts;
+    ivHex = parts[0] as string;
+    saltHex = parts[1] as string;
+    tagHex = parts[2] as string;
+    encryptedHex = parts[3] as string;
   } else {
     throw new Error('Invalid encrypted text format');
   }

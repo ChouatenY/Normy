@@ -5,7 +5,6 @@ import { projects } from '../db/schema/projects.js';
 import { eq } from 'drizzle-orm';
 import { encrypt } from '../utils/encryption.js';
 import { ProviderService } from '../services/provider.service.js';
-import { GeminiProvider, MockAIProvider } from '@normy-validation/validation-core';
 
 export const providerRoutes = new OpenAPIHono<AuthContext>();
 
@@ -38,7 +37,7 @@ providerRoutes.openapi(
     const project = c.get('project');
     
     // Only Gemini implemented for now
-    const geminiMode = project.geminiApiKey ? 'byok' : 'hosted';
+    const geminiMode: 'byok' | 'hosted' = project.geminiApiKey ? 'byok' : 'hosted';
     const geminiModel = (project.settings as any)?.geminiModel || 'gemini-2.5-flash';
     
     return c.json({

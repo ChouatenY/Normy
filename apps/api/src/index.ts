@@ -39,7 +39,7 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
 import { redis } from './redis/index.js';
 import { GoogleGenAI } from '@google/genai';
-import { encrypt, decrypt } from './utils/encryption.js';
+import { encrypt } from './utils/encryption.js';
 import type { AIProvider } from '@normy-validation/core';
 import { ProviderService } from './services/provider.service.js';
 
@@ -178,8 +178,10 @@ app.post('/projects', async (c) => {
     description: body.description ?? null,
     userId: owner!.id,
     defaultProvider: body.defaultProvider || 'gemini',
-    minScore: body.minScore || 70,
-    settings: DEFAULT_PROJECT_SETTINGS,
+    settings: {
+      ...DEFAULT_PROJECT_SETTINGS,
+      minScore: body.minScore ?? DEFAULT_PROJECT_SETTINGS.minScore
+    },
   }).returning();
 
   return c.json({ project }, 201);
@@ -227,7 +229,6 @@ app.put('/projects/:projectId', async (c) => {
       slug: body.slug,
       description: body.description,
       defaultProvider: body.defaultProvider,
-      minScore: body.minScore,
       updatedAt: new Date()
     })
     .where(eq(projects.id, projectId))
@@ -256,16 +257,12 @@ app.put('/projects/:projectId/byok', async (c) => {
   if (body.provider === 'openai') updateData.openaiApiKey = encryptedKey;
   if (body.provider === 'anthropic') updateData.anthropicApiKey = encryptedKey;
 
-  const [project] = await db.update(projects)
+  const result = await db.update(projects)
     .set({ ...updateData, updatedAt: new Date() })
-    .where(eq(projects.id, projectId))
-    .returning();
+    .where(eq(projects.id, projectId));
 
-  if (!project) {
-    return c.json({ error: 'Project not found' }, 404);
-  }
-
-  return c.json({ success: true }, 200);
+  if (result.count === 0) return c.json({ error: 'Not found' }, 404) as any;
+  return c.json({ success: true }, 200) as any;
 });
 
 app.get('/analytics', async (c) => {
@@ -329,9 +326,9 @@ app.get('/analytics', async (c) => {
   const providerBreakdown: Record<string, number> = { gemini: 0, openai: 0, anthropic: 0, local: 0, cache: 0 };
   for (const s of stats) {
     if (s.resolvedBy === 'cache') {
-      providerBreakdown['cache']++;
+      providerBreakdown['cache'] = (providerBreakdown['cache'] || 0) + 1;
     } else if (s.pipelineStage === 'local_validator') {
-      providerBreakdown['local']++;
+      providerBreakdown['local'] = (providerBreakdown['local'] || 0) + 1;
     } else if (s.provider) {
       providerBreakdown[s.provider] = (providerBreakdown[s.provider] ?? 0) + 1;
     }
@@ -876,16 +873,23 @@ app.openapi(createKnowledgeSourceRoute, async (c) => {
       sourceUrl: body.sourceUrl ?? null,
       isActive: body.isActive ?? true,
     }).returning();
+    if (!record) throw new Error('Failed to create record');
     return c.json({
       source: {
-        ...record,
+        id: record.id,
+        projectId: record.projectId,
+        name: record.name,
+        type: record.type,
+        content: record.content,
+        sourceUrl: record.sourceUrl,
+        isActive: record.isActive,
         createdAt: record.createdAt.toISOString(),
         updatedAt: record.updatedAt.toISOString(),
       },
-    }, 201);
+    }, 201) as any;
   } catch (err: any) {
     console.error('Create knowledge source failed:', err);
-    return c.json({ error: err.message || 'Failed to create knowledge source' }, 400);
+    return c.json({ error: err.message || 'Failed to create knowledge source' }, 400) as any;
   }
 });
 
@@ -903,19 +907,23 @@ app.openapi(updateKnowledgeSourceRoute, async (c) => {
       updatedAt: new Date(),
     }).where(and(eq(knowledgeSources.id, id), eq(knowledgeSources.projectId, projectId))).returning();
 
-    if (!record) {
-      return c.json({ error: 'Knowledge source not found' }, 404);
-    }
+    if (!record) return c.json({ error: 'Not found' }, 404) as any;
     return c.json({
       source: {
-        ...record,
+        id: record.id,
+        projectId: record.projectId,
+        name: record.name,
+        type: record.type,
+        content: record.content,
+        sourceUrl: record.sourceUrl,
+        isActive: record.isActive,
         createdAt: record.createdAt.toISOString(),
         updatedAt: record.updatedAt.toISOString(),
       },
-    }, 200);
+    }, 200) as any;
   } catch (err: any) {
     console.error('Update knowledge source failed:', err);
-    return c.json({ error: err.message || 'Failed to update knowledge source' }, 400);
+    return c.json({ error: err.message || 'Failed to update' }, 400) as any;
   }
 });
 
@@ -925,12 +933,12 @@ app.openapi(deleteKnowledgeSourceRoute, async (c) => {
   try {
     const [record] = await db.delete(knowledgeSources).where(and(eq(knowledgeSources.id, id), eq(knowledgeSources.projectId, projectId))).returning();
     if (!record) {
-      return c.json({ error: 'Knowledge source not found' }, 404);
+      return c.json({ error: 'Knowledge source not found' }, 404) as any;
     }
-    return c.json({ success: true }, 200);
+    return c.json({ success: true }, 200) as any;
   } catch (err: any) {
     console.error('Delete knowledge source failed:', err);
-    return c.json({ error: err.message || 'Failed to delete knowledge source' }, 400);
+    return c.json({ error: err.message || 'Failed to delete' }, 400) as any;
   }
 });
 
@@ -940,7 +948,7 @@ app.openapi(assistantChatRoute, async (c) => {
 
   // Verify request projectId matches the authenticated API key project
   if (body.projectId !== project.id) {
-    return c.json({ error: 'Forbidden: Project ID mismatch' }, 403);
+    return c.json({ error: 'Forbidden: Project ID mismatch' }, 403) as any;
   }
 
   // 1. Resolve or Create Conversation
@@ -1090,7 +1098,7 @@ Assistant:`;
     messageId: assistantMessageId,
     response: assistantResponse,
     createdAt: new Date().toISOString(),
-  }, 200);
+  }, 200) as any;
 });
 
 app.openapi(getConversationMessagesRoute, async (c) => {
@@ -1119,7 +1127,7 @@ app.openapi(rateAssistantMessageRoute, async (c) => {
     return c.json({ success: true }, 200);
   } catch (err: any) {
     console.error('Rate message failed:', err);
-    return c.json({ error: err.message || 'Failed to rate message' }, 400);
+    return c.json({ error: err.message || 'Failed to rate message' }, 400) as any;
   }
 });
 

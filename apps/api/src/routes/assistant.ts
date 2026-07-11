@@ -1,12 +1,4 @@
 import { createRoute, z } from '@hono/zod-openapi';
-import { db } from '../db/index.js';
-import { knowledgeSources } from '../db/schema/knowledge-sources.js';
-import { assistantConversations } from '../db/schema/assistant-conversations.js';
-import { assistantMessages } from '../db/schema/assistant-messages.js';
-import { eq, and, desc } from 'drizzle-orm';
-import crypto from 'node:crypto';
-import { GoogleGenAI } from '@google/genai';
-import { env } from '../config/env.js';
 
 // ─── API Schemas ──────────────────────────────────────────────────────────────
 
