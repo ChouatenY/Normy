@@ -147,8 +147,8 @@ export function NormyToast({
         className={className}
         style={toastStyle({ severity: 'info' })}
       >
-        <span style={spinnerStyle} aria-hidden="true">⟳</span>
-        <span style={{ flex: 1 }}>Checking your response…</span>
+        <span style={spinnerStyle} aria-hidden="true">✨</span>
+        <span style={{ flex: 1, fontWeight: 500 }}>Analyzing...</span>
         {dismissButton}
       </div>
     );
