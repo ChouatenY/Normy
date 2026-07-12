@@ -253,7 +253,7 @@ export class NormyClient {
 
         return {
           ok: false,
-          error: { error: errorMessage, status: res.status },
+          error: { error: errorMessage, code: 'API_ERROR', status: res.status },
         };
       }
 
@@ -266,6 +266,7 @@ export class NormyClient {
         ok: false,
         error: {
           error: isAbort ? 'Request timed out' : 'Network error — please check your connection',
+          code: 'OFFLINE',
           status: isAbort ? 408 : 0,
         },
       };
@@ -299,7 +300,7 @@ export class NormyClient {
 
         return {
           ok: false,
-          error: { error: errorMessage, status: res.status },
+          error: { error: errorMessage, code: 'API_ERROR', status: res.status },
         };
       }
 
@@ -312,6 +313,7 @@ export class NormyClient {
         ok: false,
         error: {
           error: isAbort ? 'Request timed out' : 'Network error',
+          code: 'OFFLINE',
           status: isAbort ? 408 : 0,
         },
       };
@@ -347,7 +349,7 @@ export class NormyClient {
 
         return {
           ok: false,
-          error: { error: errorMessage, status: res.status },
+          error: { error: errorMessage, code: 'API_ERROR', status: res.status },
         };
       }
 
@@ -360,6 +362,7 @@ export class NormyClient {
         ok: false,
         error: {
           error: isAbort ? 'Request timed out' : 'Network error',
+          code: 'OFFLINE',
           status: isAbort ? 408 : 0,
         },
       };
@@ -395,7 +398,7 @@ export class NormyClient {
 
         return {
           ok: false,
-          error: { error: errorMessage, status: res.status },
+          error: { error: errorMessage, code: 'API_ERROR', status: res.status },
         };
       }
 
@@ -408,6 +411,7 @@ export class NormyClient {
         ok: false,
         error: {
           error: isAbort ? 'Request timed out' : 'Network error',
+          code: 'OFFLINE',
           status: isAbort ? 408 : 0,
         },
       };

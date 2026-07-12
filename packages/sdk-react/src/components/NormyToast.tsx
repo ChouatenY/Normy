@@ -88,7 +88,7 @@ export function NormyToast({
       shownRef.current = true;
       trackEvent({
         type: 'feedback_shown',
-        fieldName: id,
+        ...(id ? { fieldName: id } : {}),
         payload: { severity: result.severity, autoDismiss: successDismissMs > 0 }
       });
     }
@@ -117,7 +117,7 @@ export function NormyToast({
         setDismissed(true);
         trackEvent({
           type: 'feedback_dismissed',
-          fieldName: id,
+          ...(id ? { fieldName: id } : {}),
           payload: { dismissedBy: 'user' }
         });
       }}
