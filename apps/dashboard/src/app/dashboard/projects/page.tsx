@@ -48,6 +48,7 @@ export default function ProjectsPage() {
   const [projDesc, setProjDesc] = useState('');
   const [projProvider, setProjProvider] = useState<'gemini' | 'openai' | 'anthropic'>('gemini');
   const [projMinScore, setProjMinScore] = useState(70);
+  const [isSaving, setIsSaving] = useState(false);
 
   const openCreate = () => {
     setProjName('');
@@ -70,17 +71,24 @@ export default function ProjectsPage() {
     e.preventDefault();
     if (!projName) return;
 
-    const created = await DbService.createProject(user?.email || 'default@example.com', {
+    setIsSaving(true);
+    try {
+      const created = await DbService.createProject(user?.email || 'default@example.com', {
       name: projName,
       slug: projSlug,
       description: projDesc,
       defaultProvider: projProvider,
       minScore: projMinScore
     });
-    setSelectedProject(created);
-    await refreshProjects();
-    setShowProjModal(false);
-    router.push(`/dashboard/projects/${created.id}`);
+      setSelectedProject(created);
+      await refreshProjects();
+      setShowProjModal(false);
+      router.push(`/dashboard/projects/${created.id}`);
+    } catch (err: any) {
+      alert(`Failed to create project: ${err.message}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -134,7 +142,7 @@ export default function ProjectsPage() {
       )}
 
       {showProjModal && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
           <NormyProvider apiKey="nrm_live_demo" projectId="00000000-0000-0000-0000-000000000000" apiUrl="" showBadge={false}>
             <div className="card-glass" style={{ width: 440, padding: 28 }}>
               <h3 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 20, color: 'var(--white)' }}>New Project</h3>
@@ -165,8 +173,10 @@ export default function ProjectsPage() {
                   <CustomSelect value={projProvider} onChange={(val) => setProjProvider(val as any)} options={[{ label: 'Google Gemini', value: 'gemini' }, { label: 'OpenAI', value: 'openai' }, { label: 'Anthropic', value: 'anthropic' }]} />
                 </div>
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <button type="button" className="btn btn-glass" style={{ flex: 1 }} onClick={() => setShowProjModal(false)}>Cancel</button>
-                  <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Create Project</button>
+                  <button type="button" className="btn btn-glass" style={{ flex: 1 }} onClick={() => setShowProjModal(false)} disabled={isSaving}>Cancel</button>
+                  <button type="submit" className="btn btn-primary" style={{ flex: 1, filter: isSaving ? 'brightness(0.7)' : 'none', cursor: isSaving ? 'not-allowed' : 'pointer' }} disabled={isSaving}>
+                    {isSaving ? 'Creating...' : 'Create Project'}
+                  </button>
                 </div>
               </form>
             </div>
