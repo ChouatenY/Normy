@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p 5006",
     "test": "vitest run",
     "check-types": "tsc --noEmit",
     "lint": "echo \"No linter configured yet\""
