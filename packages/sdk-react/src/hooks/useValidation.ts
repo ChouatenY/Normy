@@ -16,6 +16,9 @@ const PATIENCE_MS = {
   high: 1500,
 };
 
+// Global in-memory cache for exact-match strings
+const browserMemoryCache = new Map<string, ValidateResponse>();
+
 // ─── State shape ─────────────────────────────────────────────────────────────
 
 export type ValidationStatus = 'idle' | 'typing' | 'debouncing' | 'checking_local' | 'checking_ai' | 'cache_hit' | 'success' | 'warning' | 'error' | 'offline' | 'rate_limited' | 'network_error';
@@ -183,7 +186,7 @@ export function useValidation(options: UseValidationOptions): UseValidationRetur
       return;
     }
 
-    setState(prev => ({ ...prev, isValidating: true, status: 'checking_local', apiError: null }));
+    setState(prev => ({ ...prev, status: 'checking_local', apiError: null }));
 
     trackEvent({
       type: 'validation_triggered',
@@ -258,7 +261,47 @@ export function useValidation(options: UseValidationOptions): UseValidationRetur
       return;
     }
 
-    setState(prev => ({ ...prev, status: 'checking_ai' }));
+    const cacheKey = `${projectId}:${options.question}:${value}:${options.provider || 'default'}:${options.promptVersion || 'default'}`;
+    const memCachedRes = browserMemoryCache.get(cacheKey);
+
+    if (memCachedRes) {
+      if (debug) console.log('[Normy] Browser Memory Cache Hit ↓');
+      setState(prev => ({
+        ...prev,
+        isValidating: false,
+        status: 'cache_hit',
+        result: memCachedRes,
+        isValid: memCachedRes.valid,
+        apiError: null,
+        source: 'local_cache',
+        resolvedBy: memCachedRes.resolvedBy,
+        cached: true,
+        provider: memCachedRes.metadata?.provider,
+        latency: 0,
+        confidence: memCachedRes.confidence,
+        score: memCachedRes.score,
+        explanation: memCachedRes.explanation,
+      }));
+
+      setTimeout(() => {
+        setState(prev => ({ ...prev, status: memCachedRes.valid ? 'success' : 'error' }));
+      }, 50);
+
+      options.onResult?.(memCachedRes);
+      if (memCachedRes.valid) options.onValid?.(memCachedRes);
+      else options.onInvalid?.(memCachedRes);
+      options.onCacheHit?.(memCachedRes);
+      options.onValidationComplete?.(memCachedRes);
+
+      trackEvent({
+        type: 'validation_completed',
+        fieldName: options.id || options.question,
+        payload: { source: 'local_cache', valid: memCachedRes.valid, issue: memCachedRes.issue, cached: true }
+      });
+      return;
+    }
+
+    setState(prev => ({ ...prev, isValidating: true, status: 'checking_ai' }));
     if (debug) console.log(`[Normy] AI Request (${req.provider || 'gemini'}) ↓`);
 
     const result = await client.validate(req);
@@ -274,6 +317,9 @@ export function useValidation(options: UseValidationOptions): UseValidationRetur
       options.onValidationFailure?.(result.error.error);
       return;
     }
+
+    // Populate browser memory cache
+    browserMemoryCache.set(cacheKey, result.data);
 
     setState(prev => ({
       ...prev,
@@ -340,7 +386,14 @@ export function useValidation(options: UseValidationOptions): UseValidationRetur
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const value = e.target.value;
-    setState(prev => ({ ...prev, value, status: 'typing' }));
+    setState(prev => ({ 
+      ...prev, 
+      value, 
+      status: 'typing',
+      result: null,
+      apiError: null,
+      isValidating: false
+    }));
 
     if (mode === 'onPause' || mode === 'smart') {
       if (debounceRef.current) clearTimeout(debounceRef.current);
