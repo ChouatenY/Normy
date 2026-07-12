@@ -9,6 +9,7 @@ import { DbService, type Project } from '../../../lib/db-service.js';
 import { FolderKanban, Plus, Star, ArrowRight } from 'lucide-react';
 import { CustomSelect } from '../../../components/ui/custom-select.js';
 import { EmptyProjectsState } from '../../../components/ui/empty-projects.js';
+import confetti from 'canvas-confetti';
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -57,6 +58,15 @@ export default function ProjectsPage() {
       setSelectedProject(created);
       await refreshProjects();
       setShowProjModal(false);
+      
+      // Fire confetti from the center of the screen
+      confetti({
+        particleCount: 150,
+        spread: 100,
+        origin: { y: 0.6 },
+        colors: ["#a786ff", "#fd8bbc", "#eca184", "#f8deb1", "#50e3c2"]
+      });
+
       router.push(`/dashboard/projects/${created.id}`);
     } catch (err: any) {
       alert(`Failed to create project: ${err.message}`);
