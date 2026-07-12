@@ -261,7 +261,7 @@ export function useValidation(options: UseValidationOptions): UseValidationRetur
       return;
     }
 
-    const cacheKey = `${projectId}:${options.question}:${value}:${options.provider || 'default'}:${options.promptVersion || 'default'}`;
+    const cacheKey = `${projectId}:${options.question}:${value}:${options.promptVersion || 'default'}`;
     const memCachedRes = browserMemoryCache.get(cacheKey);
 
     if (memCachedRes) {
