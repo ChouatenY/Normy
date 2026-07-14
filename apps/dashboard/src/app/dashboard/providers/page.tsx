@@ -7,6 +7,8 @@ import { NormyProvider, useValidation } from '@normy-validation/react';
 import { CustomSelect } from '../../../components/ui/custom-select.js';
 import { Star, Edit2, Plus, Shield, AlertCircle } from 'lucide-react';
 
+import { motion } from 'framer-motion';
+
 function ValidatedKeyTitle({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const v = useValidation({ mode: 'onBlur', question: 'What is the name for this BYOK API key configuration?' });
 
@@ -79,7 +81,7 @@ export default function ProvidersPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
               <div className="input-group">
                 <label className="input-label">Provider</label>
-                <CustomSelect value={byokForm.provider} onChange={val => setByokForm({...byokForm, provider: val as any})} options={[{label: 'Google Gemini', value: 'gemini'}, {label: 'OpenAI', value: 'openai'}, {label: 'Anthropic', value: 'anthropic'}]} />
+                <CustomSelect style={{ height: '42px', minHeight: '42px' }} value={byokForm.provider} onChange={val => setByokForm({...byokForm, provider: val as any})} options={[{label: 'Google Gemini', value: 'gemini'}, {label: 'OpenAI', value: 'openai'}, {label: 'Anthropic', value: 'anthropic'}]} />
               </div>
               <ValidatedKeyTitle value={byokForm.title} onChange={(val) => setByokForm({...byokForm, title: val})} />
             </div>
@@ -107,15 +109,27 @@ export default function ProvidersPage() {
               
               {/* Star Background Graphic for Default */}
               {isProminent && (
-                <div style={{ position: 'absolute', top: -20, right: -20, opacity: 0.05, transform: 'rotate(15deg)', pointerEvents: 'none' }}>
+                <motion.div 
+                  initial={{ scale: 0.5, opacity: 0, rotate: 0 }}
+                  animate={{ scale: 1, opacity: 0.05, rotate: 15 }}
+                  transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+                  style={{ position: 'absolute', top: -20, right: -20, pointerEvents: 'none' }}
+                >
                   <Star size={120} fill="#fff" color="#fff" />
-                </div>
+                </motion.div>
               )}
 
               <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', zIndex: 1 }}>
                 <div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                    {isProminent ? <Star size={16} fill="var(--white)" color="var(--white)" /> : <Shield size={16} color="var(--text-sec)" />}
+                    <button 
+                      type="button"
+                      onClick={() => !isProminent && handleSetDefault(providerId as any)}
+                      style={{ background: 'none', border: 'none', padding: 0, cursor: isProminent ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      title={isProminent ? "Primary Provider" : "Click to set as Primary"}
+                    >
+                      <Star size={16} fill={isProminent ? "var(--white)" : "none"} color={isProminent ? "var(--white)" : "var(--text-sec)"} />
+                    </button>
                     <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--white)', letterSpacing: '-0.02em' }}>{providerName}</h3>
                   </div>
                   {isProminent && <span style={{ fontSize: '0.6875rem', background: 'rgba(255,255,255,0.1)', color: 'var(--white)', border: '1px solid rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 12, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.05em' }}>Primary Provider</span>}

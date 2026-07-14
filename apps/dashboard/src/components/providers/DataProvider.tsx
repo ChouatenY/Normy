@@ -38,8 +38,19 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setLoadingProjects(true);
     const list = await DbService.getProjects(user.email || 'default@example.com');
     setProjects(list || []);
-    if (list && list.length > 0 && (!selectedProject || !list.find(p => p.id === selectedProject.id))) {
-      setSelectedProject(list[0] ?? null);
+    if (list && list.length > 0) {
+      if (selectedProject) {
+        const updatedSelected = list.find(p => p.id === selectedProject.id);
+        if (updatedSelected) {
+          setSelectedProject(updatedSelected);
+        } else {
+          setSelectedProject(list[0]);
+        }
+      } else {
+        setSelectedProject(list[0]);
+      }
+    } else {
+      setSelectedProject(null);
     }
     setLoadingProjects(false);
   };
