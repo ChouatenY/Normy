@@ -86,7 +86,7 @@ export function FeedbackForm() {
     const { status, result, apiError } = validation;
     if (status === 'idle') return null;
 
-    const isLoading = status === 'validating';
+    const isLoading = status === 'checking_ai';
     const styleClass = isLoading ? 'validating' : (result?.severity ?? 'error');
     const icon = isLoading ? '⟳' : result?.severity === 'success' ? '✓' : result?.severity === 'info' ? 'ℹ' : result?.severity === 'warning' ? '⚠' : '✕';
     const msg  = isLoading ? 'Analyzing response…' : (apiError ?? result?.feedback ?? '');
@@ -182,7 +182,7 @@ export function FeedbackForm() {
           className={[
             'field-textarea',
             mainFeedback.status === 'error' ? 'has-error' : mainFeedback.status === 'success' ? 'has-success' : '',
-            mainFeedback.status === 'validating' ? 'is-validating' : '',
+            mainFeedback.status === 'checking_ai' ? 'is-validating' : '',
           ].join(' ')}
           rows={4}
           placeholder="Please describe your experience, highlighting any issues or standout features you observed."
@@ -245,7 +245,7 @@ export function FeedbackForm() {
           className={[
             'field-textarea',
             improvement.status === 'error' ? 'has-error' : improvement.status === 'success' ? 'has-success' : '',
-            improvement.status === 'validating' ? 'is-validating' : '',
+            improvement.status === 'checking_ai' ? 'is-validating' : '',
           ].join(' ')}
           rows={3}
           placeholder="What specific changes would improve your experience?"
@@ -268,7 +268,7 @@ export function FeedbackForm() {
           className={[
             'field-input',
             recommendation.status === 'error' ? 'has-error' : recommendation.status === 'success' ? 'has-success' : '',
-            recommendation.status === 'validating' ? 'is-validating' : '',
+            recommendation.status === 'checking_ai' ? 'is-validating' : '',
           ].join(' ')}
           placeholder="Yes / No (and brief reasoning)"
           value={recommendation.value}

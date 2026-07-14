@@ -103,7 +103,7 @@ export function CancellationForm() {
           className={[
             'field-textarea',
             elaboration.status === 'error' ? 'has-error' : elaboration.status === 'success' ? 'has-success' : '',
-            elaboration.status === 'validating' ? 'is-validating' : '',
+            elaboration.status === 'checking_ai' ? 'is-validating' : '',
           ].join(' ')}
           rows={4}
           placeholder="Could you share details about your decision to cancel? Be as descriptive as you like."
@@ -121,13 +121,13 @@ export function CancellationForm() {
             role={elaboration.status === 'error' ? 'alert' : 'status'}
             aria-live="polite"
             className={`v-feedback ${
-              elaboration.status === 'validating' ? 'validating'
+              elaboration.status === 'checking_ai' ? 'validating'
               : elaboration.status === 'rate_limited' ? 'rate-limit'
               : elaboration.status === 'network_error' ? 'network-error'
               : elaboration.result?.severity ?? 'error'
             }`}
           >
-            {elaboration.status === 'validating' ? (
+            {elaboration.status === 'checking_ai' ? (
               <span className="v-feedback-spinner" />
             ) : (
               <span className="v-feedback-icon">
@@ -140,7 +140,7 @@ export function CancellationForm() {
             )}
             <div style={{ flex: 1 }}>
               <div>
-                {elaboration.status === 'validating' ? 'Analyzing response…'
+                {elaboration.status === 'checking_ai' ? 'Analyzing response…'
                  : elaboration.apiError ?? elaboration.result?.feedback ?? ''}
               </div>
               {elaboration.result && elaboration.result.score !== undefined && (

@@ -52,7 +52,7 @@ export function JobApplicationForm() {
     const { status, result, apiError } = validation;
     if (status === 'idle') return null;
 
-    const isLoading = status === 'validating';
+    const isLoading = status === 'checking_ai';
     const isApiErr  = status === 'rate_limited' || status === 'network_error';
     const styleClass = isLoading ? 'validating' : isApiErr ? status : (result?.severity ?? 'error');
     const icon = isLoading ? '⟳' : isApiErr ? '⚡' : result?.severity === 'success' ? '✓' : result?.severity === 'info' ? 'ℹ' : result?.severity === 'warning' ? '⚠' : '✕';
@@ -155,7 +155,7 @@ export function JobApplicationForm() {
           className={[
             'field-textarea',
             coverLetter.status === 'error' ? 'has-error' : coverLetter.status === 'success' ? 'has-success' : '',
-            coverLetter.status === 'validating' ? 'is-validating' : '',
+            coverLetter.status === 'checking_ai' ? 'is-validating' : '',
           ].join(' ')}
           rows={5}
           placeholder="Briefly describe your fit and relevant experiences."
@@ -202,7 +202,7 @@ export function JobApplicationForm() {
           className={[
             'field-textarea',
             whyUs.status === 'error' ? 'has-error' : whyUs.status === 'success' ? 'has-success' : '',
-            whyUs.status === 'validating' ? 'is-validating' : '',
+            whyUs.status === 'checking_ai' ? 'is-validating' : '',
           ].join(' ')}
           rows={3}
           placeholder="What draws you to this role?"
@@ -226,7 +226,7 @@ export function JobApplicationForm() {
             className={[
               'field-input',
               skills.status === 'error' ? 'has-error' : skills.status === 'success' ? 'has-success' : '',
-              skills.status === 'validating' ? 'is-validating' : '',
+              skills.status === 'checking_ai' ? 'is-validating' : '',
             ].join(' ')}
             placeholder="TypeScript, React, Hono, OpenAPI…"
             value={skills.value}
@@ -246,7 +246,7 @@ export function JobApplicationForm() {
             className={[
               'field-input',
               availability.status === 'error' ? 'has-error' : availability.status === 'success' ? 'has-success' : '',
-              availability.status === 'validating' ? 'is-validating' : '',
+              availability.status === 'checking_ai' ? 'is-validating' : '',
             ].join(' ')}
             placeholder="e.g. Immediate / 2 weeks notice"
             value={availability.value}

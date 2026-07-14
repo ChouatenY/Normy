@@ -538,7 +538,7 @@ function CancellationField() {
         placeholder="Tell us why you're leaving..."
       />
 
-      {field.status === 'validating' && <span>Analyzing...</span>}
+      {field.status === 'checking_ai' && <span>Analyzing...</span>}
 
       {field.result && (
         <div className={\`feedback \${field.result.severity}\`}>

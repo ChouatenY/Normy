@@ -61,7 +61,7 @@ export function SurveyForm() {
           className={[
             'field-textarea',
             goal.status === 'error' ? 'has-error' : goal.status === 'success' ? 'has-success' : '',
-            goal.status === 'validating' ? 'is-validating' : '',
+            goal.status === 'checking_ai' ? 'is-validating' : '',
           ].join(' ')}
           rows={4}
           placeholder="Please explain what you hope to accomplish by integrating this tool."
@@ -75,13 +75,13 @@ export function SurveyForm() {
             role={goal.status === 'error' ? 'alert' : 'status'}
             aria-live="polite"
             className={`v-feedback ${
-              goal.status === 'validating' ? 'validating'
+              goal.status === 'checking_ai' ? 'validating'
               : goal.status === 'rate_limited' ? 'rate-limit'
               : goal.status === 'network_error' ? 'network-error'
               : goal.result?.severity ?? 'error'
             }`}
           >
-            {goal.status === 'validating' ? (
+            {goal.status === 'checking_ai' ? (
               <span className="v-feedback-spinner" />
             ) : (
               <span className="v-feedback-icon">
@@ -94,7 +94,7 @@ export function SurveyForm() {
             )}
             <div style={{ flex: 1 }}>
               <div>
-                {goal.status === 'validating' ? 'Analyzing your answer…'
+                {goal.status === 'checking_ai' ? 'Analyzing your answer…'
                  : goal.apiError ?? goal.result?.feedback ?? ''}
               </div>
               {goal.result && goal.result.score !== undefined && (

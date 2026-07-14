@@ -12,7 +12,7 @@ export type ValidationFieldMode = 'onPause' | 'onBlur' | 'onSubmit';
 
 const STATUS_LABELS: Record<ValidationStatus, string> = {
   idle:          'Ready',
-  validating:    'Analyzing…',
+  checking_ai: 'Analyzing…',
   success:       'Verified',
   error:         'Attention required',
   rate_limited:  'Rate limited',
@@ -21,7 +21,7 @@ const STATUS_LABELS: Record<ValidationStatus, string> = {
 
 export function ValidationIndicator({ status }: { status: ValidationStatus }) {
   return (
-    <span className={`mode-badge ${status === 'validating' ? 'pause' : status === 'success' ? 'blur' : status === 'idle' ? 'submit' : 'pause'}`}>
+    <span className={`mode-badge ${status === 'checking_ai' ? 'pause' : status === 'success' ? 'blur' : status === 'idle' ? 'submit' : 'pause'}`}>
       {STATUS_LABELS[status]}
     </span>
   );
@@ -46,7 +46,7 @@ function InlineToast({
   let message = '';
   let styleClass = status as string;
 
-  if (status === 'validating') {
+  if (status === 'checking_ai') {
     message = 'Analyzing input…';
     styleClass = 'validating';
   } else if (status === 'rate_limited') {
@@ -68,7 +68,7 @@ function InlineToast({
       aria-live={status === 'error' ? 'assertive' : 'polite'}
       className={`v-feedback ${styleClass}`}
     >
-      {status === 'validating' ? (
+      {status === 'checking_ai' ? (
         <span className="v-feedback-spinner" aria-hidden="true" />
       ) : (
         <span className="v-feedback-icon" aria-hidden="true">

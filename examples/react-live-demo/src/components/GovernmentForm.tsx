@@ -61,7 +61,7 @@ export function GovernmentForm() {
           className={[
             'field-textarea',
             address.status === 'error' ? 'has-error' : address.status === 'success' ? 'has-success' : '',
-            address.status === 'validating' ? 'is-validating' : '',
+            address.status === 'checking_ai' ? 'is-validating' : '',
           ].join(' ')}
           rows={4}
           placeholder="Please type your full official mailing and physical address."
@@ -75,13 +75,13 @@ export function GovernmentForm() {
             role={address.status === 'error' ? 'alert' : 'status'}
             aria-live="polite"
             className={`v-feedback ${
-              address.status === 'validating' ? 'validating'
+              address.status === 'checking_ai' ? 'validating'
               : address.status === 'rate_limited' ? 'rate-limit'
               : address.status === 'network_error' ? 'network-error'
               : address.result?.severity ?? 'error'
             }`}
           >
-            {address.status === 'validating' ? (
+            {address.status === 'checking_ai' ? (
               <span className="v-feedback-spinner" />
             ) : (
               <span className="v-feedback-icon">
@@ -94,7 +94,7 @@ export function GovernmentForm() {
             )}
             <div style={{ flex: 1 }}>
               <div>
-                {address.status === 'validating' ? 'Analyzing address format…'
+                {address.status === 'checking_ai' ? 'Analyzing address format…'
                  : address.apiError ?? address.result?.feedback ?? ''}
               </div>
               {address.result && address.result.score !== undefined && (
