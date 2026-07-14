@@ -10,19 +10,25 @@ export type ValidationFieldMode = 'onPause' | 'onBlur' | 'onSubmit';
 
 // ── Status indicator ───────────────────────────────────────────────────────────
 
-const STATUS_LABELS: Record<ValidationStatus, string> = {
+const STATUS_LABELS: Partial<Record<ValidationStatus, string>> = {
   idle:          'Ready',
-  checking_ai: 'Analyzing…',
+  typing:        'Typing…',
+  debouncing:    'Waiting…',
+  checking_local:'Checking local…',
+  checking_ai:   'Analyzing…',
+  cache_hit:     'Verified (Cache)',
   success:       'Verified',
   error:         'Attention required',
+  warning:       'Warning',
   rate_limited:  'Rate limited',
   network_error: 'Connection issue',
+  offline:       'Offline',
 };
 
 export function ValidationIndicator({ status }: { status: ValidationStatus }) {
   return (
     <span className={`mode-badge ${status === 'checking_ai' ? 'pause' : status === 'success' ? 'blur' : status === 'idle' ? 'submit' : 'pause'}`}>
-      {STATUS_LABELS[status]}
+      {STATUS_LABELS[status] || 'Analyzing…'}
     </span>
   );
 }
