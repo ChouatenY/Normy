@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../../components/providers/AuthProvider.js';
 import { supabase } from '../../../lib/supabase.js';
 import { NormyProvider, useValidation } from '@normy-validation/react';
+import { AvatarPicker } from '../../../components/ui/avatar-picker.js';
 
 function ValidatedNameInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const v = useValidation({ mode: 'onBlur', question: 'What is your display name for the Normy platform?' });
@@ -31,20 +32,21 @@ export default function SettingsPage() {
   const { user, refreshSession, signOut } = useAuth();
   const [newName, setNewName] = useState(user?.user_metadata?.name || '');
   const [newEmail, setNewEmail] = useState(user?.email || '');
+  const [selectedAvatarId, setSelectedAvatarId] = useState<number>(user?.user_metadata?.avatarId || 1);
   const [saving, setSaving] = useState(false);
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     const { error } = await supabase.auth.updateUser({
-      data: { name: newName },
+      data: { name: newName, avatarId: selectedAvatarId },
       email: newEmail
     });
     setSaving(false);
     if (error) {
       alert(error.message);
     } else {
-      alert('Profile updated');
+      alert('Profile updated successfully');
       await refreshSession();
     }
   };
@@ -54,7 +56,12 @@ export default function SettingsPage() {
       <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--white)', marginBottom: 24 }}>Account Settings</h1>
       <NormyProvider apiKey="nrm_live_demo" projectId="00000000-0000-0000-0000-000000000000" apiUrl="" showBadge={false}>
         <div className="card-glass" style={{ padding: 32, maxWidth: 600 }}>
-          <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <form onSubmit={handleUpdate} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div>
+              <label className="input-label" style={{ marginBottom: 12, display: 'block' }}>Profile Avatar</label>
+              <AvatarPicker selectedId={selectedAvatarId} onSelect={setSelectedAvatarId} />
+            </div>
+
             <ValidatedNameInput value={newName} onChange={setNewName} />
             <div className="input-group">
               <label className="input-label" htmlFor="settings-email">Email Address</label>

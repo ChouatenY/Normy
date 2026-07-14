@@ -9,6 +9,7 @@ import { useData } from '../../components/providers/DataProvider.js';
 import { CustomSelect } from '../../components/ui/custom-select.js';
 import { TextShimmer } from '../../components/ui/be-ui-text-animation.js';
 import { LiquidMetalButton } from '../../components/LiquidMetalButton.js';
+import { avatars } from '../../components/ui/avatar-picker.js';
 
 /** Human-readable labels for known route segments */
 const ROUTE_LABELS: Record<string, string> = {
@@ -159,8 +160,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* User Footer */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 'auto' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, justifyContent: isSidebarCollapsed ? 'center' : 'flex-start' }}>
-            <div style={{ width: 32, height: 32, borderRadius: 16, background: 'var(--surface-3)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 700, fontSize: '0.875rem', color: 'var(--white)' }}>
-              {user.user_metadata?.name ? user.user_metadata.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || 'U'}
+            <div style={{ width: 32, height: 32, borderRadius: 16, background: 'var(--surface-3)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontWeight: 700, fontSize: '0.875rem', color: 'var(--white)', overflow: 'hidden' }}>
+              {user.user_metadata?.avatarId ? (
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {avatars.find(a => a.id === user.user_metadata.avatarId)?.svg || (user.user_metadata?.name ? user.user_metadata.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || 'U')}
+                </div>
+              ) : (
+                user.user_metadata?.name ? user.user_metadata.name.charAt(0).toUpperCase() : user.email?.charAt(0).toUpperCase() || 'U'
+              )}
             </div>
             {!isSidebarCollapsed && (
               <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
