@@ -10,7 +10,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-interface Avatar {
+export interface Avatar {
     id: number;
     svg: React.ReactNode;
     alt: string;
@@ -352,35 +352,18 @@ export function AvatarPicker({ selectedId, onSelect }: { selectedId: number; onS
 
     return (
         <motion.div initial="initial" animate="animate" className="w-full">
-            <Card className="w-full max-w-md overflow-hidden bg-gradient-to-b from-background to-muted/30" style={{ background: '#111', borderColor: 'var(--border)' }}>
+            <Card className="w-full max-w-md overflow-hidden bg-gradient-to-b from-background to-muted/30" style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}>
                 <CardContent className="p-0">
-                    {/* Background header */}
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{
-                            opacity: 1,
-                            height: "8rem",
-                            transition: {
-                                height: {
-                                    type: "spring",
-                                    stiffness: 100,
-                                    damping: 20,
-                                },
-                            },
-                        }}
-                        style={{ background: 'linear-gradient(to right, rgba(76,175,145,0.2), rgba(76,175,145,0.05))', width: '100%' }}
-                    />
-
-                    <div className="px-8 pb-8 -mt-16">
+                    <div className="px-0 pb-4">
                         {/* Main avatar display */}
                         <motion.div
-                            className="relative w-40 h-40 mx-auto rounded-full overflow-hidden border-4 flex items-center justify-center"
-                            style={{ background: '#000', borderColor: 'var(--border)' }}
+                            className="relative w-32 h-32 mx-auto rounded-full overflow-hidden border-4 flex items-center justify-center"
+                            style={{ background: '#000', borderColor: 'rgba(76,175,145,0.4)', padding: 12 }}
                             variants={mainAvatarVariants}
                             layoutId="selectedAvatar"
                         >
                             <motion.div
-                                className="w-full h-full flex items-center justify-center scale-[3]"
+                                className="w-full h-full flex items-center justify-center"
                                 animate={{
                                     rotate: rotationCount,
                                 }}
@@ -390,9 +373,7 @@ export function AvatarPicker({ selectedId, onSelect }: { selectedId: number; onS
                                 }}
                                 style={{ width: '100%', height: '100%' }}
                             >
-                                <div style={{ width: 120, height: 120, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  {selectedAvatar.svg}
-                                </div>
+                                {selectedAvatar.svg}
                             </motion.div>
                         </motion.div>
 
@@ -409,6 +390,7 @@ export function AvatarPicker({ selectedId, onSelect }: { selectedId: number; onS
                                 {avatars.map((avatar) => (
                                     <motion.button
                                         key={avatar.id}
+                                        type="button"
                                         onClick={() =>
                                             handleAvatarSelect(avatar)
                                         }
