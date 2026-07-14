@@ -206,12 +206,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     if (proj) setSelectedProject(proj);
                   }}
                   options={projects.map(p => ({ label: p.name, value: p.id }))}
+                  style={{ minHeight: '36px', height: '36px' }}
                 />
                 <button 
                   onClick={() => router.push('/dashboard/projects?create=true')}
                   style={{ 
-                    height: 42, 
-                    width: 42, 
+                    height: 36, 
+                    width: 36, 
                     background: 'var(--white)', 
                     color: '#000', 
                     borderRadius: 8, 
@@ -220,10 +221,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     alignItems: 'center', 
                     justifyContent: 'center', 
                     cursor: 'pointer',
-                    boxShadow: '0 2px 10px rgba(255,255,255,0.1)'
+                    boxShadow: '0 2px 10px rgba(255,255,255,0.1)',
+                    flexShrink: 0
                   }}
                 >
-                  <Plus size={20} strokeWidth={3} />
+                  <Plus size={18} strokeWidth={3} />
                 </button>
               </div>
             )}

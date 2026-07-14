@@ -92,7 +92,7 @@ export default function ApiKeysPage() {
             </tr>
           </thead>
           <tbody>
-            {apiKeys.map(key => (
+            {apiKeys.filter(key => !key.revokedAt).map(key => (
               <tr key={key.id} style={{ borderBottom: '1px solid var(--border)', fontSize: '0.875rem', color: 'var(--white)' }}>
                 <td style={{ padding: '16px' }}>{key.name}</td>
                 <td style={{ padding: '16px', fontFamily: 'var(--mono)' }}>
