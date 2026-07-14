@@ -85,10 +85,11 @@ export async function getApiKeysAction(projectId: string): Promise<ApiKey[]> {
 }
 
 export async function createApiKeyAction(projectId: string, name: string, environment: 'development' | 'production'): Promise<{ apiKey: string } | null> {
+  const mode = environment === 'production' ? 'live' : 'test';
   const res = await fetch(`${getApiUrl()}/api-keys`, {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify({ projectId, name, environment }),
+    body: JSON.stringify({ projectId, name, mode }),
   });
   if (!res.ok) return null;
   return res.json();
