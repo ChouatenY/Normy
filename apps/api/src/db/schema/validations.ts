@@ -25,14 +25,14 @@ import {
   real,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { projects } from './projects.js';
-import { apiKeys } from './api-keys.js';
+import { projects } from './projects';
+import { apiKeys } from './api-keys';
 import {
   validationIssueEnum,
   severityEnum,
   aiProviderEnum,
   pipelineStageEnum,
-} from './enums.js';
+} from './enums';
 
 /** Arbitrary key-value metadata the SDK can attach to a validation request */
 export interface ValidationMetadata {

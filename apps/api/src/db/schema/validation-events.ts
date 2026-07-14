@@ -14,9 +14,9 @@ import {
   index,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { validations } from './validations.js';
-import { projects } from './projects.js';
-import { validationEventTypeEnum } from './enums.js';
+import { validations } from './validations';
+import { projects } from './projects';
+import { validationEventTypeEnum } from './enums';
 
 export interface ValidationTriggeredPayload {
   mode: 'onBlur' | 'onPause' | 'onSubmit';

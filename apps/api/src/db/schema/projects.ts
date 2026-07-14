@@ -19,8 +19,8 @@ import {
   timestamp,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { users } from './users.js';
-import { aiProviderEnum, projectPlanEnum } from './enums.js';
+import { users } from './users';
+import { aiProviderEnum, projectPlanEnum } from './enums';
 
 // ─── Project Settings JSONB structure ─────────────────────────────────────────
 // Stored as jsonb for flexibility — avoids a separate project_settings table.

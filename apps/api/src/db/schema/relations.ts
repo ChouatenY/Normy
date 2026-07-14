@@ -9,16 +9,16 @@
  */
 
 import { relations } from 'drizzle-orm';
-import { users } from './users.js';
-import { projects } from './projects.js';
-import { apiKeys } from './api-keys.js';
-import { validations } from './validations.js';
-import { validationEvents } from './validation-events.js';
-import { analyticsDaily } from './analytics-daily.js';
-import { providerConfigs } from './provider-configs.js';
-import { knowledgeSources } from './knowledge-sources.js';
-import { assistantConversations } from './assistant-conversations.js';
-import { assistantMessages } from './assistant-messages.js';
+import { users } from './users';
+import { projects } from './projects';
+import { apiKeys } from './api-keys';
+import { validations } from './validations';
+import { validationEvents } from './validation-events';
+import { analyticsDaily } from './analytics-daily';
+import { providerConfigs } from './provider-configs';
+import { knowledgeSources } from './knowledge-sources';
+import { assistantConversations } from './assistant-conversations';
+import { assistantMessages } from './assistant-messages';
 
 // ─── Users ────────────────────────────────────────────────────────────────────
 

@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, timestamp, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { projects } from './projects.js';
+import { projects } from './projects';
 
 export const assistantConversations = pgTable(
   'assistant_conversations',

@@ -20,8 +20,8 @@ import {
   uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { projects } from './projects.js';
-import { keyEnvironmentEnum } from './enums.js';
+import { projects } from './projects';
+import { keyEnvironmentEnum } from './enums';
 
 export const apiKeys = pgTable(
   'api_keys',

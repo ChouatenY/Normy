@@ -1,6 +1,6 @@
 import { pgTable, uuid, text, boolean, timestamp, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { projects } from './projects.js';
+import { projects } from './projects';
 
 export const knowledgeSources = pgTable(
   'knowledge_sources',

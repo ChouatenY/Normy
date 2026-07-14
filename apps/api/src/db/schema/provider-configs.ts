@@ -25,8 +25,8 @@ import {
   check,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { projects } from './projects.js';
-import { aiProviderEnum } from './enums.js';
+import { projects } from './projects';
+import { aiProviderEnum } from './enums';
 
 export const providerConfigs = pgTable(
   'provider_configs',

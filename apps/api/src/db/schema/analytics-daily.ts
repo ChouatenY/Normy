@@ -24,7 +24,7 @@ import {
   check,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { projects } from './projects.js';
+import { projects } from './projects';
 
 /** Issue breakdown stored inside JSONB — keyed by ValidationIssue enum value */
 export interface IssueBreakdown {
