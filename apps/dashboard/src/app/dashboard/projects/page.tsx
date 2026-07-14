@@ -105,7 +105,7 @@ export default function ProjectsPage() {
               }}
               onMouseEnter={(e) => { 
                 const paper = e.currentTarget.querySelector('.proj-paper') as HTMLElement;
-                if (paper) paper.style.transform = 'translateY(-36px)';
+                if (paper) paper.style.transform = 'translateY(-40px)';
                 
                 const front = e.currentTarget.querySelector('.proj-folder-front') as HTMLElement;
                 if (front) front.style.transform = 'rotateX(-6deg)';
@@ -127,8 +127,9 @@ export default function ProjectsPage() {
                 height: '92%',
                 background: '#151515',
                 borderRadius: '12px',
-                border: selectedProject?.id === proj.id ? '1px solid var(--teal)' : '1px solid rgba(255,255,255,0.05)',
+                border: '1px solid rgba(255,255,255,0.05)',
                 transition: 'border-color 0.2s',
+                padding: '24px 20px',
               }}>
                 {/* Folder Tab */}
                 <div style={{
@@ -140,20 +141,25 @@ export default function ProjectsPage() {
                   background: '#151515',
                   borderTopLeftRadius: '8px',
                   borderTopRightRadius: '8px',
-                  borderTop: selectedProject?.id === proj.id ? '1px solid var(--teal)' : '1px solid rgba(255,255,255,0.05)',
-                  borderLeft: selectedProject?.id === proj.id ? '1px solid var(--teal)' : '1px solid rgba(255,255,255,0.05)',
-                  borderRight: selectedProject?.id === proj.id ? '1px solid var(--teal)' : '1px solid rgba(255,255,255,0.05)',
+                  borderTop: '1px solid rgba(255,255,255,0.05)',
+                  borderLeft: '1px solid rgba(255,255,255,0.05)',
+                  borderRight: '1px solid rgba(255,255,255,0.05)',
                   borderBottom: 'none',
                 }} />
+                
+                {/* Big Title at the top of the folder */}
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--white)', margin: 0, position: 'relative', zIndex: 1, letterSpacing: '-0.02em' }}>
+                  {proj.name}
+                </h3>
               </div>
 
-              {/* Form Paper */}
+              {/* Form Paper (Doc Details) */}
               <div className="proj-paper" style={{
                 position: 'absolute',
                 bottom: '15px',
                 left: '8%',
                 right: '8%',
-                height: '80%',
+                height: '65%',
                 background: '#fdfdfd',
                 borderRadius: '8px',
                 transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
@@ -163,12 +169,13 @@ export default function ProjectsPage() {
                 flexDirection: 'column',
                 zIndex: 5
               }}>
-                <div style={{ height: 6, width: '100%', background: selectedProject?.id === proj.id ? 'var(--teal)' : '#222' }} />
                 <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <div style={{ fontSize: '0.625rem', color: selectedProject?.id === proj.id ? 'var(--teal)' : '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
-                    Form Template
+                  <div style={{ fontSize: '0.625rem', color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                    Project Details
                   </div>
-                  <h3 style={{ fontSize: '1.125rem', fontWeight: 800, color: '#111', lineHeight: 1.15 }}>{proj.name}</h3>
+                  <p style={{ color: '#333', fontSize: '0.8125rem', margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {proj.description || 'No description provided for this project.'}
+                  </p>
                   
                   {/* Wireframe fields */}
                   <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -203,9 +210,6 @@ export default function ProjectsPage() {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, paddingRight: 12 }}>
-                    <p style={{ color: 'var(--text-sec)', fontSize: '0.8125rem', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {proj.description || 'No description'}
-                    </p>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.625rem', background: 'rgba(255,255,255,0.05)', color: 'var(--text-sec)', textTransform: 'capitalize' }}>
                         {proj.defaultProvider}
@@ -216,7 +220,7 @@ export default function ProjectsPage() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}>
-                    {selectedProject?.id === proj.id ? <Star size={16} color="var(--teal)" fill="var(--teal)" /> : <ArrowRight size={16} color="var(--text-sec)" />}
+                    <ArrowRight size={16} color="var(--text-sec)" />
                   </div>
                 </div>
               </div>
