@@ -144,8 +144,8 @@ export function NormyProvider({
       const isShiftMatched = needsShift ? e.shiftKey : !e.shiftKey;
       
       const isKeyMatched = 
-        e.key.toLowerCase() === keyChar || 
-        e.code.toLowerCase() === `key${keyChar}` ||
+        (e.key && e.key.toLowerCase() === keyChar) || 
+        (e.code && e.code.toLowerCase() === `key${keyChar}`) ||
         (keyChar === '/' && e.key === '/');
 
       if (isCtrlMatched && isAltMatched && isShiftMatched && isKeyMatched) {
