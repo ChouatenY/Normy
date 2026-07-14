@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useData } from '../../../components/providers/DataProvider.js';
 import { useAuth } from '../../../components/providers/AuthProvider.js';
 import { DbService, type Project } from '../../../lib/db-service.js';
-import { FolderKanban, Plus, Star, ArrowRight } from 'lucide-react';
+import { FolderKanban, Plus, Star, ArrowRight, Activity } from 'lucide-react';
 import { CustomSelect } from '../../../components/ui/custom-select.js';
 import { EmptyProjectsState } from '../../../components/ui/empty-projects.js';
 import confetti from 'canvas-confetti';
@@ -142,11 +142,6 @@ export default function ProjectsPage() {
                 <div style={{ position: 'absolute', top: 0, left: 0, width: 128, height: 40, background: 'linear-gradient(to top, #1e1e1e, #2a2a2a)', borderTopLeftRadius: 12, borderTopRightRadius: 12, borderTop: '1px solid rgba(255,255,255,0.1)', borderLeft: '1px solid rgba(255,255,255,0.1)', borderRight: '1px solid rgba(255,255,255,0.1)' }} />
                 <div style={{ position: 'absolute', top: 32, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, #1e1e1e, #0a0a0a)', borderBottomLeftRadius: 12, borderBottomRightRadius: 12, borderTopRightRadius: 12, border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.8)' }} />
                 <div style={{ position: 'absolute', top: 40, left: 8, right: 8, bottom: 8, background: '#000', borderRadius: 8, boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)', pointerEvents: 'none' }} />
-                
-                {/* BIG Title At the Top */}
-                <h3 style={{ position: 'absolute', top: 50, left: 24, right: 24, fontSize: '1.4rem', fontWeight: 800, color: 'rgba(255,255,255,0.95)', margin: 0, zIndex: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', letterSpacing: '-0.02em' }}>
-                  {proj.name}
-                </h3>
               </div>
 
               {/* Exact Form Paper Graphic (224x288) */}
@@ -168,8 +163,13 @@ export default function ProjectsPage() {
                 flexDirection: 'column',
                 padding: '20px 16px'
               }}>
-                <div style={{ fontSize: '0.65rem', color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
-                  Doc Details
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '0.65rem', color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Doc Details
+                  </div>
+                  <div style={{ fontSize: '0.65rem', color: '#aaa', fontWeight: 500 }}>
+                    {proj.createdAt ? new Date(proj.createdAt).toLocaleDateString() : 'New'}
+                  </div>
                 </div>
                 <div style={{ color: '#222', fontSize: '0.8125rem', fontWeight: 500, lineHeight: 1.5, marginBottom: '16px', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                   {proj.description || 'No description provided for this project.'}
@@ -194,20 +194,34 @@ export default function ProjectsPage() {
                 zIndex: 20,
                 pointerEvents: 'none'
               }}>
-                <div style={{ width: '100%', height: '100%', background: 'linear-gradient(to bottom, #2a2a2a, #111)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.2)', boxShadow: 'inset 0 2px 10px rgba(255,255,255,0.1), 0 -20px 40px rgba(0,0,0,0.8)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '20px' }}>
+                <div style={{ width: '100%', height: '100%', background: 'linear-gradient(to bottom, #2a2a2a, #111)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.2)', boxShadow: 'inset 0 2px 10px rgba(255,255,255,0.1), 0 -20px 40px rgba(0,0,0,0.8)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '24px 20px' }}>
                   <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent)' }} />
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%' }}>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.625rem', background: 'rgba(255,255,255,0.05)', color: 'var(--text-sec)', textTransform: 'capitalize' }}>
-                        {proj.defaultProvider}
-                      </span>
-                      <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.625rem', background: proj.status === 'active' ? 'rgba(76,175,145,0.1)' : 'rgba(255,100,100,0.1)', color: proj.status === 'active' ? '#4CAF50' : '#F44336' }}>
-                        {proj.status}
-                      </span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}>
-                      <ArrowRight size={16} color="var(--text-sec)" />
+                  <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 12 }}>
+                    <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'rgba(255,255,255,0.95)', margin: 0, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', letterSpacing: '-0.02em' }}>
+                      {proj.name}
+                    </h3>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <span style={{ padding: '4px 10px', borderRadius: 12, fontSize: '0.65rem', background: 'rgba(255,255,255,0.08)', color: 'var(--text-sec)', textTransform: 'capitalize', fontWeight: 600 }}>
+                          {proj.defaultProvider}
+                        </span>
+                        <span style={{ padding: '4px 10px', borderRadius: 12, fontSize: '0.65rem', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.9)', textTransform: 'capitalize', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                          {proj.status === 'active' ? (
+                            <>
+                              <Activity size={12} color="var(--white)" /> Active
+                            </>
+                          ) : (
+                            <>
+                              <Activity size={12} color="var(--text-sec)" /> {proj.status}
+                            </>
+                          )}
+                        </span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }}>
+                        <ArrowRight size={16} color="var(--text-sec)" />
+                      </div>
                     </div>
                   </div>
                 </div>
