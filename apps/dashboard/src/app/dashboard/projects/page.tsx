@@ -95,9 +95,14 @@ export default function ProjectsPage() {
               key={proj.id}
               style={{
                 position: 'relative',
-                height: 250,
+                height: 280,
+                width: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
                 cursor: 'pointer',
-                perspective: '1000px',
+                perspective: '1200px',
               }}
               onClick={() => {
                 setSelectedProject(proj);
@@ -108,122 +113,106 @@ export default function ProjectsPage() {
                 if (paper) paper.style.transform = 'translateY(-40px)';
                 
                 const front = e.currentTarget.querySelector('.proj-folder-front') as HTMLElement;
-                if (front) front.style.transform = 'rotateX(-6deg)';
+                if (front) {
+                  front.style.transform = 'rotateX(-25deg)';
+                  front.style.bottom = '10px';
+                }
               }}
               onMouseLeave={(e) => { 
                 const paper = e.currentTarget.querySelector('.proj-paper') as HTMLElement;
                 if (paper) paper.style.transform = 'translateY(0)';
                 
                 const front = e.currentTarget.querySelector('.proj-folder-front') as HTMLElement;
-                if (front) front.style.transform = 'rotateX(0deg)';
+                if (front) {
+                  front.style.transform = 'rotateX(0deg)';
+                  front.style.bottom = '0px';
+                }
               }}
             >
-              {/* Folder Back */}
+              
+              {/* Exact Folder Back Graphic (320x224) */}
               <div style={{
                 position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: '92%',
-                background: '#151515',
-                borderRadius: '12px',
-                border: '1px solid rgba(255,255,255,0.05)',
-                transition: 'border-color 0.2s',
-                padding: '24px 20px',
+                bottom: 24,
+                width: '100%',
+                maxWidth: 320,
+                height: 224,
+                filter: 'drop-shadow(0 25px 25px rgba(0,0,0,0.25))'
               }}>
-                {/* Folder Tab */}
-                <div style={{
-                  position: 'absolute',
-                  top: '-14px',
-                  left: '12px',
-                  width: '90px',
-                  height: '15px',
-                  background: '#151515',
-                  borderTopLeftRadius: '8px',
-                  borderTopRightRadius: '8px',
-                  borderTop: '1px solid rgba(255,255,255,0.05)',
-                  borderLeft: '1px solid rgba(255,255,255,0.05)',
-                  borderRight: '1px solid rgba(255,255,255,0.05)',
-                  borderBottom: 'none',
-                }} />
+                <div style={{ position: 'absolute', top: 0, left: 0, width: 128, height: 40, background: 'linear-gradient(to top, #1e1e1e, #2a2a2a)', borderTopLeftRadius: 12, borderTopRightRadius: 12, borderTop: '1px solid rgba(255,255,255,0.1)', borderLeft: '1px solid rgba(255,255,255,0.1)', borderRight: '1px solid rgba(255,255,255,0.1)' }} />
+                <div style={{ position: 'absolute', top: 32, left: 0, right: 0, bottom: 0, background: 'linear-gradient(to bottom, #1e1e1e, #0a0a0a)', borderBottomLeftRadius: 12, borderBottomRightRadius: 12, borderTopRightRadius: 12, border: '1px solid rgba(255,255,255,0.1)', boxShadow: 'inset 0 0 40px rgba(0,0,0,0.8)' }} />
+                <div style={{ position: 'absolute', top: 40, left: 8, right: 8, bottom: 8, background: '#000', borderRadius: 8, boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.5)', pointerEvents: 'none' }} />
                 
-                {/* Big Title at the top of the folder */}
-                <h3 style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--white)', margin: 0, position: 'relative', zIndex: 1, letterSpacing: '-0.02em' }}>
+                {/* BIG Title At the Top */}
+                <h3 style={{ position: 'absolute', top: 50, left: 24, right: 24, fontSize: '1.4rem', fontWeight: 800, color: 'rgba(255,255,255,0.95)', margin: 0, zIndex: 1, textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', letterSpacing: '-0.02em' }}>
                   {proj.name}
                 </h3>
               </div>
 
-              {/* Form Paper (Doc Details) */}
+              {/* Exact Form Paper Graphic (224x288) */}
               <div className="proj-paper" style={{
                 position: 'absolute',
-                bottom: '15px',
-                left: '8%',
-                right: '8%',
-                height: '65%',
+                bottom: 10,
+                width: '80%',
+                maxWidth: 224,
+                height: 260,
                 background: '#fdfdfd',
-                borderRadius: '8px',
-                transition: 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.3)',
+                borderRadius: 12,
+                boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                transformOrigin: 'bottom center',
+                transition: 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
                 overflow: 'hidden',
+                zIndex: 10,
                 display: 'flex',
                 flexDirection: 'column',
-                zIndex: 5
+                padding: '20px 16px'
               }}>
-                <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <div style={{ fontSize: '0.625rem', color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
-                    Project Details
-                  </div>
-                  <p style={{ color: '#333', fontSize: '0.8125rem', margin: 0, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {proj.description || 'No description provided for this project.'}
-                  </p>
-                  
-                  {/* Wireframe fields */}
-                  <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ height: 10, width: '100%', background: '#eee', borderRadius: 4 }} />
-                    <div style={{ height: 10, width: '75%', background: '#eee', borderRadius: 4 }} />
-                    <div style={{ height: 10, width: '90%', background: '#eee', borderRadius: 4 }} />
-                  </div>
+                <div style={{ fontSize: '0.65rem', color: '#666', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                  Doc Details
+                </div>
+                <div style={{ color: '#222', fontSize: '0.8125rem', fontWeight: 500, lineHeight: 1.5, marginBottom: '16px', display: '-webkit-box', WebkitLineClamp: 4, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                  {proj.description || 'No description provided for this project.'}
+                </div>
+
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px', marginTop: 'auto' }}>
+                  <div style={{ height: 10, width: "100%", background: "#f0f0f0", borderRadius: 4 }} />
+                  <div style={{ height: 10, width: "85%", background: "#f0f0f0", borderRadius: 4 }} />
+                  <div style={{ height: 10, width: "95%", background: "#f0f0f0", borderRadius: 4 }} />
                 </div>
               </div>
 
-              {/* Folder Front */}
+              {/* Exact Folder Front Graphic (340x176) */}
               <div className="proj-folder-front" style={{
                 position: 'absolute',
                 bottom: 0,
-                left: 0,
-                right: 0,
-                height: '72%',
-                background: 'linear-gradient(135deg, #2a2a2a, #1a1a1a)',
-                borderRadius: '12px',
-                borderTop: '1px solid rgba(255,255,255,0.1)',
-                borderLeft: '1px solid rgba(255,255,255,0.05)',
-                borderRight: '1px solid rgba(255,255,255,0.05)',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
-                boxShadow: '0 -4px 12px rgba(0,0,0,0.4)',
+                width: '100%',
+                maxWidth: 340,
+                height: 176,
                 transformOrigin: 'bottom center',
-                transition: 'transform 0.3s ease',
-                padding: '20px',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'flex-end',
-                zIndex: 10
+                transition: 'transform 0.4s ease, bottom 0.4s ease',
+                zIndex: 20,
+                pointerEvents: 'none'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1, paddingRight: 12 }}>
+                <div style={{ width: '100%', height: '100%', background: 'linear-gradient(to bottom, #2a2a2a, #111)', borderRadius: 16, border: '1px solid rgba(255,255,255,0.2)', boxShadow: 'inset 0 2px 10px rgba(255,255,255,0.1), 0 -20px 40px rgba(0,0,0,0.8)', position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', padding: '20px' }}>
+                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 1, background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent)' }} />
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%' }}>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.625rem', background: 'rgba(255,255,255,0.05)', color: 'var(--text-sec)', textTransform: 'capitalize' }}>
                         {proj.defaultProvider}
                       </span>
-                      <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.625rem', background: proj.status === 'active' ? 'rgba(76,175,145,0.1)' : 'rgba(255,100,100,0.1)', color: proj.status === 'active' ? 'var(--teal)' : 'var(--red)' }}>
+                      <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.625rem', background: proj.status === 'active' ? 'rgba(76,175,145,0.1)' : 'rgba(255,100,100,0.1)', color: proj.status === 'active' ? '#4CAF50' : '#F44336' }}>
                         {proj.status}
                       </span>
                     </div>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}>
-                    <ArrowRight size={16} color="var(--text-sec)" />
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: '50%', background: 'rgba(255,255,255,0.05)' }}>
+                      <ArrowRight size={16} color="var(--text-sec)" />
+                    </div>
                   </div>
                 </div>
               </div>
+
             </div>
           ))}
         </div>
