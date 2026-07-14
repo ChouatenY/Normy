@@ -33,6 +33,7 @@
     "@normy-validation/core": "workspace:*"
   },
   "devDependencies": {
+    "dotenv": "^16.4.5",
     "drizzle-kit": "^0.28.1",
     "typescript": "^5.4.5",
     "vitest": "^1.6.0"
