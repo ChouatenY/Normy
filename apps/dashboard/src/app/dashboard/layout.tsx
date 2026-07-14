@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { LayoutDashboard, FolderKanban, KeyRound, BookOpenText, CodeXml, Settings2, CreditCard, PanelLeftClose, PanelRightClose, BarChart3, Plus } from 'lucide-react';
 import { useAuth } from '../../components/providers/AuthProvider.js';
 import { useData } from '../../components/providers/DataProvider.js';
@@ -29,6 +29,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [showSplash, setShowSplash] = useState(true);
   const [tipIndex, setTipIndex] = useState(0);
   const pathname = usePathname();
+  const router = useRouter();
   const { user, loading, signOut } = useAuth();
   const { projects, selectedProject, setSelectedProject } = useData();
 
@@ -206,8 +207,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   }}
                   options={projects.map(p => ({ label: p.name, value: p.id }))}
                 />
-                <button className="btn btn-glass" style={{ padding: 8 }}>
-                  <Plus size={16} />
+                <button 
+                  onClick={() => router.push('/dashboard/projects?create=true')}
+                  style={{ 
+                    height: 42, 
+                    width: 42, 
+                    background: 'var(--white)', 
+                    color: '#000', 
+                    borderRadius: 8, 
+                    border: 'none', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    cursor: 'pointer',
+                    boxShadow: '0 2px 10px rgba(255,255,255,0.1)'
+                  }}
+                >
+                  <Plus size={20} strokeWidth={3} />
                 </button>
               </div>
             )}
