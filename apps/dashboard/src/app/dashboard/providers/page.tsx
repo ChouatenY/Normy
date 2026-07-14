@@ -35,16 +35,27 @@ export default function ProvidersPage() {
   const { selectedProject, setSelectedProject, refreshProjects } = useData();
   const [showByokForm, setShowByokForm] = useState(false);
   const [byokForm, setByokForm] = useState<{ provider: 'gemini' | 'openai' | 'anthropic'; title: string; key: string }>({ provider: 'gemini', title: '', key: '' });
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (toastMessage) {
+      const timer = setTimeout(() => setToastMessage(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [toastMessage]);
 
   if (!selectedProject) return <div style={{ color: 'var(--text-sec)' }}>Select a project first.</div>;
 
   const handleSaveByok = async () => {
-    if (!byokForm.title || !byokForm.key) return alert('Please provide title and key');
+    if (!byokForm.title || !byokForm.key) {
+      setToastMessage('Please provide title and key');
+      return;
+    }
     if (selectedProject) {
       await DbService.updateByok(selectedProject.id, byokForm.provider, byokForm.key);
       await refreshProjects();
       setShowByokForm(false);
-      alert('BYOK Key saved securely.');
+      setToastMessage('BYOK Key saved securely.');
     }
   };
 
@@ -53,6 +64,7 @@ export default function ProvidersPage() {
       const updated = await DbService.updateProject(selectedProject.id, { defaultProvider: providerId });
       if (updated) setSelectedProject(updated);
       await refreshProjects();
+      setToastMessage('Primary provider updated.');
     }
   };
 
@@ -156,6 +168,31 @@ export default function ProvidersPage() {
           );
         })}
       </div>
+
+      {/* Floating Toast Notification */}
+      {toastMessage && (
+        <div style={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          background: 'rgba(10, 10, 10, 0.95)',
+          border: toastMessage.includes('Please') ? '1px solid var(--red)' : '1px solid var(--teal)',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.6)',
+          borderRadius: 8,
+          padding: '16px 20px',
+          zIndex: 9999,
+          display: 'flex',
+          gap: 12,
+          alignItems: 'center',
+          animation: 'slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          backdropFilter: 'blur(12px)',
+        }}>
+          <span style={{ fontSize: '1.25rem', color: toastMessage.includes('Please') ? 'var(--red)' : 'var(--teal)' }}>
+            {toastMessage.includes('Please') ? '✕' : '✓'}
+          </span>
+          <div style={{ fontSize: '0.875rem', fontWeight: 600, color: '#fff' }}>{toastMessage}</div>
+        </div>
+      )}
     </div>
   );
 }
