@@ -62,13 +62,13 @@ export default function ProvidersPage() {
       </div>
 
       {/* Notification / Info banner */}
-      <div className="card-glass" style={{ display: 'flex', alignItems: 'center', gap: 16, background: 'linear-gradient(90deg, rgba(76,175,145,0.05) 0%, rgba(255,255,255,0.02) 100%)', borderColor: 'rgba(76,175,145,0.2)' }}>
-        <div style={{ padding: 12, background: 'rgba(76,175,145,0.1)', borderRadius: 8 }}>
-          <AlertCircle size={24} color="var(--teal)" />
+      <div className="card-glass" style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32, background: 'rgba(255,255,255,0.02)', borderColor: 'var(--border)' }}>
+        <div style={{ fontSize: '2rem', padding: '0 8px', filter: 'grayscale(0.2)' }}>
+          🔐
         </div>
         <div>
-          <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--white)', marginBottom: 4 }}>You are on the BYOK (Bring Your Own Key) Tier</h4>
-          <p style={{ fontSize: '0.8125rem', color: 'var(--text-sec)' }}>You are not being charged by Normy for API validations. Your configured provider key will be billed directly by the LLM provider.</p>
+          <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--white)', marginBottom: 4 }}>Bring Your Own Key (BYOK) Environment</h4>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--text-sec)' }}>You will not be charged by Normy for AI validation requests. Usage will be billed directly to the respective LLM provider using your supplied key.</p>
         </div>
       </div>
 
@@ -95,7 +95,7 @@ export default function ProvidersPage() {
         </NormyProvider>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
         {['gemini', 'openai', 'anthropic'].map((providerId) => {
           const hasKey = providerId === 'gemini' ? !!selectedProject.geminiApiKey : providerId === 'openai' ? !!selectedProject.openaiApiKey : !!selectedProject.anthropicApiKey;
           if (!hasKey) return null;
@@ -103,23 +103,41 @@ export default function ProvidersPage() {
           const providerName = providerId === 'gemini' ? 'Google Gemini' : providerId === 'openai' ? 'OpenAI' : 'Anthropic';
           
           return (
-            <div key={providerId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 16, background: 'var(--surface-1)', border: '1px solid var(--border)', borderRadius: 12 }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <Shield size={14} color="var(--teal)" />
-                  <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--white)' }}>{providerName} Key</span>
-                  {isProminent && <span style={{ fontSize: '0.625rem', background: 'rgba(76,175,145,0.1)', color: 'var(--teal)', border: '1px solid rgba(76,175,145,0.2)', padding: '2px 6px', borderRadius: 4, textTransform: 'uppercase', fontWeight: 700 }}>Default</span>}
+            <div key={providerId} className="card-glass" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 16, padding: 24, background: isProminent ? 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))' : 'var(--surface-1)', border: isProminent ? '1px solid rgba(255,255,255,0.1)' : '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+              
+              {/* Star Background Graphic for Default */}
+              {isProminent && (
+                <div style={{ position: 'absolute', top: -20, right: -20, opacity: 0.05, transform: 'rotate(15deg)', pointerEvents: 'none' }}>
+                  <Star size={120} fill="#fff" color="#fff" />
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', fontFamily: 'var(--mono)' }}>•••••••••••••••• (Encrypted)</div>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => handleSetDefault(providerId as any)} className={isProminent ? 'btn-liquid-metal' : 'btn btn-glass'} style={{ padding: 8, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Star size={16} fill={isProminent ? '#fff' : 'none'} color={isProminent ? '#fff' : 'var(--text-sec)'} />
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', zIndex: 1 }}>
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    {isProminent ? <Star size={16} fill="var(--white)" color="var(--white)" /> : <Shield size={16} color="var(--text-sec)" />}
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--white)', letterSpacing: '-0.02em' }}>{providerName}</h3>
+                  </div>
+                  {isProminent && <span style={{ fontSize: '0.6875rem', background: 'rgba(255,255,255,0.1)', color: 'var(--white)', border: '1px solid rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 12, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.05em' }}>Primary Provider</span>}
+                </div>
+                
+                <button className="btn btn-glass" style={{ padding: 8, borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.05)' }} onClick={() => { setByokForm({ provider: providerId as any, title: providerName, key: '' }); setShowByokForm(true); }}>
+                  <Edit2 size={16} color="var(--text-sec)" />
                 </button>
-                <button className="btn btn-glass" style={{ padding: 8 }} onClick={() => { setByokForm({ provider: providerId as any, title: providerName, key: '' }); setShowByokForm(true); }}>
-                  <Edit2 size={16} />
-                </button>
               </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, zIndex: 1, marginTop: 'auto' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', fontWeight: 600 }}>Active Key</span>
+                <div style={{ background: '#000', border: '1px solid var(--border)', padding: '8px 12px', borderRadius: 8, fontSize: '0.875rem', color: 'var(--text-sec)', fontFamily: 'var(--mono)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span>••••••••••••••••••••</span>
+                </div>
+              </div>
+
+              {!isProminent && (
+                <button onClick={() => handleSetDefault(providerId as any)} className="btn btn-glass" style={{ width: '100%', marginTop: 8, padding: 10, fontSize: '0.8125rem', fontWeight: 600, zIndex: 1 }}>
+                  Set as Primary
+                </button>
+              )}
             </div>
           );
         })}
