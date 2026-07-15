@@ -2,6 +2,7 @@ import {
   getProjectsAction,
   createProjectAction,
   updateProjectAction,
+  deleteProjectAction,
   updateByokAction,
   setPrimaryByokAction,
   deleteByokAction,
@@ -10,6 +11,16 @@ import {
   revokeApiKeyAction,
   deleteApiKeyAction,
 } from '../app/actions.js';
+
+export interface ProjectSettings {
+  minScore?: number;
+  defaultProvider?: 'openai' | 'gemini' | 'anthropic';
+  defaultValidationMode?: 'onBlur' | 'onPause' | 'onSubmit';
+  pauseDelayMs?: number;
+  storeInputText?: boolean;
+  shieldEnabled?: boolean;
+  byokKeys?: any[];
+}
 
 export interface Project {
   id: string;
@@ -25,6 +36,7 @@ export interface Project {
   geminiApiKey?: string | null;
   openaiApiKey?: string | null;
   anthropicApiKey?: string | null;
+  settings?: ProjectSettings;
 }
 
 export interface ApiKey {
@@ -66,6 +78,10 @@ export class DbService {
 
   static async updateProject(projectId: string, data: Partial<Project>): Promise<Project | null> {
     return updateProjectAction(projectId, data);
+  }
+
+  static async deleteProject(projectId: string): Promise<boolean> {
+    return deleteProjectAction(projectId);
   }
 
   static async updateByok(projectId: string, provider: 'gemini' | 'openai' | 'anthropic', key: string, title?: string): Promise<void> {

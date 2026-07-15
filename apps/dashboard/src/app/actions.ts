@@ -54,7 +54,7 @@ export async function createProjectAction(data: { name: string; ownerEmail: stri
   }
 }
 
-export async function updateProjectAction(id: string, data: Partial<Project>): Promise<Project | null> {
+export async function updateProjectAction(id: string, data: any): Promise<Project | null> {
   const res = await fetch(`${getApiUrl()}/projects/${id}`, {
     method: 'PUT',
     headers: getHeaders(),
@@ -63,6 +63,14 @@ export async function updateProjectAction(id: string, data: Partial<Project>): P
   if (!res.ok) return null;
   const json = await res.json();
   return json.project;
+}
+
+export async function deleteProjectAction(id: string): Promise<boolean> {
+  const res = await fetch(`${getApiUrl()}/projects/${id}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
+  });
+  return res.ok;
 }
 
 export async function updateByokAction(projectId: string, provider: string, key: string, title?: string): Promise<boolean> {

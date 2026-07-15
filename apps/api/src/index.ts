@@ -222,18 +222,49 @@ app.put('/projects/:projectId', async (c) => {
   const body = await c.req.json().catch(() => null);
   if (!body) return c.json({ error: 'invalid body' }, 400);
 
+  const existingProject = await db.query.projects.findFirst({
+    where: (p, { eq }) => eq(p.id, projectId)
+  });
+
+  if (!existingProject) {
+    return c.json({ error: 'Project not found' }, 404);
+  }
+
+  const updatePayload: any = {
+    name: body.name,
+    slug: body.slug,
+    description: body.description,
+    defaultProvider: body.defaultProvider,
+    updatedAt: new Date()
+  };
+
+  if (body.settings) {
+    updatePayload.settings = {
+      ...(existingProject.settings || {}),
+      ...body.settings
+    };
+  }
+
   const [project] = await db.update(projects)
-    .set({
-      name: body.name,
-      slug: body.slug,
-      description: body.description,
-      defaultProvider: body.defaultProvider,
-      updatedAt: new Date()
-    })
+    .set(updatePayload)
     .where(eq(projects.id, projectId))
     .returning();
 
   return c.json({ project });
+});
+
+app.delete('/projects/:projectId', async (c) => {
+  const unauthorized = requireAdminSecret(c);
+  if (unauthorized) return unauthorized;
+
+  const projectId = c.req.param('projectId');
+  
+  // Soft delete
+  await db.update(projects)
+    .set({ deletedAt: new Date(), updatedAt: new Date(), isActive: false })
+    .where(eq(projects.id, projectId));
+
+  return c.json({ success: true });
 });
 
 app.put('/projects/:projectId/byok', async (c) => {

@@ -6,8 +6,47 @@ import { useData } from '../../../../components/providers/DataProvider.js';
 import { useAuth } from '../../../../components/providers/AuthProvider.js';
 import { DbService, type Project } from '../../../../lib/db-service.js';
 import { NormyProvider, useValidation } from '@normy-validation/react';
-import { Edit2, ArrowLeft, Trash2, FolderKanban } from 'lucide-react';
+import { Edit2, ArrowLeft, Trash2, FolderKanban, AlertTriangle } from 'lucide-react';
 import { CustomSelect } from '../../../../components/ui/custom-select.js';
+
+function WheelPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+  const itemHeight = 40;
+  const items = Array.from({ length: 101 }, (_, i) => i);
+  
+  useEffect(() => {
+    if (containerRef.current) {
+      containerRef.current.scrollTop = value * itemHeight;
+    }
+  }, []);
+
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    const index = Math.round(el.scrollTop / itemHeight);
+    if (items[index] !== undefined && items[index] !== value) {
+      onChange(items[index]);
+    }
+  };
+
+  return (
+    <div 
+      ref={containerRef}
+      onScroll={handleScroll}
+      className="no-scrollbar"
+      style={{ height: itemHeight * 3, width: 120, overflowY: 'scroll', scrollSnapType: 'y mandatory', position: 'relative', border: '1px solid var(--border)', borderRadius: 12, background: 'var(--surface-1)', msOverflowStyle: 'none', scrollbarWidth: 'none' }}
+    >
+      <style>{`.no-scrollbar::-webkit-scrollbar { display: none; }`}</style>
+      <div style={{ position: 'sticky', top: itemHeight, height: itemHeight, width: '100%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)' }} />
+      <div style={{ height: itemHeight, flexShrink: 0 }} /> 
+      {items.map(item => (
+        <div key={item} style={{ height: itemHeight, display: 'flex', alignItems: 'center', justifyContent: 'center', scrollSnapAlign: 'center', color: item === value ? 'var(--white)' : 'var(--text-sec)', fontSize: item === value ? '1.25rem' : '1rem', fontWeight: item === value ? 700 : 400, transition: 'all 0.2s', cursor: 'pointer' }} onClick={() => { onChange(item); if (containerRef.current) containerRef.current.scrollTo({ top: item * itemHeight, behavior: 'smooth' }); }}>
+          {item}
+        </div>
+      ))}
+      <div style={{ height: itemHeight, flexShrink: 0 }} />
+    </div>
+  );
+}
 
 function ValidatedInput({ id, label, value, onChange, question, placeholder, required }: {
   id: string; label: string; value: string; onChange: (v: string) => void; question: string; placeholder?: string; required?: boolean;
@@ -52,6 +91,14 @@ export default function ProjectDetailPage() {
   const [projDesc, setProjDesc] = useState('');
   const [projProvider, setProjProvider] = useState<'gemini' | 'openai' | 'anthropic'>('gemini');
   const [projMinScore, setProjMinScore] = useState(70);
+  const [projPauseDelayMs, setProjPauseDelayMs] = useState(2000);
+  const [projShieldEnabled, setProjShieldEnabled] = useState(false);
+  const [projStoreInputText, setProjStoreInputText] = useState(true);
+  const [projDefaultValidationMode, setProjDefaultValidationMode] = useState<'onBlur' | 'onPause' | 'onSubmit'>('onPause');
+  
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteConfirmName, setDeleteConfirmName] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     const found = projects.find(p => p.id === projectId);
@@ -61,7 +108,11 @@ export default function ProjectDetailPage() {
       setProjSlug(found.slug);
       setProjDesc(found.description || '');
       setProjProvider(found.defaultProvider);
-      setProjMinScore(found.minScore);
+      setProjMinScore(found.settings?.minScore ?? found.minScore ?? 70);
+      setProjPauseDelayMs(found.settings?.pauseDelayMs ?? 2000);
+      setProjShieldEnabled(found.settings?.shieldEnabled ?? false);
+      setProjStoreInputText(found.settings?.storeInputText ?? true);
+      setProjDefaultValidationMode(found.settings?.defaultValidationMode ?? 'onPause');
       if (!selectedProject || selectedProject.id !== found.id) {
         setSelectedProject(found);
       }
@@ -78,6 +129,14 @@ export default function ProjectDetailPage() {
       description: projDesc,
       defaultProvider: projProvider,
       minScore: projMinScore,
+      settings: {
+        ...(project.settings || {}),
+        minScore: projMinScore,
+        pauseDelayMs: projPauseDelayMs,
+        shieldEnabled: projShieldEnabled,
+        storeInputText: projStoreInputText,
+        defaultValidationMode: projDefaultValidationMode
+      }
     });
     if (updated) {
       setProject(updated);
@@ -96,6 +155,14 @@ export default function ProjectDetailPage() {
       </div>
     );
   }
+
+  const handleDelete = async () => {
+    if (deleteConfirmName !== project.name) return;
+    setIsDeleting(true);
+    await DbService.deleteProject(project.id);
+    await refreshProjects();
+    router.push('/dashboard/projects');
+  };
 
   return (
     <div>
@@ -126,8 +193,35 @@ export default function ProjectDetailPage() {
                 <CustomSelect value={projProvider} onChange={(val) => setProjProvider(val as any)} options={[{ label: 'Google Gemini', value: 'gemini' }, { label: 'OpenAI', value: 'openai' }, { label: 'Anthropic', value: 'anthropic' }]} />
               </div>
               <div className="input-group">
-                <label className="input-label" htmlFor="proj-minscore">Min Score Threshold</label>
-                <input id="proj-minscore" type="number" className="input-field" value={projMinScore} onChange={(e) => setProjMinScore(Number(e.target.value))} min={0} max={100} />
+                <label className="input-label" htmlFor="proj-minscore">Min Score Threshold (0-100)</label>
+                <WheelPicker value={projMinScore} onChange={setProjMinScore} />
+              </div>
+
+              {/* Advanced Validation Settings Box */}
+              <div style={{ marginTop: 8, padding: 24, border: '1px solid var(--border)', borderRadius: 12, background: 'rgba(0,0,0,0.2)' }}>
+                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--white)', marginBottom: 16 }}>Advanced Validation Settings</h4>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                   <div className="input-group">
+                     <label className="input-label">Default Mode</label>
+                     <CustomSelect value={projDefaultValidationMode} onChange={val => setProjDefaultValidationMode(val as any)} options={[{label: 'On Pause (Typing)', value: 'onPause'}, {label: 'On Blur', value: 'onBlur'}, {label: 'On Submit', value: 'onSubmit'}]} />
+                   </div>
+                   <div className="input-group">
+                     <label className="input-label" htmlFor="proj-pausedelay">Pause Delay (ms)</label>
+                     <input id="proj-pausedelay" type="number" className="input-field" value={projPauseDelayMs} onChange={e => setProjPauseDelayMs(Number(e.target.value))} step={100} min={500} max={5000} />
+                   </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 24, marginTop: 16 }}>
+                   <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-sec)', fontSize: '0.875rem' }}>
+                      <input type="checkbox" checked={projStoreInputText} onChange={e => setProjStoreInputText(e.target.checked)} />
+                      Store Input Text (Privacy)
+                   </label>
+                   <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-sec)', fontSize: '0.875rem' }}>
+                      <input type="checkbox" checked={projShieldEnabled} onChange={e => setProjShieldEnabled(e.target.checked)} />
+                      Enable Normy Shield
+                   </label>
+                </div>
               </div>
               <div style={{ display: 'flex', gap: 12 }}>
                 <button type="button" className="btn btn-glass" onClick={() => setIsEditing(false)}>Cancel</button>
@@ -171,6 +265,43 @@ export default function ProjectDetailPage() {
                 <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: 4 }}>Created</div>
                 <div style={{ color: 'var(--white)', fontSize: '0.875rem' }}>{new Date(project.createdAt).toLocaleDateString()}</div>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Danger Zone */}
+      {!isEditing && (
+        <div className="card-glass" style={{ marginTop: 24, padding: 24, border: '1px solid rgba(255,100,100,0.3)', background: 'rgba(255,100,100,0.02)' }}>
+          <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--red)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <AlertTriangle size={18} /> Danger Zone
+          </h3>
+          <p style={{ fontSize: '0.875rem', color: 'var(--text-sec)', marginBottom: 16 }}>
+            Permanently delete this project and all of its associated API keys and analytics data. This action cannot be undone.
+          </p>
+          <button className="btn btn-glass" style={{ color: 'var(--red)', border: '1px solid rgba(255,100,100,0.5)' }} onClick={() => setShowDeleteModal(true)}>
+            Delete Project
+          </button>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(4px)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div className="card-glass" style={{ width: '100%', maxWidth: 440, padding: 32 }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--white)', marginBottom: 8 }}>Delete Project?</h2>
+            <p style={{ fontSize: '0.875rem', color: 'var(--text-sec)', marginBottom: 24, lineHeight: 1.5 }}>
+              You are about to delete the project <strong style={{ color: 'var(--white)' }}>{project.name}</strong>. All API keys will be revoked, and all validation logs and analytics will be permanently lost.
+            </p>
+            <div className="input-group" style={{ marginBottom: 24 }}>
+              <label className="input-label">Type <strong>{project.name}</strong> to confirm</label>
+              <input className="input-field" value={deleteConfirmName} onChange={(e) => setDeleteConfirmName(e.target.value)} placeholder={project.name} />
+            </div>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button className="btn btn-glass" onClick={() => { setShowDeleteModal(false); setDeleteConfirmName(''); }}>Cancel</button>
+              <button className="btn btn-primary" style={{ background: 'var(--red)' }} onClick={handleDelete} disabled={deleteConfirmName !== project.name || isDeleting}>
+                {isDeleting ? 'Deleting...' : 'Permanently Delete'}
+              </button>
             </div>
           </div>
         </div>
