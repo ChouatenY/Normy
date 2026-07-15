@@ -61,14 +61,14 @@ export default function AnalyticsPage() {
 
       {/* ── Primary Metrics Grid ─────────────────────────────────── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
-        <MetricCard label="Total Validations" value={data.totalValidations.toLocaleString()} icon={<Activity size={18} />} />
-        <MetricCard label="Average Score" value={`${data.averageScore}/100`} icon={<TrendingUp size={18} />} color="var(--teal)" subtitle="Quality score" />
-        <MetricCard label="Avg Confidence" value={`${(data.averageConfidence * 100).toFixed(1)}%`} icon={<Shield size={18} />} color="var(--blue)" />
-        <MetricCard label="AI Requests" value={data.aiRequests.toLocaleString()} icon={<Cpu size={18} />} color="var(--blue)" subtitle={`${data.aiRequestsAvoided} avoided by local/cache`} />
-        <MetricCard label="Cache Hit Rate" value={`${data.cacheHitRate}%`} icon={<Zap size={18} />} color="var(--orange)" />
-        <MetricCard label="Local Validators" value={`${data.localValidatorUsage}%`} icon={<Shield size={18} />} color="var(--teal)" subtitle="Short-circuited before AI" />
-        <MetricCard label="Avg Latency" value={`${data.averageLatency}ms`} icon={<Clock size={18} />} />
-        <MetricCard label="Cost Savings" value={`$${data.costSavings.toFixed(4)}`} icon={<DollarSign size={18} />} color="var(--teal)" subtitle={`AI spend: $${data.actualAiCost.toFixed(4)}`} />
+        <MetricCard label="Total Validations" value={(data.totalValidations || 0).toLocaleString()} icon={<Activity size={18} />} />
+        <MetricCard label="Average Score" value={`${data.averageScore || 0}/100`} icon={<TrendingUp size={18} />} color="var(--teal)" subtitle="Quality score" />
+        <MetricCard label="Avg Confidence" value={`${((data.averageConfidence || 0) * 100).toFixed(1)}%`} icon={<Shield size={18} />} color="var(--blue)" />
+        <MetricCard label="AI Requests" value={(data.aiRequests || 0).toLocaleString()} icon={<Cpu size={18} />} color="var(--blue)" subtitle={`${data.aiRequestsAvoided || 0} avoided by local/cache`} />
+        <MetricCard label="Cache Hit Rate" value={`${data.cacheHitRate || 0}%`} icon={<Zap size={18} />} color="var(--orange)" />
+        <MetricCard label="Local Validators" value={`${data.localValidatorUsage || 0}%`} icon={<Shield size={18} />} color="var(--teal)" subtitle="Short-circuited before AI" />
+        <MetricCard label="Avg Latency" value={`${data.averageLatency || 0}ms`} icon={<Clock size={18} />} />
+        <MetricCard label="Cost Savings" value={`$${(data.costSavings || 0).toFixed(4)}`} icon={<DollarSign size={18} />} color="var(--teal)" subtitle={`AI spend: $${(data.actualAiCost || 0).toFixed(4)}`} />
       </div>
 
       {/* ── BYOK vs Hosted ───────────────────────────────────────── */}
@@ -78,11 +78,11 @@ export default function AnalyticsPage() {
           <div style={{ display: 'flex', gap: 24, marginBottom: 16 }}>
             <div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: 4 }}>Hosted AI</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--blue)' }}>{data.hostedUsage}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--blue)' }}>{data.hostedUsage || 0}</div>
             </div>
             <div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: 4 }}>BYOK</div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--teal)' }}>{data.byokUsage}</div>
+              <div style={{ fontSize: '1.5rem', fontWeight: 700, color: 'var(--teal)' }}>{data.byokUsage || 0}</div>
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -90,7 +90,7 @@ export default function AnalyticsPage() {
               <div key={provider} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-sec)', width: 80, textTransform: 'capitalize' }}>{provider}</span>
                 <div style={{ flex: 1, height: 6, background: 'var(--surface-2)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${(count / data.totalValidations) * 100}%`, background: provider === 'local' ? 'var(--teal)' : provider === 'cache' ? 'var(--orange)' : 'var(--blue)', borderRadius: 3 }} />
+                  <div style={{ height: '100%', width: `${data.totalValidations ? (count / data.totalValidations) * 100 : 0}%`, background: provider === 'local' ? 'var(--teal)' : provider === 'cache' ? 'var(--orange)' : 'var(--blue)', borderRadius: 3 }} />
                 </div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--white)', fontFamily: 'var(--mono)', width: 40, textAlign: 'right' }}>{count}</span>
               </div>
@@ -105,7 +105,7 @@ export default function AnalyticsPage() {
               <div key={issue} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontSize: '0.75rem', color: 'var(--text-sec)', width: 140, fontFamily: 'var(--mono)' }}>{issue}</span>
                 <div style={{ flex: 1, height: 6, background: 'var(--surface-2)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: `${(count / data.totalValidations) * 100}%`, background: issue === 'VALID' ? 'var(--teal)' : 'var(--red)', borderRadius: 3 }} />
+                  <div style={{ height: '100%', width: `${data.totalValidations ? (count / data.totalValidations) * 100 : 0}%`, background: issue === 'VALID' ? 'var(--teal)' : 'var(--red)', borderRadius: 3 }} />
                 </div>
                 <span style={{ fontSize: '0.75rem', color: 'var(--white)', fontFamily: 'var(--mono)', width: 40, textAlign: 'right' }}>{count}</span>
               </div>
@@ -125,7 +125,7 @@ export default function AnalyticsPage() {
                 title={`${day.date}: ${day.validations} validations, avg score ${day.averageScore}`}
                 style={{
                   flex: 1,
-                  height: `${(day.validations / maxTimelineValidations) * 100}%`,
+                  height: `${maxTimelineValidations ? (day.validations / maxTimelineValidations) * 100 : 0}%`,
                   minHeight: 4,
                   background: `linear-gradient(to top, var(--teal), var(--blue))`,
                   borderRadius: '2px 2px 0 0',
