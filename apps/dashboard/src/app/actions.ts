@@ -65,11 +65,27 @@ export async function updateProjectAction(id: string, data: Partial<Project>): P
   return json.project;
 }
 
-export async function updateByokAction(projectId: string, provider: string, key: string): Promise<boolean> {
+export async function updateByokAction(projectId: string, provider: string, key: string, title?: string): Promise<boolean> {
   const res = await fetch(`${getApiUrl()}/projects/${projectId}/byok`, {
     method: 'PUT',
     headers: getHeaders(),
-    body: JSON.stringify({ provider, key }),
+    body: JSON.stringify({ provider, key, title }),
+  });
+  return res.ok;
+}
+
+export async function setPrimaryByokAction(projectId: string, keyId: string): Promise<boolean> {
+  const res = await fetch(`${getApiUrl()}/projects/${projectId}/byok/${keyId}/primary`, {
+    method: 'POST',
+    headers: getHeaders(),
+  });
+  return res.ok;
+}
+
+export async function deleteByokAction(projectId: string, keyId: string): Promise<boolean> {
+  const res = await fetch(`${getApiUrl()}/projects/${projectId}/byok/${keyId}`, {
+    method: 'DELETE',
+    headers: getHeaders(),
   });
   return res.ok;
 }

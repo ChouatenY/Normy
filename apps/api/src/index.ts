@@ -244,23 +244,129 @@ app.put('/projects/:projectId/byok', async (c) => {
   const body = await c.req.json().catch(() => null) as {
     provider: 'gemini' | 'openai' | 'anthropic';
     key: string;
+    title?: string;
   } | null;
 
   if (!body?.provider || !body.key) {
     return c.json({ error: 'provider and key are required' }, 400);
   }
 
-  const encryptedKey = encrypt(body.key);
-  const updateData: any = {};
-  if (body.provider === 'gemini') updateData.geminiApiKey = encryptedKey;
-  if (body.provider === 'openai') updateData.openaiApiKey = encryptedKey;
-  if (body.provider === 'anthropic') updateData.anthropicApiKey = encryptedKey;
+  const project = await db.query.projects.findFirst({
+    where: (p, { eq }) => eq(p.id, projectId)
+  });
 
-  const result = await db.update(projects)
+  if (!project) return c.json({ error: 'Project not found' }, 404) as any;
+
+  const encryptedKey = encrypt(body.key);
+  const settings: any = project.settings || {};
+  if (!settings.byokKeys) settings.byokKeys = [];
+
+  const newKey = {
+    id: crypto.randomUUID(),
+    provider: body.provider,
+    title: body.title || `${body.provider === 'gemini' ? 'Google Gemini' : body.provider === 'openai' ? 'OpenAI' : 'Anthropic'} Key`,
+    encryptedKey,
+    isPrimary: false,
+    createdAt: new Date().toISOString()
+  };
+
+  const existingProviderKeys = settings.byokKeys.filter((k: any) => k.provider === body.provider);
+  if (existingProviderKeys.length === 0) {
+    newKey.isPrimary = true;
+  }
+
+  settings.byokKeys.push(newKey);
+
+  const updateData: any = { settings };
+  if (newKey.isPrimary) {
+    if (body.provider === 'gemini') updateData.geminiApiKey = encryptedKey;
+    if (body.provider === 'openai') updateData.openaiApiKey = encryptedKey;
+    if (body.provider === 'anthropic') updateData.anthropicApiKey = encryptedKey;
+  }
+
+  await db.update(projects)
     .set({ ...updateData, updatedAt: new Date() })
     .where(eq(projects.id, projectId));
 
-  if (result.count === 0) return c.json({ error: 'Not found' }, 404) as any;
+  return c.json({ success: true, keyId: newKey.id }, 200) as any;
+});
+
+app.post('/projects/:projectId/byok/:keyId/primary', async (c) => {
+  const unauthorized = requireAdminSecret(c);
+  if (unauthorized) return unauthorized;
+
+  const projectId = c.req.param('projectId');
+  const keyId = c.req.param('keyId');
+
+  const project = await db.query.projects.findFirst({
+    where: (p, { eq }) => eq(p.id, projectId)
+  });
+
+  if (!project) return c.json({ error: 'Project not found' }, 404) as any;
+  const settings: any = project.settings || {};
+  if (!settings.byokKeys) return c.json({ error: 'No BYOK keys found' }, 404) as any;
+
+  const targetKey = settings.byokKeys.find((k: any) => k.id === keyId);
+  if (!targetKey) return c.json({ error: 'Key not found' }, 404) as any;
+
+  settings.byokKeys = settings.byokKeys.map((k: any) => {
+    if (k.provider === targetKey.provider) {
+      return { ...k, isPrimary: k.id === keyId };
+    }
+    return k;
+  });
+
+  const updateData: any = { settings, defaultProvider: targetKey.provider };
+  if (targetKey.provider === 'gemini') updateData.geminiApiKey = targetKey.encryptedKey;
+  if (targetKey.provider === 'openai') updateData.openaiApiKey = targetKey.encryptedKey;
+  if (targetKey.provider === 'anthropic') updateData.anthropicApiKey = targetKey.encryptedKey;
+
+  await db.update(projects)
+    .set({ ...updateData, updatedAt: new Date() })
+    .where(eq(projects.id, projectId));
+
+  return c.json({ success: true }, 200) as any;
+});
+
+app.delete('/projects/:projectId/byok/:keyId', async (c) => {
+  const unauthorized = requireAdminSecret(c);
+  if (unauthorized) return unauthorized;
+
+  const projectId = c.req.param('projectId');
+  const keyId = c.req.param('keyId');
+
+  const project = await db.query.projects.findFirst({
+    where: (p, { eq }) => eq(p.id, projectId)
+  });
+
+  if (!project) return c.json({ error: 'Project not found' }, 404) as any;
+  const settings: any = project.settings || {};
+  if (!settings.byokKeys) return c.json({ error: 'No BYOK keys found' }, 404) as any;
+
+  const targetKey = settings.byokKeys.find((k: any) => k.id === keyId);
+  if (!targetKey) return c.json({ error: 'Key not found' }, 404) as any;
+
+  settings.byokKeys = settings.byokKeys.filter((k: any) => k.id !== keyId);
+
+  const updateData: any = { settings };
+  if (targetKey.isPrimary) {
+    if (targetKey.provider === 'gemini') updateData.geminiApiKey = null;
+    if (targetKey.provider === 'openai') updateData.openaiApiKey = null;
+    if (targetKey.provider === 'anthropic') updateData.anthropicApiKey = null;
+    
+    const fallbackKey = settings.byokKeys.find((k: any) => k.provider === targetKey.provider);
+    if (fallbackKey) {
+       fallbackKey.isPrimary = true;
+       if (fallbackKey.provider === 'gemini') updateData.geminiApiKey = fallbackKey.encryptedKey;
+       if (fallbackKey.provider === 'openai') updateData.openaiApiKey = fallbackKey.encryptedKey;
+       if (fallbackKey.provider === 'anthropic') updateData.anthropicApiKey = fallbackKey.encryptedKey;
+    }
+  }
+
+  await db.update(projects)
+    .set({ ...updateData, updatedAt: new Date() })
+    .where(eq(projects.id, projectId));
+
   return c.json({ success: true }, 200) as any;
 });
 

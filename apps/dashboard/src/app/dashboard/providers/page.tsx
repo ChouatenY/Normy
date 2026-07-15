@@ -5,7 +5,7 @@ import { useData } from '../../../components/providers/DataProvider.js';
 import { DbService } from '../../../lib/db-service.js';
 import { NormyProvider, useValidation } from '@normy-validation/react';
 import { CustomSelect } from '../../../components/ui/custom-select.js';
-import { Star, Edit2, Plus, Shield, AlertCircle } from 'lucide-react';
+import { Star, Edit2, Plus, Shield, AlertCircle, Trash2 } from 'lucide-react';
 
 import { motion } from 'framer-motion';
 
@@ -52,19 +52,26 @@ export default function ProvidersPage() {
       return;
     }
     if (selectedProject) {
-      await DbService.updateByok(selectedProject.id, byokForm.provider, byokForm.key);
+      await DbService.updateByok(selectedProject.id, byokForm.provider, byokForm.key, byokForm.title);
       await refreshProjects();
       setShowByokForm(false);
       setToastMessage('BYOK Key saved securely.');
     }
   };
 
-  const handleSetDefault = async (providerId: 'gemini' | 'openai' | 'anthropic') => {
+  const handleSetDefault = async (keyId: string) => {
     if (selectedProject) {
-      const updated = await DbService.updateProject(selectedProject.id, { defaultProvider: providerId });
-      if (updated) setSelectedProject(updated);
+      await DbService.setPrimaryByok(selectedProject.id, keyId);
       await refreshProjects();
       setToastMessage('Primary provider updated.');
+    }
+  };
+
+  const handleDelete = async (keyId: string) => {
+    if (selectedProject) {
+      await DbService.deleteByok(selectedProject.id, keyId);
+      await refreshProjects();
+      setToastMessage('BYOK Key deleted.');
     }
   };
 
@@ -110,14 +117,12 @@ export default function ProvidersPage() {
       )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
-        {['gemini', 'openai', 'anthropic'].map((providerId) => {
-          const hasKey = providerId === 'gemini' ? !!selectedProject.geminiApiKey : providerId === 'openai' ? !!selectedProject.openaiApiKey : !!selectedProject.anthropicApiKey;
-          if (!hasKey) return null;
-          const isProminent = selectedProject.defaultProvider === providerId;
-          const providerName = providerId === 'gemini' ? 'Google Gemini' : providerId === 'openai' ? 'OpenAI' : 'Anthropic';
+        {(selectedProject.settings?.byokKeys || []).map((keyItem: any) => {
+          const isProminent = keyItem.isPrimary;
+          const providerLabel = keyItem.provider === 'gemini' ? 'Google Gemini' : keyItem.provider === 'openai' ? 'OpenAI' : 'Anthropic';
           
           return (
-            <div key={providerId} className="card-glass" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 16, padding: 24, background: isProminent ? 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))' : 'var(--surface-1)', border: isProminent ? '1px solid rgba(255,255,255,0.1)' : '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
+            <div key={keyItem.id} className="card-glass" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 16, padding: 24, background: isProminent ? 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))' : 'var(--surface-1)', border: isProminent ? '1px solid rgba(255,255,255,0.1)' : '1px solid var(--border)', borderRadius: 16, overflow: 'hidden' }}>
               
               {/* Star Background Graphic for Default */}
               {isProminent && (
@@ -136,19 +141,22 @@ export default function ProvidersPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
                     <button 
                       type="button"
-                      onClick={() => !isProminent && handleSetDefault(providerId as any)}
+                      onClick={() => !isProminent && handleSetDefault(keyItem.id)}
                       style={{ background: 'none', border: 'none', padding: 0, cursor: isProminent ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                       title={isProminent ? "Primary Provider" : "Click to set as Primary"}
                     >
                       <Star size={16} fill={isProminent ? "var(--white)" : "none"} color={isProminent ? "var(--white)" : "var(--text-sec)"} />
                     </button>
-                    <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--white)', letterSpacing: '-0.02em' }}>{providerName}</h3>
+                    <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--white)', letterSpacing: '-0.02em' }}>{keyItem.title}</h3>
                   </div>
-                  {isProminent && <span style={{ fontSize: '0.6875rem', background: 'rgba(255,255,255,0.1)', color: 'var(--white)', border: '1px solid rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 12, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.05em' }}>Primary Provider</span>}
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                     <span style={{ fontSize: '0.6875rem', background: 'rgba(255,255,255,0.05)', color: 'var(--text-sec)', border: '1px solid rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 12, textTransform: 'uppercase', fontWeight: 600 }}>{providerLabel}</span>
+                     {isProminent && <span style={{ fontSize: '0.6875rem', background: 'rgba(255,255,255,0.1)', color: 'var(--white)', border: '1px solid rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 12, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.05em' }}>Primary Provider</span>}
+                  </div>
                 </div>
                 
-                <button className="btn btn-glass" style={{ padding: 8, borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.05)' }} onClick={() => { setByokForm({ provider: providerId as any, title: providerName, key: '' }); setShowByokForm(true); }}>
-                  <Edit2 size={16} color="var(--text-sec)" />
+                <button className="btn btn-glass" style={{ padding: 8, borderRadius: 8, border: 'none', background: 'rgba(255,255,255,0.05)' }} onClick={() => handleDelete(keyItem.id)} title="Delete Key">
+                  <Trash2 size={16} color="rgba(255,100,100,0.8)" />
                 </button>
               </div>
 
@@ -160,13 +168,18 @@ export default function ProvidersPage() {
               </div>
 
               {!isProminent && (
-                <button onClick={() => handleSetDefault(providerId as any)} className="btn btn-glass" style={{ width: '100%', marginTop: 8, padding: 10, fontSize: '0.8125rem', fontWeight: 600, zIndex: 1 }}>
+                <button onClick={() => handleSetDefault(keyItem.id)} className="btn btn-glass" style={{ width: '100%', marginTop: 8, padding: 10, fontSize: '0.8125rem', fontWeight: 600, zIndex: 1 }}>
                   Set as Primary
                 </button>
               )}
             </div>
           );
         })}
+        {(selectedProject.settings?.byokKeys || []).length === 0 && (
+          <div style={{ color: 'var(--text-sec)', padding: 24, textAlign: 'center', width: '100%', gridColumn: '1 / -1' }}>
+            No BYOK keys configured yet. Click "Add Custom Key" to add one.
+          </div>
+        )}
       </div>
 
       {/* Floating Toast Notification */}

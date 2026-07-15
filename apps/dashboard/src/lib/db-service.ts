@@ -3,6 +3,8 @@ import {
   createProjectAction,
   updateProjectAction,
   updateByokAction,
+  setPrimaryByokAction,
+  deleteByokAction,
   getApiKeysAction,
   createApiKeyAction,
   revokeApiKeyAction,
@@ -66,8 +68,16 @@ export class DbService {
     return updateProjectAction(projectId, data);
   }
 
-  static async updateByok(projectId: string, provider: 'gemini' | 'openai' | 'anthropic', key: string): Promise<void> {
-    await updateByokAction(projectId, provider, key);
+  static async updateByok(projectId: string, provider: 'gemini' | 'openai' | 'anthropic', key: string, title?: string): Promise<void> {
+    await updateByokAction(projectId, provider, key, title);
+  }
+
+  static async setPrimaryByok(projectId: string, keyId: string): Promise<void> {
+    await setPrimaryByokAction(projectId, keyId);
+  }
+
+  static async deleteByok(projectId: string, keyId: string): Promise<void> {
+    await deleteByokAction(projectId, keyId);
   }
 
   static async getApiKeys(projectId: string): Promise<ApiKey[]> {

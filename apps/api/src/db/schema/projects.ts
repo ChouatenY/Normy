@@ -43,6 +43,15 @@ export interface ProjectSettings {
   webhookUrl?: string;
   /** Webhook secret for HMAC verification */
   webhookSecret?: string;
+  /** Array of BYOK keys to allow multiple keys per provider */
+  byokKeys?: Array<{
+    id: string;
+    provider: 'gemini' | 'openai' | 'anthropic';
+    title: string;
+    encryptedKey: string;
+    isPrimary: boolean;
+    createdAt: string;
+  }>;
 }
 
 export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {
