@@ -6,8 +6,27 @@ import { useData } from '../../../../components/providers/DataProvider.js';
 import { useAuth } from '../../../../components/providers/AuthProvider.js';
 import { DbService, type Project } from '../../../../lib/db-service.js';
 import { NormyProvider, useValidation } from '@normy-validation/react';
-import { Edit2, ArrowLeft, Trash2, FolderKanban, AlertTriangle } from 'lucide-react';
+import { Edit2, ArrowLeft, Trash2, FolderKanban, AlertTriangle, HelpCircle } from 'lucide-react';
 import { CustomSelect } from '../../../../components/ui/custom-select.js';
+
+function ToggleSwitch({ checked, onChange, label, tooltip }: { checked: boolean; onChange: (v: boolean) => void; label: string; tooltip: string }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.05)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <span style={{ fontSize: '0.875rem', color: 'var(--white)', fontWeight: 500 }}>{label}</span>
+        <div style={{ display: 'flex', cursor: 'help' }} title={tooltip}>
+          <HelpCircle size={14} color="var(--text-sec)" />
+        </div>
+      </div>
+      <div 
+        onClick={() => onChange(!checked)}
+        style={{ width: 40, height: 24, borderRadius: 12, background: checked ? 'var(--teal)' : 'rgba(255,255,255,0.1)', position: 'relative', cursor: 'pointer', transition: 'background 0.3s' }}
+      >
+        <div style={{ position: 'absolute', top: 2, left: checked ? 18 : 2, width: 20, height: 20, borderRadius: 10, background: 'var(--white)', transition: 'left 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+      </div>
+    </div>
+  );
+}
 
 function WheelPicker({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const containerRef = React.useRef<HTMLDivElement>(null);
@@ -222,11 +241,13 @@ export default function ProjectDetailPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               <div className="input-group">
                 <label className="input-label">Default AI Provider</label>
-                <CustomSelect value={projProvider} onChange={(val) => setProjProvider(val as any)} options={[
-                  { label: 'Google Gemini', value: 'gemini' }, 
-                  { label: 'OpenAI GPT', value: 'openai' }, 
-                  { label: 'Anthropic Claude', value: 'anthropic' }
-                ]} />
+                <div style={{ height: 42 }}>
+                  <CustomSelect value={projProvider} onChange={(val) => setProjProvider(val as any)} options={[
+                    { label: 'Google Gemini', value: 'gemini' }, 
+                    { label: 'OpenAI GPT', value: 'openai' }, 
+                    { label: 'Anthropic Claude', value: 'anthropic' }
+                  ]} />
+                </div>
               </div>
               <div className="input-group">
                 <label className="input-label" htmlFor="proj-minscore">Min Score Threshold (0-100)</label>
@@ -240,11 +261,13 @@ export default function ProjectDetailPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                  <div className="input-group">
                    <label className="input-label">Default Mode</label>
-                   <CustomSelect value={projDefaultValidationMode} onChange={val => setProjDefaultValidationMode(val as any)} options={[
-                     {label: 'On Pause (Typing)', value: 'onPause'}, 
-                     {label: 'On Blur', value: 'onBlur'}, 
-                     {label: 'On Submit', value: 'onSubmit'}
-                   ]} />
+                   <div style={{ height: 42 }}>
+                     <CustomSelect value={projDefaultValidationMode} onChange={val => setProjDefaultValidationMode(val as any)} options={[
+                       {label: 'On Pause (Typing)', value: 'onPause'}, 
+                       {label: 'On Blur', value: 'onBlur'}, 
+                       {label: 'On Submit', value: 'onSubmit'}
+                     ]} />
+                   </div>
                  </div>
                  <div className="input-group">
                    <label className="input-label" htmlFor="proj-pausedelay">Pause Delay (ms)</label>
@@ -252,15 +275,19 @@ export default function ProjectDetailPage() {
                  </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 24, marginTop: 8 }}>
-                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--white)', fontSize: '0.875rem', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={projStoreInputText} onChange={e => setProjStoreInputText(e.target.checked)} style={{ accentColor: 'var(--purple)' }} />
-                    Store Input Text (Privacy)
-                 </label>
-                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--white)', fontSize: '0.875rem', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={projShieldEnabled} onChange={e => setProjShieldEnabled(e.target.checked)} style={{ accentColor: 'var(--purple)' }} />
-                    Enable Normy Shield
-                 </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginTop: 8 }}>
+                 <ToggleSwitch 
+                    label="Store Input Text (Privacy)"
+                    tooltip="If enabled, the raw text inputted by users will be securely stored in your dashboard logs for quality analysis."
+                    checked={projStoreInputText} 
+                    onChange={setProjStoreInputText} 
+                 />
+                 <ToggleSwitch 
+                    label="Enable Normy Shield"
+                    tooltip="Automatically blocks profane, harmful, or adversarial prompts before hitting the AI."
+                    checked={projShieldEnabled} 
+                    onChange={setProjShieldEnabled} 
+                 />
               </div>
             </div>
             
