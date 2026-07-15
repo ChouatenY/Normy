@@ -20,9 +20,9 @@ function ToggleSwitch({ checked, onChange, label, tooltip }: { checked: boolean;
       </div>
       <div 
         onClick={() => onChange(!checked)}
-        style={{ width: 40, height: 24, borderRadius: 12, background: checked ? 'var(--teal)' : 'rgba(255,255,255,0.1)', position: 'relative', cursor: 'pointer', transition: 'background 0.3s' }}
+        style={{ width: 40, height: 24, borderRadius: 12, background: checked ? '#fff' : 'rgba(255,255,255,0.1)', position: 'relative', cursor: 'pointer', transition: 'background 0.3s' }}
       >
-        <div style={{ position: 'absolute', top: 2, left: checked ? 18 : 2, width: 20, height: 20, borderRadius: 10, background: 'var(--white)', transition: 'left 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
+        <div style={{ position: 'absolute', top: 2, left: checked ? 18 : 2, width: 20, height: 20, borderRadius: 10, background: checked ? '#000' : '#fff', transition: 'left 0.3s', boxShadow: '0 2px 4px rgba(0,0,0,0.2)' }} />
       </div>
     </div>
   );
@@ -80,8 +80,8 @@ function WheelPicker({ value, onChange }: { value: number; onChange: (v: number)
   );
 }
 
-function ValidatedInput({ id, label, value, onChange, question, placeholder, required }: {
-  id: string; label: string; value: string; onChange: (v: string) => void; question: string; placeholder?: string; required?: boolean;
+function ValidatedInput({ id, label, value, onChange, question, placeholder, required, multiline }: {
+  id: string; label: string; value: string; onChange: (v: string) => void; question: string; placeholder?: string; required?: boolean; multiline?: boolean;
 }) {
   const v = useValidation({ mode: 'onPause', pauseMs: 1000, question });
 
@@ -91,15 +91,28 @@ function ValidatedInput({ id, label, value, onChange, question, placeholder, req
   return (
     <div className="input-group">
       <label className="input-label" htmlFor={id}>{label} {required && <span style={{ color: 'var(--red)' }}>*</span>}</label>
-      <input
-        id={id}
-        className={`input-field ${v.status === 'error' ? 'has-error' : v.status === 'success' ? 'has-success' : ''}`}
-        value={value}
-        onChange={(e) => { onChange(e.target.value); v.handleChange(e); }}
-        onBlur={v.handleBlur}
-        placeholder={placeholder}
-        required={required}
-      />
+      {multiline ? (
+        <textarea
+          id={id}
+          className={`input-field ${v.status === 'error' ? 'has-error' : v.status === 'success' ? 'has-success' : ''}`}
+          style={{ minHeight: 100, paddingTop: 12, paddingBottom: 12, resize: 'vertical' }}
+          value={value}
+          onChange={(e) => { onChange(e.target.value); v.handleChange(e); }}
+          onBlur={v.handleBlur}
+          placeholder={placeholder}
+          required={required}
+        />
+      ) : (
+        <input
+          id={id}
+          className={`input-field ${v.status === 'error' ? 'has-error' : v.status === 'success' ? 'has-success' : ''}`}
+          value={value}
+          onChange={(e) => { onChange(e.target.value); v.handleChange(e); }}
+          onBlur={v.handleBlur}
+          placeholder={placeholder}
+          required={required}
+        />
+      )}
       {v.status !== 'idle' && v.status !== 'typing' && (
         <div style={{ fontSize: '0.75rem', marginTop: 4, color: v.result?.severity === 'success' ? 'var(--teal)' : v.result?.severity === 'warning' ? 'var(--amber)' : 'var(--red)' }}>
           {v.isValidating ? 'Validating…' : v.result?.feedback || v.apiError || ''}
@@ -224,7 +237,7 @@ export default function ProjectDetailPage() {
               <input id="proj-slug" className="input-field" value={projSlug} onChange={(e) => setProjSlug(e.target.value)} placeholder="project-slug" />
             </div>
             
-            <ValidatedInput id="proj-desc" label="Description" value={projDesc} onChange={setProjDesc} question="What does this validation project do?" placeholder="Describe the purpose of this project" />
+            <ValidatedInput id="proj-desc" label="Description" value={projDesc} onChange={setProjDesc} question="What does this validation project do?" placeholder="Describe the purpose of this project" multiline />
             
             <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
               <span style={{ color: 'var(--text-sec)' }}>Status</span>
@@ -241,13 +254,11 @@ export default function ProjectDetailPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               <div className="input-group">
                 <label className="input-label">Default AI Provider</label>
-                <div style={{ height: 42 }}>
-                  <CustomSelect value={projProvider} onChange={(val) => setProjProvider(val as any)} options={[
-                    { label: 'Google Gemini', value: 'gemini' }, 
-                    { label: 'OpenAI GPT', value: 'openai' }, 
-                    { label: 'Anthropic Claude', value: 'anthropic' }
-                  ]} />
-                </div>
+                <CustomSelect style={{ height: 44 }} value={projProvider} onChange={(val) => setProjProvider(val as any)} options={[
+                  { label: 'Google Gemini', value: 'gemini' }, 
+                  { label: 'OpenAI GPT', value: 'openai' }, 
+                  { label: 'Anthropic Claude', value: 'anthropic' }
+                ]} />
               </div>
               <div className="input-group">
                 <label className="input-label" htmlFor="proj-minscore">Min Score Threshold (0-100)</label>
@@ -261,13 +272,11 @@ export default function ProjectDetailPage() {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
                  <div className="input-group">
                    <label className="input-label">Default Mode</label>
-                   <div style={{ height: 42 }}>
-                     <CustomSelect value={projDefaultValidationMode} onChange={val => setProjDefaultValidationMode(val as any)} options={[
-                       {label: 'On Pause (Typing)', value: 'onPause'}, 
-                       {label: 'On Blur', value: 'onBlur'}, 
-                       {label: 'On Submit', value: 'onSubmit'}
-                     ]} />
-                   </div>
+                   <CustomSelect style={{ height: 44 }} value={projDefaultValidationMode} onChange={val => setProjDefaultValidationMode(val as any)} options={[
+                     {label: 'On Pause (Typing)', value: 'onPause'}, 
+                     {label: 'On Blur', value: 'onBlur'}, 
+                     {label: 'On Submit', value: 'onSubmit'}
+                   ]} />
                  </div>
                  <div className="input-group">
                    <label className="input-label" htmlFor="proj-pausedelay">Pause Delay (ms)</label>
