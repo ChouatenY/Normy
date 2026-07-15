@@ -11,9 +11,9 @@ import { LiquidMetalButton } from './components/ui/liquid-metal-button';
 
 const env = (import.meta as any).env as Record<string, string | undefined>;
 
-const apiUrl = env.VITE_NORMY_API_URL ?? 'http://localhost:3001';
-const projectId = env.VITE_NORMY_PROJECT_ID ?? '';
-const apiKey = env.VITE_NORMY_API_KEY ?? '';
+const apiUrl = env.VITE_NORMY_API_URL ?? 'https://usenormy.com/api';
+const projectId = env.VITE_NORMY_PROJECT_ID ?? '5d3478a9-ce43-45d7-9a75-ee2ed8737ac7';
+const apiKey = env.VITE_NORMY_API_KEY ?? 'nrm_live_2AMGLgTf97wrRgmK2aowro_Gyaaz6s_t';
 
 /* ── Liquid-metal orb for pipeline step numbers ── */
 function MetalOrb({ step }: { step: string }) {

@@ -47,14 +47,17 @@ export default function ProvidersPage() {
   if (!selectedProject) return <div style={{ color: 'var(--text-sec)' }}>Select a project first.</div>;
 
   const handleSaveByok = async () => {
-    if (!byokForm.title || !byokForm.key) {
+    const trimmedTitle = byokForm.title.trim();
+    const trimmedKey = byokForm.key.trim();
+    if (!trimmedTitle || !trimmedKey) {
       setToastMessage('Please provide title and key');
       return;
     }
     if (selectedProject) {
-      await DbService.updateByok(selectedProject.id, byokForm.provider, byokForm.key, byokForm.title);
+      await DbService.updateByok(selectedProject.id, byokForm.provider, trimmedKey, trimmedTitle);
       await refreshProjects();
       setShowByokForm(false);
+      setByokForm({ provider: 'gemini', title: '', key: '' });
       setToastMessage('BYOK Key saved securely.');
     }
   };

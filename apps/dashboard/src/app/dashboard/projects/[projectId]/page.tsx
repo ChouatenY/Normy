@@ -203,7 +203,7 @@ export default function ProjectDetailPage() {
   }
 
   const handleDelete = async () => {
-    if (deleteConfirmName !== project.name) return;
+    if (deleteConfirmName.trim().toLowerCase() !== project.name.trim().toLowerCase()) return;
     setIsDeleting(true);
     await DbService.deleteProject(project.id);
     await refreshProjects();
@@ -332,8 +332,8 @@ export default function ProjectDetailPage() {
             </div>
             <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
               <button className="btn btn-glass" onClick={() => { setShowDeleteModal(false); setDeleteConfirmName(''); }}>Cancel</button>
-              <button className="btn btn-primary" style={{ background: 'var(--red)' }} onClick={handleDelete} disabled={deleteConfirmName !== project.name || isDeleting}>
-                {isDeleting ? 'Deleting...' : 'Permanently Delete'}
+              <button className="btn btn-primary" style={{ background: 'var(--red)' }} onClick={handleDelete} disabled={deleteConfirmName.trim().toLowerCase() !== project.name.trim().toLowerCase() || isDeleting}>
+                {isDeleting ? 'Deleting...' : 'I understand, delete project'}
               </button>
             </div>
           </div>

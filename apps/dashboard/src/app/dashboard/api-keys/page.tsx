@@ -35,7 +35,7 @@ export default function ApiKeysPage() {
 
   const confirmDelete = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (deleteModal && deleteConfirmName === deleteModal.keyName) {
+    if (deleteModal && deleteConfirmName.trim().toLowerCase() === deleteModal.keyName.trim().toLowerCase()) {
       setIsDeleting(true);
       await DbService.revokeApiKey(deleteModal.keyId);
       await refreshApiKeys();
@@ -146,13 +146,13 @@ export default function ApiKeysPage() {
                   className="btn" 
                   style={{ 
                     flex: 1, 
-                    background: deleteConfirmName === deleteModal.keyName ? 'var(--red)' : 'var(--border)', 
-                    color: deleteConfirmName === deleteModal.keyName ? 'var(--white)' : 'var(--text-sec)', 
+                    background: deleteConfirmName.trim().toLowerCase() === deleteModal.keyName.trim().toLowerCase() ? 'var(--red)' : 'var(--border)', 
+                    color: deleteConfirmName.trim().toLowerCase() === deleteModal.keyName.trim().toLowerCase() ? 'var(--white)' : 'var(--text-sec)', 
                     border: 'none',
-                    cursor: deleteConfirmName === deleteModal.keyName && !isDeleting ? 'pointer' : 'not-allowed',
+                    cursor: deleteConfirmName.trim().toLowerCase() === deleteModal.keyName.trim().toLowerCase() && !isDeleting ? 'pointer' : 'not-allowed',
                     opacity: isDeleting ? 0.7 : 1
                   }} 
-                  disabled={deleteConfirmName !== deleteModal.keyName || isDeleting}
+                  disabled={deleteConfirmName.trim().toLowerCase() !== deleteModal.keyName.trim().toLowerCase() || isDeleting}
                 >
                   {isDeleting ? 'Revoking...' : 'Revoke Key'}
                 </button>

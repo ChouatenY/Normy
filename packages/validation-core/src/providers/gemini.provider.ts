@@ -13,7 +13,7 @@ export class GeminiProvider extends BaseAIProvider {
     if (!config.apiKey) {
       throw new Error('Gemini API key is required');
     }
-    this.ai = new GoogleGenAI({ apiKey: config.apiKey });
+    this.ai = new GoogleGenAI({ apiKey: config.apiKey.trim() });
   }
 
   /**
