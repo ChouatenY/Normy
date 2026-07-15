@@ -210,7 +210,7 @@ export default function ProjectDetailPage() {
             <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
               <span style={{ color: 'var(--text-sec)' }}>Status</span>
               <span style={{ padding: '2px 8px', borderRadius: 12, background: project.status === 'active' ? 'rgba(76,175,145,0.1)' : 'rgba(255,100,100,0.1)', color: project.status === 'active' ? 'var(--teal)' : 'var(--red)' }}>
-                {project.status.toUpperCase()}
+                {project.status?.toUpperCase() || 'UNKNOWN'}
               </span>
             </div>
           </div>
