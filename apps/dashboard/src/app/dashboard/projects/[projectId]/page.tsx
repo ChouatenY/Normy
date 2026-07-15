@@ -33,7 +33,20 @@ function WheelPicker({ value, onChange }: { value: number; onChange: (v: number)
       ref={containerRef}
       onScroll={handleScroll}
       className="no-scrollbar"
-      style={{ height: itemHeight * 3, width: 120, overflowY: 'scroll', scrollSnapType: 'y mandatory', position: 'relative', border: '1px solid var(--border)', borderRadius: 12, background: 'var(--surface-1)', msOverflowStyle: 'none', scrollbarWidth: 'none' }}
+      style={{ 
+        height: itemHeight * 3, 
+        width: 120, 
+        overflowY: 'scroll', 
+        scrollSnapType: 'y mandatory', 
+        position: 'relative', 
+        border: '1px solid var(--border)', 
+        borderRadius: 12, 
+        background: 'var(--surface-1)', 
+        msOverflowStyle: 'none', 
+        scrollbarWidth: 'none',
+        WebkitMaskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%)',
+        maskImage: 'linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%)'
+      }}
     >
       <style>{`.no-scrollbar::-webkit-scrollbar { display: none; }`}</style>
       <div style={{ position: 'sticky', top: itemHeight, height: itemHeight, width: '100%', background: 'rgba(255,255,255,0.05)', pointerEvents: 'none', borderTop: '1px solid rgba(255,255,255,0.1)', borderBottom: '1px solid rgba(255,255,255,0.1)' }} />
@@ -85,7 +98,7 @@ export default function ProjectDetailPage() {
   const { projects, selectedProject, setSelectedProject, refreshProjects } = useData();
 
   const [project, setProject] = useState<Project | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [projName, setProjName] = useState('');
   const [projSlug, setProjSlug] = useState('');
   const [projDesc, setProjDesc] = useState('');
@@ -123,6 +136,7 @@ export default function ProjectDetailPage() {
     e.preventDefault();
     if (!project || !projName) return;
 
+    setIsSaving(true);
     const updated = await DbService.updateProject(project.id, {
       name: projName,
       slug: projSlug,
@@ -143,7 +157,7 @@ export default function ProjectDetailPage() {
       setSelectedProject(updated);
     }
     await refreshProjects();
-    setIsEditing(false);
+    setIsSaving(false);
   };
 
   if (!project) {
@@ -172,107 +186,90 @@ export default function ProjectDetailPage() {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
         <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--white)' }}>{project.name}</h1>
-        <button className="btn btn-primary" onClick={() => setIsEditing(!isEditing)}>
-          <Edit2 size={16} /> {isEditing ? 'Cancel' : 'Edit Project'}
+        <button className="btn btn-primary" onClick={handleSave} disabled={isSaving}>
+          {isSaving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
 
-      {isEditing ? (
-        <NormyProvider apiKey="nrm_live_demo" projectId="00000000-0000-0000-0000-000000000000" apiUrl="" showBadge={false}>
-          <div className="card-glass" style={{ padding: 32, maxWidth: 600 }}>
-            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--white)', marginBottom: 20 }}>Edit Project</h3>
-            <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <ValidatedInput id="proj-name" label="Project Name" value={projName} onChange={setProjName} question="What is the name of this validation project?" placeholder="e.g. User Registration" required />
+      <NormyProvider apiKey="nrm_live_demo" projectId="00000000-0000-0000-0000-000000000000" apiUrl="" showBadge={false}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          
+          {/* General Details Card */}
+          <div className="card-glass" style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--white)' }}>General Details</h3>
+            
+            <ValidatedInput id="proj-name" label="Project Name" value={projName} onChange={setProjName} question="What is the name of this validation project?" placeholder="e.g. User Registration" required />
+            
+            <div className="input-group">
+              <label className="input-label" htmlFor="proj-slug">URL Slug</label>
+              <input id="proj-slug" className="input-field" value={projSlug} onChange={(e) => setProjSlug(e.target.value)} placeholder="project-slug" />
+            </div>
+            
+            <ValidatedInput id="proj-desc" label="Description" value={projDesc} onChange={setProjDesc} question="What does this validation project do?" placeholder="Describe the purpose of this project" />
+            
+            <div style={{ marginTop: 'auto', paddingTop: 20, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
+              <span style={{ color: 'var(--text-sec)' }}>Status</span>
+              <span style={{ padding: '2px 8px', borderRadius: 12, background: project.status === 'active' ? 'rgba(76,175,145,0.1)' : 'rgba(255,100,100,0.1)', color: project.status === 'active' ? 'var(--teal)' : 'var(--red)' }}>
+                {project.status.toUpperCase()}
+              </span>
+            </div>
+          </div>
+
+          {/* Validation Engine Settings Card */}
+          <div className="card-glass" style={{ padding: 32, display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--white)' }}>Validation Engine Settings</h3>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
               <div className="input-group">
-                <label className="input-label" htmlFor="proj-slug">Slug</label>
-                <input id="proj-slug" className="input-field" value={projSlug} onChange={(e) => setProjSlug(e.target.value)} placeholder="project-slug" />
-              </div>
-              <ValidatedInput id="proj-desc" label="Description" value={projDesc} onChange={setProjDesc} question="What does this validation project do?" placeholder="Describe the purpose of this project" />
-              <div className="input-group">
-                <label className="input-label">Default Provider</label>
-                <CustomSelect value={projProvider} onChange={(val) => setProjProvider(val as any)} options={[{ label: 'Google Gemini', value: 'gemini' }, { label: 'OpenAI', value: 'openai' }, { label: 'Anthropic', value: 'anthropic' }]} />
+                <label className="input-label">Default AI Provider</label>
+                <CustomSelect value={projProvider} onChange={(val) => setProjProvider(val as any)} options={[
+                  { label: 'Google Gemini', value: 'gemini' }, 
+                  { label: 'OpenAI GPT', value: 'openai' }, 
+                  { label: 'Anthropic Claude', value: 'anthropic' }
+                ]} />
               </div>
               <div className="input-group">
                 <label className="input-label" htmlFor="proj-minscore">Min Score Threshold (0-100)</label>
                 <WheelPicker value={projMinScore} onChange={setProjMinScore} />
               </div>
+            </div>
 
-              {/* Advanced Validation Settings Box */}
-              <div style={{ marginTop: 8, padding: 24, border: '1px solid var(--border)', borderRadius: 12, background: 'rgba(0,0,0,0.2)' }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--white)', marginBottom: 16 }}>Advanced Validation Settings</h4>
-                
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                   <div className="input-group">
-                     <label className="input-label">Default Mode</label>
-                     <CustomSelect value={projDefaultValidationMode} onChange={val => setProjDefaultValidationMode(val as any)} options={[{label: 'On Pause (Typing)', value: 'onPause'}, {label: 'On Blur', value: 'onBlur'}, {label: 'On Submit', value: 'onSubmit'}]} />
-                   </div>
-                   <div className="input-group">
-                     <label className="input-label" htmlFor="proj-pausedelay">Pause Delay (ms)</label>
-                     <input id="proj-pausedelay" type="number" className="input-field" value={projPauseDelayMs} onChange={e => setProjPauseDelayMs(Number(e.target.value))} step={100} min={500} max={5000} />
-                   </div>
-                </div>
+            <div style={{ padding: 20, border: '1px solid var(--border)', borderRadius: 12, background: 'rgba(0,0,0,0.2)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <h4 style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--white)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Advanced Behavior</h4>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                 <div className="input-group">
+                   <label className="input-label">Default Mode</label>
+                   <CustomSelect value={projDefaultValidationMode} onChange={val => setProjDefaultValidationMode(val as any)} options={[
+                     {label: 'On Pause (Typing)', value: 'onPause'}, 
+                     {label: 'On Blur', value: 'onBlur'}, 
+                     {label: 'On Submit', value: 'onSubmit'}
+                   ]} />
+                 </div>
+                 <div className="input-group">
+                   <label className="input-label" htmlFor="proj-pausedelay">Pause Delay (ms)</label>
+                   <input id="proj-pausedelay" type="number" className="input-field" value={projPauseDelayMs} onChange={e => setProjPauseDelayMs(Number(e.target.value))} step={100} min={500} max={5000} />
+                 </div>
+              </div>
 
-                <div style={{ display: 'flex', gap: 24, marginTop: 16 }}>
-                   <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-sec)', fontSize: '0.875rem' }}>
-                      <input type="checkbox" checked={projStoreInputText} onChange={e => setProjStoreInputText(e.target.checked)} />
-                      Store Input Text (Privacy)
-                   </label>
-                   <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-sec)', fontSize: '0.875rem' }}>
-                      <input type="checkbox" checked={projShieldEnabled} onChange={e => setProjShieldEnabled(e.target.checked)} />
-                      Enable Normy Shield
-                   </label>
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 12 }}>
-                <button type="button" className="btn btn-glass" onClick={() => setIsEditing(false)}>Cancel</button>
-                <button type="submit" className="btn btn-primary">Save Changes</button>
-              </div>
-            </form>
-          </div>
-        </NormyProvider>
-      ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-          <div className="card-glass" style={{ padding: 24 }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--white)', marginBottom: 12 }}>Details</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: 4 }}>Slug</div>
-                <div style={{ color: 'var(--white)', fontFamily: 'var(--mono)', fontSize: '0.875rem' }}>{project.slug}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: 4 }}>Description</div>
-                <div style={{ color: 'var(--white)', fontSize: '0.875rem' }}>{project.description || '—'}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: 4 }}>Status</div>
-                <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: project.status === 'active' ? 'rgba(76,175,145,0.1)' : 'rgba(255,100,100,0.1)', color: project.status === 'active' ? 'var(--teal)' : 'var(--red)' }}>{project.status}</span>
+              <div style={{ display: 'flex', gap: 24, marginTop: 8 }}>
+                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--white)', fontSize: '0.875rem', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={projStoreInputText} onChange={e => setProjStoreInputText(e.target.checked)} style={{ accentColor: 'var(--purple)' }} />
+                    Store Input Text (Privacy)
+                 </label>
+                 <label style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--white)', fontSize: '0.875rem', cursor: 'pointer' }}>
+                    <input type="checkbox" checked={projShieldEnabled} onChange={e => setProjShieldEnabled(e.target.checked)} style={{ accentColor: 'var(--purple)' }} />
+                    Enable Normy Shield
+                 </label>
               </div>
             </div>
-          </div>
-
-          <div className="card-glass" style={{ padding: 24 }}>
-            <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--white)', marginBottom: 12 }}>Configuration</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: 4 }}>Default Provider</div>
-                <div style={{ color: 'var(--white)', fontSize: '0.875rem', textTransform: 'capitalize' }}>{project.defaultProvider}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: 4 }}>Min Score</div>
-                <div style={{ color: 'var(--white)', fontSize: '0.875rem' }}>{project.minScore}/100</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', textTransform: 'uppercase', marginBottom: 4 }}>Created</div>
-                <div style={{ color: 'var(--white)', fontSize: '0.875rem' }}>{new Date(project.createdAt).toLocaleDateString()}</div>
-              </div>
-            </div>
+            
           </div>
         </div>
-      )}
+      </NormyProvider>
 
       {/* Danger Zone */}
-      {!isEditing && (
-        <div className="card-glass" style={{ marginTop: 24, padding: 24, border: '1px solid rgba(255,100,100,0.3)', background: 'rgba(255,100,100,0.02)' }}>
+      <div className="card-glass" style={{ marginTop: 24, padding: 24, border: '1px solid rgba(255,100,100,0.3)', background: 'rgba(255,100,100,0.02)' }}>
           <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--red)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
             <AlertTriangle size={18} /> Danger Zone
           </h3>
