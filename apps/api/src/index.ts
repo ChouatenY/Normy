@@ -816,41 +816,49 @@ app.openapi(validateRoute, async (c) => {
   const validationId = crypto.randomUUID();
   const storeInput = project.settings?.storeInputText ?? true;
 
-  await db.insert(validations).values({
-    id: validationId,
-    projectId: project.id,
-    apiKeyId,
-    question: storeInput ? body.question : null,
-    answer: storeInput ? body.answer : null,
-    issue: result.issue,
-    score: result.score,
-    feedback: result.feedback,
-    severity: result.severity,
-    valid: result.valid,
-    pipelineStage: result.source === 'local' ? 'local_validator' : 'ai_provider',
-    resolvedBy: result.resolvedBy ?? result.provider,
-    provider: result.source === 'local' ? null : result.provider as any,
-    model: result.source === 'local' ? null : 'gemini-2.5-flash',
-    latencyMs: result.metadata?.latencyMs ?? latencyMs,
-    tokenCount: (result.tokenUsage?.inputTokens ?? 0) + (result.tokenUsage?.outputTokens ?? 0),
-    confidence: result.confidence,
-    promptVersion,
-    scoreBefore,
-    scoreAfter,
-    improvementDelta,
-  }).catch((err) => console.error('Failed to log validation to database:', err));
+  let validationInserted = false;
+  try {
+    await db.insert(validations).values({
+      id: validationId,
+      projectId: project.id,
+      apiKeyId,
+      question: storeInput ? body.question : null,
+      answer: storeInput ? body.answer : null,
+      issue: result.issue,
+      score: result.score,
+      feedback: result.feedback,
+      severity: result.severity,
+      valid: result.valid,
+      pipelineStage: result.source === 'local' ? 'local_validator' : 'ai_provider',
+      resolvedBy: result.resolvedBy ?? result.provider,
+      provider: result.source === 'local' ? null : result.provider as any,
+      model: result.source === 'local' ? null : 'gemini-2.5-flash',
+      latencyMs: result.metadata?.latencyMs ?? latencyMs,
+      tokenCount: (result.tokenUsage?.inputTokens ?? 0) + (result.tokenUsage?.outputTokens ?? 0),
+      confidence: result.confidence,
+      promptVersion,
+      scoreBefore,
+      scoreAfter,
+      improvementDelta,
+    });
+    validationInserted = true;
+  } catch (err) {
+    console.error('Failed to log validation to database:', err);
+  }
 
-  // 6. Record validation_completed event referencing the validation ID
-  await db.insert(validationEvents).values({
-    validationId,
-    projectId: project.id,
-    type: 'validation_completed',
-    sessionId,
-    payload: { score: result.score, valid: result.valid },
-  }).catch((err) => console.error('Failed to log validation_completed event:', err));
+  if (validationInserted) {
+    // 6. Record validation_completed event referencing the validation ID
+    await db.insert(validationEvents).values({
+      validationId,
+      projectId: project.id,
+      type: 'validation_completed',
+      sessionId,
+      payload: { score: result.score, valid: result.valid },
+    }).catch((err) => console.error('Failed to log validation_completed event:', err));
+  }
 
   // 7. Record token usage and cost event
-  if (result.provider === 'gemini' && result.tokenUsage) {
+  if (validationInserted && result.provider === 'gemini' && result.tokenUsage) {
     const inputTokens = result.tokenUsage.inputTokens;
     const outputTokens = result.tokenUsage.outputTokens;
     
@@ -887,7 +895,7 @@ app.openapi(validateRoute, async (c) => {
   }
 
   // 8. Record improvement event if applicable
-  if (improvementDelta !== null && improvementDelta > 0) {
+  if (validationInserted && improvementDelta !== null && improvementDelta > 0) {
     await db.insert(validationEvents).values({
       validationId,
       projectId: project.id,
