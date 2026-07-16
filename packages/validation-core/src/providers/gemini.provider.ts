@@ -43,7 +43,7 @@ export class GeminiProvider extends BaseAIProvider {
     const startTime = Date.now();
     const promptTemplate = getPromptTemplate(request.promptVersion);
     const prompt = promptTemplate.build(request);
-    const model = this.config.model ?? 'gemini-2.5-flash';
+    const model = this.config.model ?? 'gemini-1.5-flash';
 
     try {
       return await this.withRetry(() =>
@@ -153,7 +153,7 @@ export class GeminiProvider extends BaseAIProvider {
 
   async healthCheck(): Promise<{ ok: boolean; error?: string }> {
     try {
-      const model = this.config.model ?? 'gemini-2.5-flash';
+      const model = this.config.model ?? 'gemini-1.5-flash';
       // simple connectivity check
       const response = await this.ai.models.generateContent({
         model,
@@ -184,7 +184,7 @@ export class GeminiProvider extends BaseAIProvider {
 
   getCapabilities(): { models: string[]; maxTokens: number; supportedFeatures: string[] } {
     return {
-      models: ['gemini-2.5-flash', 'gemini-2.5-pro', 'gemini-2.0-flash'],
+      models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
       maxTokens: 1048576, // Gemini 1.5 context window
       supportedFeatures: ['structured_json', 'system_instructions', 'function_calling']
     };

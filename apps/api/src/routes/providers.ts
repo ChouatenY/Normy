@@ -38,7 +38,7 @@ providerRoutes.openapi(
     
     // Only Gemini implemented for now
     const geminiMode: 'byok' | 'hosted' = project.geminiApiKey ? 'byok' : 'hosted';
-    const geminiModel = (project.settings as any)?.geminiModel || 'gemini-2.5-flash';
+    const geminiModel = (project.settings as any)?.geminiModel || 'gemini-1.5-flash';
     
     return c.json({
       providers: [
