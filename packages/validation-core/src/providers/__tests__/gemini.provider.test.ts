@@ -119,7 +119,7 @@ describe('GeminiProvider', () => {
 
     expect(result.valid).toBe(true);
     expect(generateContentMock).toHaveBeenCalledTimes(2);
-    expect(generateContentMock.mock.calls[0][0].model).toBe('gemini-2.5-flash-lite');
-    expect(generateContentMock.mock.calls[1][0].model).toBe('gemini-2.0-flash');
+    expect(generateContentMock.mock.calls[0]![0]!.model).toBe('gemini-2.5-flash-lite');
+    expect(generateContentMock.mock.calls[1]![0]!.model).toBe('gemini-2.0-flash');
   });
 });

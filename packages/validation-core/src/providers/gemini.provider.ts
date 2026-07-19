@@ -56,6 +56,7 @@ export class GeminiProvider extends BaseAIProvider {
 
     for (let i = 0; i < models.length; i++) {
       const currentModel = models[i];
+      if (!currentModel) continue;
       try {
         const result = await this.withRetry(() =>
           this.withTimeout(
@@ -107,7 +108,7 @@ export class GeminiProvider extends BaseAIProvider {
                 issue: safeIssue,
                 feedbackCategory: ISSUE_TO_CATEGORY[safeIssue] ?? 'ADD_SPECIFIC_DETAILS',
                 feedback: parsed.feedback || 'Please refine your answer.',
-                severity: score >= 80 ? 'success' : score >= 50 ? 'info' : score >= 30 ? 'warning' : 'error',
+                severity: (score >= 80 ? 'success' : score >= 50 ? 'info' : score >= 30 ? 'warning' : 'error') as any,
                 validatedAt: new Date().toISOString(),
                 provider: this.name,
                 latencyMs: Date.now() - startTime,
@@ -178,6 +179,7 @@ export class GeminiProvider extends BaseAIProvider {
 
     for (let i = 0; i < models.length; i++) {
       const model = models[i];
+      if (!model) continue;
       try {
         const response = await this.ai.models.generateContent({
           model,

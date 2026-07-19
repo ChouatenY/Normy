@@ -1,8 +1,11 @@
 import { BaseAIProvider } from './base.js';
-import type { ValidationRequest, ValidationResult, ProviderConfig } from '@normy-validation/core';
+import type { ValidationRequest, ValidationResult, ProviderConfig, AIProviderName } from '@normy-validation/core';
 import { ISSUE_TO_CATEGORY, type ValidationIssue } from '@normy-validation/core';
+import { getPromptTemplate } from '../prompts/index.js';
 
 export class OpenAIProvider extends BaseAIProvider {
+  readonly name: AIProviderName = 'openai';
+
   constructor(config: ProviderConfig) {
     super(config);
   }
@@ -18,7 +21,8 @@ export class OpenAIProvider extends BaseAIProvider {
   }
 
   async validate(request: ValidationRequest): Promise<ValidationResult> {
-    const prompt = this.buildPrompt(request);
+    const promptTemplate = getPromptTemplate(request.promptVersion);
+    const prompt = promptTemplate.build(request);
     const startTime = Date.now();
     
     const { models, isFallbackMode } = this.resolveModelsToTry(this.config.model);
@@ -26,6 +30,7 @@ export class OpenAIProvider extends BaseAIProvider {
 
     for (let i = 0; i < models.length; i++) {
       const currentModel = models[i];
+      if (!currentModel) continue;
       try {
         const result = await this.withRetry(() =>
           this.withTimeout(
@@ -50,7 +55,7 @@ export class OpenAIProvider extends BaseAIProvider {
                 throw new Error(`OpenAI HTTP ${res.status}: ${textErr}`);
               }
 
-              const data = await res.json();
+              const data = (await res.json()) as any;
               const text = data.choices?.[0]?.message?.content;
               if (!text) {
                 throw new Error('No content returned from OpenAI');
@@ -89,7 +94,7 @@ export class OpenAIProvider extends BaseAIProvider {
                 issue: safeIssue,
                 feedbackCategory: ISSUE_TO_CATEGORY[safeIssue] ?? 'ADD_SPECIFIC_DETAILS',
                 feedback: parsed.feedback || 'Please refine your answer.',
-                severity: score >= 80 ? 'success' : score >= 50 ? 'info' : score >= 30 ? 'warning' : 'error',
+                severity: (score >= 80 ? 'success' : score >= 50 ? 'info' : score >= 30 ? 'warning' : 'error') as any,
                 validatedAt: new Date().toISOString(),
                 provider: this.name,
                 latencyMs: Date.now() - startTime,
@@ -129,6 +134,10 @@ export class OpenAIProvider extends BaseAIProvider {
   async healthCheck(): Promise<{ ok: boolean; error?: string }> {
     try {
       const { models } = this.resolveModelsToTry(this.config.model);
+      const model = models[0];
+      if (!model) {
+        return { ok: false, error: 'No models configured' };
+      }
       const res = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -136,7 +145,7 @@ export class OpenAIProvider extends BaseAIProvider {
           'Authorization': `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify({
-          model: models[0],
+          model,
           messages: [
             { role: 'user', content: 'Ping' }
           ],
@@ -155,7 +164,7 @@ export class OpenAIProvider extends BaseAIProvider {
     }
   }
 
-  estimateCost(request: ValidationRequest): number {
+  estimateCost(_request: ValidationRequest): number {
     // Standard cost estimate for gpt-4o-mini
     return 0.0001;
   }

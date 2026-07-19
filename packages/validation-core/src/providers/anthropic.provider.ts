@@ -1,8 +1,11 @@
 import { BaseAIProvider } from './base.js';
-import type { ValidationRequest, ValidationResult, ProviderConfig } from '@normy-validation/core';
+import type { ValidationRequest, ValidationResult, ProviderConfig, AIProviderName } from '@normy-validation/core';
 import { ISSUE_TO_CATEGORY, type ValidationIssue } from '@normy-validation/core';
+import { getPromptTemplate } from '../prompts/index.js';
 
 export class AnthropicProvider extends BaseAIProvider {
+  readonly name: AIProviderName = 'anthropic';
+
   constructor(config: ProviderConfig) {
     super(config);
   }
@@ -24,7 +27,8 @@ export class AnthropicProvider extends BaseAIProvider {
   }
 
   async validate(request: ValidationRequest): Promise<ValidationResult> {
-    const prompt = this.buildPrompt(request);
+    const promptTemplate = getPromptTemplate(request.promptVersion);
+    const prompt = promptTemplate.build(request);
     const startTime = Date.now();
     
     const { models, isFallbackMode } = this.resolveModelsToTry(this.config.model);
@@ -32,6 +36,7 @@ export class AnthropicProvider extends BaseAIProvider {
 
     for (let i = 0; i < models.length; i++) {
       const currentModel = models[i];
+      if (!currentModel) continue;
       try {
         const result = await this.withRetry(() =>
           this.withTimeout(
@@ -57,7 +62,7 @@ export class AnthropicProvider extends BaseAIProvider {
                 throw new Error(`Anthropic HTTP ${res.status}: ${textErr}`);
               }
 
-              const data = await res.json();
+              const data = (await res.json()) as any;
               const text = data.content?.[0]?.text;
               if (!text) {
                 throw new Error('No content returned from Anthropic');
@@ -96,7 +101,7 @@ export class AnthropicProvider extends BaseAIProvider {
                 issue: safeIssue,
                 feedbackCategory: ISSUE_TO_CATEGORY[safeIssue] ?? 'ADD_SPECIFIC_DETAILS',
                 feedback: parsed.feedback || 'Please refine your answer.',
-                severity: score >= 80 ? 'success' : score >= 50 ? 'info' : score >= 30 ? 'warning' : 'error',
+                severity: (score >= 80 ? 'success' : score >= 50 ? 'info' : score >= 30 ? 'warning' : 'error') as any,
                 validatedAt: new Date().toISOString(),
                 provider: this.name,
                 latencyMs: Date.now() - startTime,
@@ -136,6 +141,10 @@ export class AnthropicProvider extends BaseAIProvider {
   async healthCheck(): Promise<{ ok: boolean; error?: string }> {
     try {
       const { models } = this.resolveModelsToTry(this.config.model);
+      const model = models[0];
+      if (!model) {
+        return { ok: false, error: 'No models configured' };
+      }
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -144,7 +153,7 @@ export class AnthropicProvider extends BaseAIProvider {
           'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: models[0],
+          model,
           max_tokens: 5,
           messages: [
             { role: 'user', content: 'Ping' }
@@ -163,7 +172,7 @@ export class AnthropicProvider extends BaseAIProvider {
     }
   }
 
-  estimateCost(request: ValidationRequest): number {
+  estimateCost(_request: ValidationRequest): number {
     return 0.00015;
   }
 
