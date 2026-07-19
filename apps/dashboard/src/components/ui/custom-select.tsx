@@ -42,16 +42,24 @@ export function CustomSelect({ options, value, onChange, placeholder, className,
           background: 'rgba(0,0,0,0.4)',
           border: '1px solid var(--border)',
           borderRadius: 8,
-          padding: '0 14px',
-          height: '100%',
+          padding: '10px 14px',
           color: 'var(--white)',
           fontSize: '0.875rem',
           cursor: 'pointer',
           outline: 'none',
         }}
       >
-        <span>{selectedOption ? selectedOption.label : placeholder || 'Select...'}</span>
-        <ChevronDown size={16} color="var(--text-sec)" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+        <span style={{
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textAlign: 'left',
+          marginRight: 8,
+          flex: 1,
+        }}>
+          {selectedOption ? selectedOption.label : placeholder || 'Select...'}
+        </span>
+        <ChevronDown size={16} color="var(--text-sec)" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
       </button>
 
       <AnimatePresence>
@@ -92,6 +100,9 @@ export function CustomSelect({ options, value, onChange, placeholder, className,
                   color: option.value === value ? 'var(--white)' : 'var(--text-sec)',
                   background: option.value === value ? 'rgba(255,255,255,0.05)' : 'transparent',
                   transition: 'background 0.2s, color 0.2s',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
                 }}
                 onMouseEnter={(e) => {
                   if (option.value !== value) {
