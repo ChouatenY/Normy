@@ -190,3 +190,22 @@ export async function getAnalyticsAction(projectId: string) {
     return null;
   }
 }
+
+export async function getProjectProvidersAction(projectId: string) {
+  const targetUrl = `${getApiUrl()}/projects/${projectId}/providers`;
+  console.log(`[ACTION getProjectProviders] fetching: ${targetUrl}`);
+  try {
+    const res = await fetch(targetUrl, {
+      headers: getHeaders(),
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      console.error(`[ACTION getProjectProviders] FAILED: HTTP ${res.status}`);
+      return null;
+    }
+    return await res.json();
+  } catch (error: any) {
+    console.error(`[ACTION getProjectProviders] EXCEPTION: ${error.message}`, error);
+    return null;
+  }
+}

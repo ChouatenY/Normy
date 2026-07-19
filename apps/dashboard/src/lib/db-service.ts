@@ -10,6 +10,7 @@ import {
   createApiKeyAction,
   revokeApiKeyAction,
   deleteApiKeyAction,
+  getProjectProvidersAction,
 } from '../app/actions.js';
 
 export interface ProjectSettings {
@@ -112,5 +113,9 @@ export class DbService {
 
   static async deleteApiKey(id: string): Promise<void> {
     await deleteApiKeyAction(id);
+  }
+
+  static async getProjectProviders(projectId: string): Promise<any> {
+    return getProjectProvidersAction(projectId);
   }
 }

@@ -38,7 +38,7 @@ import { eq, and, desc, sql } from 'drizzle-orm';
 import crypto from 'node:crypto';
 import { redis } from './redis/index.js';
 import { GoogleGenAI } from '@google/genai';
-import { encrypt } from './utils/encryption.js';
+import { encrypt, decrypt } from './utils/encryption.js';
 import type { AIProvider } from '@normy-validation/core';
 import { ProviderService } from './services/provider.service.js';
 
@@ -399,6 +399,112 @@ app.delete('/projects/:projectId/byok/:keyId', async (c) => {
     .where(eq(projects.id, projectId));
 
   return c.json({ success: true }, 200) as any;
+});
+
+app.get('/projects/:projectId/providers', async (c) => {
+  const unauthorized = requireAdminSecret(c);
+  if (unauthorized) return unauthorized;
+
+  const projectId = c.req.param('projectId');
+  const project = await db.query.projects.findFirst({
+    where: (p, { eq }) => eq(p.id, projectId)
+  });
+
+  if (!project) return c.json({ error: 'Project not found' }, 404) as any;
+
+  // Resolve Gemini dynamic models if a key exists
+  let geminiAvailableModels = [
+    'gemini-2.5-flash-lite',
+    'gemini-2.0-flash',
+    'gemini-2.5-flash',
+    'gemini-2.5-pro',
+    'gemini-2.0-pro'
+  ];
+  let geminiStatus: 'connected' | 'disconnected' | 'disabled' = project.geminiApiKey ? 'connected' : 'disconnected';
+
+  if (project.geminiApiKey) {
+    try {
+      const decryptedKey = decrypt(project.geminiApiKey);
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${decryptedKey}`, {
+        signal: AbortSignal.timeout(4000)
+      });
+      if (res.ok) {
+        const data = await res.json() as any;
+        if (data && Array.isArray(data.models)) {
+          const chatModels = data.models
+            .filter((m: any) => 
+              m.supportedGenerationMethods?.includes('generateContent') &&
+              !m.name?.includes('embedding')
+            )
+            .map((m: any) => {
+              const name = m.name || '';
+              return name.startsWith('models/') ? name.substring(7) : name;
+            });
+          if (chatModels.length > 0) {
+            geminiAvailableModels = chatModels;
+          } else {
+            geminiAvailableModels = [];
+          }
+        } else {
+          geminiAvailableModels = [];
+        }
+      } else {
+        geminiAvailableModels = [];
+        geminiStatus = 'disabled';
+      }
+    } catch (err) {
+      console.error('Failed to fetch dynamic gemini models:', err);
+    }
+  }
+
+  const geminiMode = project.geminiApiKey ? 'byok' : 'hosted';
+  const geminiModel = (project.settings as any)?.geminiModel || env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+
+  const openaiMode = project.openaiApiKey ? 'byok' : 'hosted';
+  const openaiModel = (project.settings as any)?.openaiModel || 'gpt-4o-mini';
+  const openaiStatus = project.openaiApiKey ? 'connected' : 'disconnected';
+
+  const anthropicMode = project.anthropicApiKey ? 'byok' : 'hosted';
+  const anthropicModel = (project.settings as any)?.anthropicModel || 'claude-3-5-haiku-latest';
+  const anthropicStatus = project.anthropicApiKey ? 'connected' : 'disconnected';
+
+  return c.json({
+    providers: [
+      {
+        name: 'gemini',
+        status: geminiStatus,
+        mode: geminiMode,
+        model: geminiModel,
+        availableModels: geminiAvailableModels,
+      },
+      {
+        name: 'openai',
+        status: openaiStatus,
+        mode: openaiMode,
+        model: openaiModel,
+        availableModels: [
+          'gpt-4o-mini',
+          'gpt-4o',
+          'gpt-4-turbo',
+          'gpt-4',
+          'gpt-3.5-turbo'
+        ],
+      },
+      {
+        name: 'anthropic',
+        status: anthropicStatus,
+        mode: anthropicMode,
+        model: anthropicModel,
+        availableModels: [
+          'claude-3-5-haiku-latest',
+          'claude-3-5-sonnet-latest',
+          'claude-3-opus-latest',
+          'claude-3-haiku-20240307',
+          'claude-3-sonnet-20240229'
+        ],
+      }
+    ]
+  }) as any;
 });
 
 app.get('/analytics', async (c) => {

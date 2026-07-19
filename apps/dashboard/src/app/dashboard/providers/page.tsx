@@ -1,31 +1,41 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useData } from '../../../components/providers/DataProvider.js';
 import { DbService } from '../../../lib/db-service.js';
-import { NormyProvider, useValidation } from '@normy-validation/react';
+import { Plus, Trash2, Star, ShieldAlert } from 'lucide-react';
 import { CustomSelect } from '../../../components/ui/custom-select.js';
-import { Star, Edit2, Plus, Shield, AlertCircle, Trash2 } from 'lucide-react';
-
 import { motion } from 'framer-motion';
+import { NormyProvider } from '@normy/sdk-react';
 
-function ValidatedKeyTitle({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const v = useValidation({ mode: 'onBlur', question: 'What is the name for this BYOK API key configuration?' });
+interface ValidatedKeyTitleProps {
+  value: string;
+  onChange: (val: string) => void;
+}
+
+function ValidatedKeyTitle({ value, onChange }: ValidatedKeyTitleProps) {
+  const [touched, setTouched] = useState(false);
+  const isValid = value.trim().length >= 3;
 
   return (
     <div className="input-group">
       <label className="input-label">Key Title</label>
       <input
-        className={`input-field ${v.status === 'error' ? 'has-error' : v.status === 'success' ? 'has-success' : ''}`}
+        type="text"
+        className="input-field"
         value={value}
-        onChange={(e) => { onChange(e.target.value); v.handleChange(e); }}
-        onBlur={v.handleBlur}
+        onChange={(e) => { onChange(e.target.value); setTouched(true); }}
+        onBlur={() => setTouched(true)}
         placeholder="e.g. Production Gemini Key"
+        style={{
+          border: touched && !isValid ? '1px solid var(--red)' : undefined
+        }}
       />
-      {v.status !== 'idle' && v.status !== 'typing' && v.result?.feedback && (
-        <div style={{ fontSize: '0.75rem', marginTop: 4, color: v.result.severity === 'success' ? 'var(--teal)' : 'var(--red)' }}>
-          {v.result.feedback}
-        </div>
+      {touched && !isValid && (
+        <span style={{ fontSize: '0.7rem', color: 'var(--red)', marginTop: 4 }}>
+          Title must be at least 3 characters.
+        </span>
       )}
     </div>
   );
@@ -36,7 +46,7 @@ const PROVIDER_MODELS: Record<string, { name: string; default: string; list: { l
     name: 'Google Gemini',
     default: 'gemini-2.5-flash-lite',
     list: [
-      { label: 'gemini-2.5-flash-lite (Recommended)', value: 'gemini-2.5-flash-lite' },
+      { label: 'gemini-2.5-flash-lite ★', value: 'gemini-2.5-flash-lite' },
       { label: 'gemini-2.0-flash', value: 'gemini-2.0-flash' },
       { label: 'gemini-2.5-flash', value: 'gemini-2.5-flash' },
       { label: 'gemini-2.5-pro', value: 'gemini-2.5-pro' },
@@ -47,7 +57,7 @@ const PROVIDER_MODELS: Record<string, { name: string; default: string; list: { l
     name: 'OpenAI',
     default: 'gpt-4o-mini',
     list: [
-      { label: 'gpt-4o-mini (Recommended)', value: 'gpt-4o-mini' },
+      { label: 'gpt-4o-mini ★', value: 'gpt-4o-mini' },
       { label: 'gpt-4o', value: 'gpt-4o' },
       { label: 'gpt-4-turbo', value: 'gpt-4-turbo' },
       { label: 'gpt-4', value: 'gpt-4' },
@@ -58,7 +68,7 @@ const PROVIDER_MODELS: Record<string, { name: string; default: string; list: { l
     name: 'Anthropic Claude',
     default: 'claude-3-5-haiku-latest',
     list: [
-      { label: 'claude-3-5-haiku-latest (Recommended)', value: 'claude-3-5-haiku-latest' },
+      { label: 'claude-3-5-haiku-latest ★', value: 'claude-3-5-haiku-latest' },
       { label: 'claude-3-5-sonnet-latest', value: 'claude-3-5-sonnet-latest' },
       { label: 'claude-3-opus-latest', value: 'claude-3-opus-latest' },
       { label: 'claude-3-haiku-20240307', value: 'claude-3-haiku-20240307' },
@@ -73,7 +83,29 @@ export default function ProvidersPage() {
   const [byokForm, setByokForm] = useState<{ provider: 'gemini' | 'openai' | 'anthropic'; title: string; key: string }>({ provider: 'gemini', title: '', key: '' });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-  React.useEffect(() => {
+  const [dynamicProviders, setDynamicProviders] = useState<any[]>([]);
+  const [isLoadingProviders, setIsLoadingProviders] = useState(false);
+
+  const fetchDynamicProviders = useCallback(async () => {
+    if (!selectedProject) return;
+    setIsLoadingProviders(true);
+    try {
+      const data = await DbService.getProjectProviders(selectedProject.id);
+      if (data && data.providers) {
+        setDynamicProviders(data.providers);
+      }
+    } catch (e) {
+      console.error('Failed to fetch dynamic providers:', e);
+    } finally {
+      setIsLoadingProviders(false);
+    }
+  }, [selectedProject]);
+
+  useEffect(() => {
+    fetchDynamicProviders();
+  }, [selectedProject, fetchDynamicProviders]);
+
+  useEffect(() => {
     if (toastMessage) {
       const timer = setTimeout(() => setToastMessage(null), 3000);
       return () => clearTimeout(timer);
@@ -92,6 +124,7 @@ export default function ProvidersPage() {
     if (selectedProject) {
       await DbService.updateByok(selectedProject.id, byokForm.provider, trimmedKey, trimmedTitle);
       await refreshProjects();
+      await fetchDynamicProviders();
       setShowByokForm(false);
       setByokForm({ provider: 'gemini', title: '', key: '' });
       setToastMessage('BYOK Key saved securely.');
@@ -117,6 +150,7 @@ export default function ProvidersPage() {
     if (selectedProject) {
       await DbService.setPrimaryByok(selectedProject.id, keyId);
       await refreshProjects();
+      await fetchDynamicProviders();
       setToastMessage('Primary provider updated.');
     }
   };
@@ -125,6 +159,7 @@ export default function ProvidersPage() {
     if (selectedProject) {
       await DbService.deleteByok(selectedProject.id, keyId);
       await refreshProjects();
+      await fetchDynamicProviders();
       setToastMessage('BYOK Key deleted.');
     }
   };
@@ -179,26 +214,53 @@ export default function ProvidersPage() {
         const settingsKey = `${provider}Model`;
         const currentValue = (selectedProject.settings as any)[settingsKey] || pInfo.default;
 
+        const dynamicProviderInfo = dynamicProviders.find((p: any) => p.name === provider);
+        const hasWarning = provider === 'gemini' && (dynamicProviderInfo?.status === 'disabled' || (dynamicProviderInfo?.availableModels || []).length === 0);
+
         // Check if custom option needs to be added
-        const isListed = pInfo.list.some((m) => m.value === currentValue);
-        const options = [...pInfo.list];
-        if (!isListed && currentValue) {
+        let options = [...pInfo.list];
+        if (provider === 'gemini') {
+          if (dynamicProviderInfo && dynamicProviderInfo.availableModels && dynamicProviderInfo.availableModels.length > 0) {
+            options = dynamicProviderInfo.availableModels.map((m: string) => {
+              const isRecommended = m === 'gemini-2.5-flash-lite';
+              return {
+                label: `${m}${isRecommended ? ' ★' : ''}`,
+                value: m
+              };
+            });
+          } else if (hasWarning) {
+            options = [{ label: '⚠️ No models found', value: '' }];
+          }
+        }
+
+        const isListed = options.some((m) => m.value === currentValue);
+        if (!isListed && currentValue && !hasWarning) {
           options.push({ label: currentValue, value: currentValue });
         }
 
         return (
-          <div key={provider} className="card-glass" style={{ padding: 24, marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-            <div>
-              <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--white)', marginBottom: 4 }}>{pInfo.name} Model</h3>
-              <p style={{ fontSize: '0.8125rem', color: 'var(--text-sec)' }}>Select the model to use for {pInfo.name} BYOK requests.</p>
+          <div key={provider} className="card-glass" style={{ padding: 24, marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 16, border: hasWarning ? '1px solid var(--red)' : undefined }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+              <div>
+                <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--white)', marginBottom: 4 }}>{pInfo.name} Model</h3>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--text-sec)' }}>Select the model to use for {pInfo.name} BYOK requests.</p>
+              </div>
+              <div style={{ width: 250, flexShrink: 0 }}>
+                <CustomSelect 
+                  value={hasWarning ? '' : currentValue} 
+                  onChange={val => !hasWarning && handleUpdateModel(provider, val)} 
+                  options={options} 
+                  disabled={hasWarning}
+                  style={hasWarning ? { border: '1px solid var(--red)', color: 'var(--red)' } : undefined}
+                />
+              </div>
             </div>
-            <div style={{ width: 250, flexShrink: 0 }}>
-              <CustomSelect 
-                value={currentValue} 
-                onChange={val => handleUpdateModel(provider, val)} 
-                options={options} 
-              />
-            </div>
+            {hasWarning && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--red)', fontSize: '0.8125rem', fontWeight: 600, background: 'rgba(239, 68, 68, 0.05)', padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(239, 68, 68, 0.1)' }}>
+                <ShieldAlert size={16} style={{ flexShrink: 0 }} />
+                <span>⚠️ No models found for this Gemini API key. Please check your credentials or verify your project billing setup on Google AI Studio.</span>
+              </div>
+            )}
           </div>
         );
       })}
