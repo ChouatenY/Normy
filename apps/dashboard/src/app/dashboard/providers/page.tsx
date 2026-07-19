@@ -7,7 +7,7 @@ import { DbService } from '../../../lib/db-service.js';
 import { Plus, Trash2, Star, ShieldAlert } from 'lucide-react';
 import { CustomSelect } from '../../../components/ui/custom-select.js';
 import { motion } from 'framer-motion';
-import { NormyProvider } from '@normy/sdk-react';
+import { NormyProvider } from '@normy-validation/react';
 
 interface ValidatedKeyTitleProps {
   value: string;
