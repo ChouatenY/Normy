@@ -651,6 +651,10 @@ app.openapi(validateRoute, async (c) => {
   const providerName = (project as any).defaultProvider || env.AI_PROVIDER || 'gemini';
   const resolvedModel = providerName === 'gemini'
     ? ((project.settings as any)?.geminiModel || env.GEMINI_MODEL || 'gemini-2.5-flash-lite')
+    : providerName === 'openai'
+    ? ((project.settings as any)?.openaiModel || 'gpt-4o-mini')
+    : providerName === 'anthropic'
+    ? ((project.settings as any)?.anthropicModel || 'claude-3-5-haiku-latest')
     : 'default';
   const apiKeyEnv = c.get('apiKeyEnvironment');
 
