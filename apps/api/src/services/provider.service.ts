@@ -1,7 +1,7 @@
 import { env } from '../config/env.js';
 import { decrypt } from '../utils/encryption.js';
 import type { Project } from '../db/schema/projects.js';
-import { GeminiProvider, MockAIProvider } from '@normy-validation/validation-core';
+import { GeminiProvider, MockAIProvider, OpenAIProvider, AnthropicProvider } from '@normy-validation/validation-core';
 import type { AIProvider } from '@normy-validation/core';
 
 export interface ProviderResolution {
@@ -60,9 +60,22 @@ export class ProviderService {
       return { provider, mode };
     }
 
-    // Future placeholder for other providers (or throw NOT_IMPLEMENTED)
-    if (providerName === 'openai' || providerName === 'anthropic') {
-      throw new Error(`Provider "${providerName}" is configured but not active in this deployment.`);
+    if (providerName === 'openai') {
+      const provider = new OpenAIProvider({
+        provider: 'openai',
+        apiKey: activeProviderKey || '',
+        model: model || 'gpt-4o-mini',
+      });
+      return { provider, mode };
+    }
+
+    if (providerName === 'anthropic') {
+      const provider = new AnthropicProvider({
+        provider: 'anthropic',
+        apiKey: activeProviderKey || '',
+        model: model || 'claude-3-5-haiku-latest',
+      });
+      return { provider, mode };
     }
 
     // Fallback Mock provider

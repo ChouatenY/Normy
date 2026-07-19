@@ -10,3 +10,5 @@ export type { AIProvider, AIProviderName, ProviderConfig } from '@normy-validati
 export { BaseAIProvider } from './base.js';
 export { MockAIProvider } from './mock.provider.js';
 export { GeminiProvider } from './gemini.provider.js';
+export { OpenAIProvider } from './openai.provider.js';
+export { AnthropicProvider } from './anthropic.provider.js';

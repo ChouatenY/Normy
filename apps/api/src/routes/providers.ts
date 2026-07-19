@@ -16,6 +16,7 @@ const ProviderSchema = z.object({
   status: z.enum(['connected', 'disconnected', 'disabled']),
   mode: z.enum(['hosted', 'byok']),
   model: z.string().optional(),
+  availableModels: z.array(z.string()).optional(),
   lastTested: z.string().nullable().optional(),
   lastUsed: z.string().nullable().optional(),
 });
@@ -37,10 +38,17 @@ providerRoutes.openapi(
   async (c) => {
     const project = c.get('project');
     
-    // Only Gemini implemented for now
     const geminiMode: 'byok' | 'hosted' = project.geminiApiKey ? 'byok' : 'hosted';
     const geminiModel = (project.settings as any)?.geminiModel || env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
     
+    const openaiMode: 'byok' | 'hosted' = project.openaiApiKey ? 'byok' : 'hosted';
+    const openaiModel = (project.settings as any)?.openaiModel || 'gpt-4o-mini';
+    const openaiStatus = project.openaiApiKey ? ('connected' as const) : ('disconnected' as const);
+
+    const anthropicMode: 'byok' | 'hosted' = project.anthropicApiKey ? 'byok' : 'hosted';
+    const anthropicModel = (project.settings as any)?.anthropicModel || 'claude-3-5-haiku-latest';
+    const anthropicStatus = project.anthropicApiKey ? ('connected' as const) : ('disconnected' as const);
+
     return c.json({
       providers: [
         {
@@ -48,18 +56,45 @@ providerRoutes.openapi(
           status: 'connected' as const,
           mode: geminiMode,
           model: geminiModel,
+          availableModels: [
+            'gemini-2.5-flash-lite',
+            'gemini-2.0-flash',
+            'gemini-2.5-flash',
+            'gemini-2.5-pro',
+            'gemini-2.0-pro'
+          ],
           lastTested: null,
           lastUsed: null,
         },
         {
           name: 'openai',
-          status: 'disconnected' as const,
-          mode: 'hosted' as const,
+          status: openaiStatus,
+          mode: openaiMode,
+          model: openaiModel,
+          availableModels: [
+            'gpt-4o-mini',
+            'gpt-4o',
+            'gpt-4-turbo',
+            'gpt-4',
+            'gpt-3.5-turbo'
+          ],
+          lastTested: null,
+          lastUsed: null,
         },
         {
           name: 'anthropic',
-          status: 'disconnected' as const,
-          mode: 'hosted' as const,
+          status: anthropicStatus,
+          mode: anthropicMode,
+          model: anthropicModel,
+          availableModels: [
+            'claude-3-5-haiku-latest',
+            'claude-3-5-sonnet-latest',
+            'claude-3-opus-latest',
+            'claude-3-haiku-20240307',
+            'claude-3-sonnet-20240229'
+          ],
+          lastTested: null,
+          lastUsed: null,
         }
       ]
     });
