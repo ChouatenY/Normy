@@ -35,6 +35,7 @@ DATABASE_URL=postgresql://normy:change-me@localhost:5432/normy
 REDIS_URL=redis://localhost:6379
 AI_PROVIDER=gemini
 GEMINI_API_KEY=your-gemini-key
+GEMINI_MODEL=gemini-2.5-flash-lite
 API_SECRET=your-32-character-minimum-secret
 ```
 
@@ -121,6 +122,7 @@ POSTGRES_DB=normy
 API_SECRET=replace-with-long-random-secret
 AI_PROVIDER=gemini
 GEMINI_API_KEY=your-gemini-key
+GEMINI_MODEL=gemini-2.5-flash-lite
 ALLOWED_ORIGINS=https://your-docs-domain.vercel.app
 ```
 
@@ -178,6 +180,7 @@ curl http://localhost:3001/health
    - `API_SECRET`
    - `AI_PROVIDER=gemini`
    - `GEMINI_API_KEY`
+   - `GEMINI_MODEL`
    - `ALLOWED_ORIGINS`
 4. Deploy the service.
 5. Run migrations with a one-off Railway command:

@@ -62,6 +62,14 @@ export default function ProvidersPage() {
     }
   };
 
+  const handleUpdateModel = async (modelName: string) => {
+    if (selectedProject) {
+      await DbService.updateProject(selectedProject.id, { settings: { ...(selectedProject.settings || {}), geminiModel: modelName } });
+      await refreshProjects();
+      setToastMessage('Gemini model updated.');
+    }
+  };
+
   const handleSetDefault = async (keyId: string) => {
     if (selectedProject) {
       await DbService.setPrimaryByok(selectedProject.id, keyId);
@@ -119,6 +127,30 @@ export default function ProvidersPage() {
         </NormyProvider>
       )}
 
+      {/* Gemini Model Selection */}
+      {(selectedProject.settings?.byokKeys || []).some((k: any) => k.provider === 'gemini') && (
+        <div className="card-glass" style={{ padding: 24, marginBottom: 32, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          <div>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 700, color: 'var(--white)', marginBottom: 4 }}>Gemini Model</h3>
+            <p style={{ fontSize: '0.8125rem', color: 'var(--text-sec)' }}>Select the model to use for Gemini BYOK requests.</p>
+          </div>
+          <div style={{ width: 250, flexShrink: 0 }}>
+            <CustomSelect 
+              value={(selectedProject.settings as any)?.geminiModel || 'gemini-2.5-flash-lite'} 
+              onChange={val => handleUpdateModel(val)} 
+              options={[
+                {label: 'gemini-2.5-flash-lite', value: 'gemini-2.5-flash-lite'},
+                {label: 'gemini-2.0-flash', value: 'gemini-2.0-flash'},
+                // Include current model if it's custom/different
+                ...(!['gemini-2.5-flash-lite', 'gemini-2.0-flash'].includes((selectedProject.settings as any)?.geminiModel) && (selectedProject.settings as any)?.geminiModel 
+                  ? [{ label: (selectedProject.settings as any)?.geminiModel, value: (selectedProject.settings as any)?.geminiModel }] 
+                  : [])
+              ]} 
+            />
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 20 }}>
         {(selectedProject.settings?.byokKeys || []).map((keyItem: any) => {
           const isProminent = keyItem.isPrimary;
@@ -155,6 +187,9 @@ export default function ProvidersPage() {
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                      <span style={{ fontSize: '0.6875rem', background: 'rgba(255,255,255,0.05)', color: 'var(--text-sec)', border: '1px solid rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: 12, textTransform: 'uppercase', fontWeight: 600 }}>{providerLabel}</span>
                      {isProminent && <span style={{ fontSize: '0.6875rem', background: 'rgba(255,255,255,0.1)', color: 'var(--white)', border: '1px solid rgba(255,255,255,0.2)', padding: '2px 8px', borderRadius: 12, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.05em' }}>Primary Provider</span>}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-sec)', marginTop: 8 }}>
+                    Model: <span style={{ color: 'var(--white)', fontFamily: 'var(--mono)' }}>{keyItem.provider === 'gemini' ? ((selectedProject.settings as any)?.geminiModel || 'gemini-2.5-flash-lite') : 'Default'}</span>
                   </div>
                 </div>
                 

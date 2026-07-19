@@ -39,153 +39,185 @@ export class GeminiProvider extends BaseAIProvider {
     }
   }
 
+  private resolveModelsToTry(): { models: string[]; isFallbackMode: boolean } {
+    if (this.config.model && this.config.model.trim()) {
+      return { models: [this.config.model.trim()], isFallbackMode: false };
+    }
+    return { models: ['gemini-2.5-flash-lite', 'gemini-2.0-flash'], isFallbackMode: true };
+  }
+
   async validate(request: ValidationRequest): Promise<ValidationResult> {
     const startTime = Date.now();
     const promptTemplate = getPromptTemplate(request.promptVersion);
     const prompt = promptTemplate.build(request);
-    const model = this.config.model ?? 'gemini-1.5-flash';
 
-    try {
-      return await this.withRetry(() =>
-        this.withTimeout(
-          (async () => {
-            const response = await this.ai.models.generateContent({
-              model,
-              contents: prompt,
-              config: {
-                responseMimeType: 'application/json',
-              },
-            });
+    const { models, isFallbackMode } = this.resolveModelsToTry();
+    let lastError: any = null;
 
-            const text = response.text;
-            if (!text) {
-              throw new Error('No response returned from Gemini');
-            }
+    for (let i = 0; i < models.length; i++) {
+      const currentModel = models[i];
+      try {
+        const result = await this.withRetry(() =>
+          this.withTimeout(
+            (async () => {
+              const response = await this.ai.models.generateContent({
+                model: currentModel,
+                contents: prompt,
+                config: {
+                  responseMimeType: 'application/json',
+                },
+              });
 
-            let parsed: any;
-            try {
-              let cleanText = text.trim();
-              const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
-              if (jsonMatch) {
-                cleanText = jsonMatch[0];
+              const text = response.text;
+              if (!text) {
+                throw new Error('No response returned from Gemini');
               }
-              parsed = JSON.parse(cleanText);
-            } catch (e) {
-              console.error('Failed to parse Gemini JSON. Raw response:', text);
-              throw new Error('Invalid JSON response from Gemini');
-            }
 
-            const issue = parsed.issue as ValidationIssue;
-            
-            // Validate the issue is one of the strictly allowed AI issue types
-            let safeIssue = issue;
-            if (!['IRRELEVANT_RESPONSE', 'CONTRADICTORY_RESPONSE', 'LOW_QUALITY', 'VALID'].includes(issue)) {
-              safeIssue = 'LOW_QUALITY';
-            }
+              let parsed: any;
+              try {
+                let cleanText = text.trim();
+                const jsonMatch = cleanText.match(/\{[\s\S]*\}/);
+                if (jsonMatch) {
+                  cleanText = jsonMatch[0];
+                }
+                parsed = JSON.parse(cleanText);
+              } catch (e) {
+                console.error('Failed to parse Gemini JSON. Raw response:', text);
+                throw new Error('Invalid JSON response from Gemini');
+              }
 
-            const score = typeof parsed.score === 'number' ? parsed.score : 50;
-            const valid = score >= (request.minScore ?? 50);
+              const issue = parsed.issue as ValidationIssue;
+              
+              // Validate the issue is one of the strictly allowed AI issue types
+              let safeIssue = issue;
+              if (!['IRRELEVANT_RESPONSE', 'CONTRADICTORY_RESPONSE', 'LOW_QUALITY', 'VALID'].includes(issue)) {
+                safeIssue = 'LOW_QUALITY';
+              }
 
-            // Extract tokens if returned by the SDK
-            const inputTokens = response.usageMetadata?.promptTokenCount ?? 0;
-            const outputTokens = response.usageMetadata?.candidatesTokenCount ?? 0;
+              const score = typeof parsed.score === 'number' ? parsed.score : 50;
+              const valid = score >= (request.minScore ?? 50);
 
-            return {
-              valid,
-              score,
-              issue: safeIssue,
-              feedbackCategory: ISSUE_TO_CATEGORY[safeIssue] ?? 'ADD_SPECIFIC_DETAILS',
-              feedback: parsed.feedback || 'Please refine your answer.',
-              severity: score >= 80 ? 'success' : score >= 50 ? 'info' : score >= 30 ? 'warning' : 'error',
-              validatedAt: new Date().toISOString(),
-              provider: this.name,
-              latencyMs: Date.now() - startTime,
-              confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.8,
-              tokenUsage: {
-                inputTokens,
-                outputTokens,
-              },
-              exampleAnswer: parsed.exampleAnswer ?? null,
-              explanation: parsed.explanation ?? undefined,
-            };
-          })()
-        )
-      );
-    } catch (error) {
-      console.error('Gemini Provider validation failed gracefully:', error);
-      // We log the error completely so it's easier to debug
-      console.error(error);
-      const latencyMs = Date.now() - startTime;
-      
-      const errStr = String(error).toLowerCase();
-      let feedback = 'We could not evaluate your answer with confidence. Please try again.';
-      
-      if (errStr.includes('quota') || errStr.includes('429') || errStr.includes('exhausted') || errStr.includes('limit')) {
-        feedback = 'Normy AI validation quota or rate limit exceeded. Please try again in a few moments or check your API key status.';
-      } else if (errStr.includes('403') || errStr.includes('leaked') || errStr.includes('permission')) {
-        feedback = 'Your Gemini API key was rejected (Permission Denied / Leaked Key). Please update your GEMINI_API_KEY environment variable.';
-      } else if (errStr.includes('404') || errStr.includes('not found')) {
-        feedback = 'The AI model specified is not available. Please check your model configuration.';
-      } else if (errStr.includes('invalid json')) {
-        feedback = 'The AI produced an invalid response format that could not be parsed.';
+              // Extract tokens if returned by the SDK
+              const inputTokens = response.usageMetadata?.promptTokenCount ?? 0;
+              const outputTokens = response.usageMetadata?.candidatesTokenCount ?? 0;
+
+              return {
+                valid,
+                score,
+                issue: safeIssue,
+                feedbackCategory: ISSUE_TO_CATEGORY[safeIssue] ?? 'ADD_SPECIFIC_DETAILS',
+                feedback: parsed.feedback || 'Please refine your answer.',
+                severity: score >= 80 ? 'success' : score >= 50 ? 'info' : score >= 30 ? 'warning' : 'error',
+                validatedAt: new Date().toISOString(),
+                provider: this.name,
+                latencyMs: Date.now() - startTime,
+                confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 0.8,
+                tokenUsage: {
+                  inputTokens,
+                  outputTokens,
+                },
+                exampleAnswer: parsed.exampleAnswer ?? null,
+                explanation: parsed.explanation ?? undefined,
+              };
+            })()
+          )
+        );
+        return result;
+      } catch (error: any) {
+        lastError = error;
+        const errStr = String(error).toLowerCase();
+        const is404 = errStr.includes('404') || errStr.includes('not found') || errStr.includes('model_not_found');
+
+        if (is404) {
+          if (isFallbackMode && i < models.length - 1) {
+            console.warn(`Fallback: Model "${currentModel}" not found. Trying next fallback: "${models[i + 1]}"...`);
+            continue;
+          }
+          console.error(`Configured Gemini model "${currentModel}" is unavailable. Please update GEMINI_MODEL or the project's provider configuration.`);
+          throw new Error('INVALID_MODEL_CONFIGURATION');
+        }
+
+        break;
       }
-
-      // Fallback response - LOW_CONFIDENCE, never crash the API
-      return {
-        valid: false,
-        score: 0,
-        issue: 'LOW_CONFIDENCE',
-        feedbackCategory: 'ADD_SPECIFIC_DETAILS',
-        feedback,
-        severity: 'error',
-        validatedAt: new Date().toISOString(),
-        provider: this.name,
-        latencyMs,
-        confidence: 0,
-        tokenUsage: {
-          inputTokens: 0,
-          outputTokens: 0,
-        },
-        exampleAnswer: null,
-      };
     }
+
+    const latencyMs = Date.now() - startTime;
+    const errStr = String(lastError).toLowerCase();
+    let feedback = 'We could not evaluate your answer with confidence. Please try again.';
+    
+    if (errStr.includes('quota') || errStr.includes('429') || errStr.includes('exhausted') || errStr.includes('limit')) {
+      feedback = 'Normy AI validation quota or rate limit exceeded. Please try again in a few moments or check your API key status.';
+    } else if (errStr.includes('403') || errStr.includes('leaked') || errStr.includes('permission')) {
+      feedback = 'Your Gemini API key was rejected (Permission Denied / Leaked Key). Please update your GEMINI_API_KEY environment variable.';
+    } else if (errStr.includes('invalid json')) {
+      feedback = 'The AI produced an invalid response format that could not be parsed.';
+    }
+
+    return {
+      valid: false,
+      score: 0,
+      issue: 'LOW_CONFIDENCE',
+      feedbackCategory: 'ADD_SPECIFIC_DETAILS',
+      feedback,
+      severity: 'error',
+      validatedAt: new Date().toISOString(),
+      provider: this.name,
+      latencyMs,
+      confidence: 0,
+      tokenUsage: {
+        inputTokens: 0,
+        outputTokens: 0,
+      },
+      exampleAnswer: null,
+    };
   }
 
   async healthCheck(): Promise<{ ok: boolean; error?: string }> {
-    try {
-      const model = this.config.model ?? 'gemini-1.5-flash';
-      // simple connectivity check
-      const response = await this.ai.models.generateContent({
-        model,
-        contents: 'ping',
-      });
-      if (response.text) {
-        return { ok: true };
+    const { models, isFallbackMode } = this.resolveModelsToTry();
+    let lastErrorMsg = '';
+
+    for (let i = 0; i < models.length; i++) {
+      const model = models[i];
+      try {
+        const response = await this.ai.models.generateContent({
+          model,
+          contents: 'ping',
+        });
+        if (response.text) {
+          return { ok: true };
+        }
+        lastErrorMsg = 'Empty response from Gemini';
+      } catch (e: any) {
+        const errStr = String(e).toLowerCase();
+        const is404 = errStr.includes('404') || errStr.includes('not found') || errStr.includes('model_not_found');
+
+        if (is404 && isFallbackMode && i < models.length - 1) {
+          continue;
+        }
+
+        let error = 'Authentication failed';
+        if (errStr.includes('quota') || errStr.includes('429')) error = 'Quota exceeded';
+        else if (is404) error = 'Model not found';
+        else if (errStr.includes('timeout')) error = 'Timeout';
+        else if (e instanceof Error) error = e.message;
+        
+        lastErrorMsg = error;
+        break;
       }
-      return { ok: false, error: 'Empty response from Gemini' };
-    } catch (e: any) {
-      const errStr = String(e).toLowerCase();
-      let error = 'Authentication failed';
-      if (errStr.includes('quota') || errStr.includes('429')) error = 'Quota exceeded';
-      else if (errStr.includes('404')) error = 'Model not found';
-      else if (errStr.includes('timeout')) error = 'Timeout';
-      else if (e instanceof Error) error = e.message;
-      return { ok: false, error };
     }
+    return { ok: false, error: lastErrorMsg || 'Model not found' };
   }
 
   estimateCost(request: ValidationRequest): number {
-    // Very rough heuristic based on character count mapped to tokens
     const charCount = request.question.length + request.answer.length + (request.fieldContext?.length ?? 0);
     const estimatedTokens = Math.ceil(charCount / 4);
-    // Assumption: $0.15 per 1M tokens -> 0.00000015 per token
     return estimatedTokens * 0.00000015;
   }
 
   getCapabilities(): { models: string[]; maxTokens: number; supportedFeatures: string[] } {
     return {
-      models: ['gemini-1.5-flash', 'gemini-1.5-pro'],
-      maxTokens: 1048576, // Gemini 1.5 context window
+      models: ['gemini-2.5-flash-lite', 'gemini-2.0-flash'],
+      maxTokens: 1048576,
       supportedFeatures: ['structured_json', 'system_instructions', 'function_calling']
     };
   }

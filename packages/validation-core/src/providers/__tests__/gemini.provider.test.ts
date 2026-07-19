@@ -87,4 +87,39 @@ describe('GeminiProvider', () => {
     expect(result.valid).toBe(true);
     expect(generateContentMock).toHaveBeenCalledTimes(2);
   });
+
+  it('throws INVALID_MODEL_CONFIGURATION on model not found error', async () => {
+    generateContentMock.mockRejectedValueOnce(new Error('Model not found (404)'));
+
+    const provider = new GeminiProvider({ provider: 'gemini', apiKey: 'test-key', model: 'invalid-model', maxRetries: 0 });
+    await expect(provider.validate({
+      question: 'Q',
+      answer: 'A',
+    })).rejects.toThrow('INVALID_MODEL_CONFIGURATION');
+  });
+
+  it('gracefully falls back to secondary model if first model is not found', async () => {
+    // First call rejects with 404, second call succeeds
+    generateContentMock.mockRejectedValueOnce(new Error('Model not found (404)'));
+    generateContentMock.mockResolvedValueOnce({
+      text: JSON.stringify({
+        issue: 'VALID',
+        score: 90,
+        confidence: 0.9,
+        feedbackCategory: 'valid',
+        feedback: 'Good.',
+      }),
+    });
+
+    const provider = new GeminiProvider({ provider: 'gemini', apiKey: 'test-key', maxRetries: 0 });
+    const result = await provider.validate({
+      question: 'Q',
+      answer: 'A',
+    });
+
+    expect(result.valid).toBe(true);
+    expect(generateContentMock).toHaveBeenCalledTimes(2);
+    expect(generateContentMock.mock.calls[0][0].model).toBe('gemini-2.5-flash-lite');
+    expect(generateContentMock.mock.calls[1][0].model).toBe('gemini-2.0-flash');
+  });
 });

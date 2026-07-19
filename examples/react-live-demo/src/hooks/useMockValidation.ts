@@ -141,8 +141,11 @@ Scoring guide:
 
 Be strict. A one-word valid answer like "yes" or "no" without explanation is LOW_QUALITY (score 35).`;
 
+  const model = (typeof window !== 'undefined' && localStorage.getItem('GEMINI_MODEL')) ||
+    (import.meta as unknown as { env: Record<string, string> }).env?.VITE_GEMINI_MODEL || 'gemini-2.5-flash-lite';
+
   const response = await ai.models.generateContent({
-    model: 'gemini-2.0-flash',
+    model,
     contents: prompt,
     config: { responseMimeType: 'application/json' },
   });

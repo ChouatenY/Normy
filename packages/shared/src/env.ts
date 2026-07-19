@@ -33,6 +33,7 @@ export const serverEnvSchema = z.object({
   OPENAI_API_KEY: z.string().transform(val => val || undefined).optional(),
   GEMINI_API_KEY: z.string().transform(val => val || undefined).optional(),
   ANTHROPIC_API_KEY: z.string().transform(val => val || undefined).optional(),
+  GEMINI_MODEL: z.string().optional(),
 
   // ── Default AI provider to use ───────────────────────────────────────────────
   AI_PROVIDER: z

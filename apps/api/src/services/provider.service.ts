@@ -35,11 +35,6 @@ export class ProviderService {
         console.error('Failed to decrypt BYOK key', e);
         throw new Error('INVALID_CONFIGURATION');
       }
-      
-      // Parse model if we have a config object in settings (Future Proofing)
-      if (project.settings && (project.settings as any)[`${providerName}Model`]) {
-        model = (project.settings as any)[`${providerName}Model`];
-      }
     } else {
       // Hosted resolution
       activeProviderKey = providerName === 'gemini' ? (env.GEMINI_API_KEY || '') : '';
@@ -51,11 +46,16 @@ export class ProviderService {
       }
     }
 
+    // Parse model if we have a config object in settings (Future Proofing)
+    if (project.settings && (project.settings as any)[`${providerName}Model`]) {
+      model = (project.settings as any)[`${providerName}Model`];
+    }
+
     if (providerName === 'gemini') {
       const provider = new GeminiProvider({
         provider: 'gemini',
         apiKey: activeProviderKey || '',
-        model: model,
+        model: model || env.GEMINI_MODEL,
       });
       return { provider, mode };
     }

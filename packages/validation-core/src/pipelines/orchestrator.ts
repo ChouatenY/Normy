@@ -97,7 +97,11 @@ export class OrchestratorPipeline implements ValidationPipeline {
         params.minScore = request.minScore;
       }
       return this.scoringEngine.finalizeResult(params);
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.message === 'INVALID_MODEL_CONFIGURATION') {
+        throw error;
+      }
+      
       console.error(`AI validation provider ${this.provider.name} failed:`, error);
       
       // Fallback in case AI completely fails (timeout, auth, etc.)

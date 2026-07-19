@@ -649,6 +649,9 @@ app.openapi(validateRoute, async (c) => {
   const sessionId = c.req.header('x-session-id') || null;
   const promptVersion = body.promptVersion || (project.settings as any)?.defaultPromptVersion || 'quality-v1';
   const providerName = (project as any).defaultProvider || env.AI_PROVIDER || 'gemini';
+  const resolvedModel = providerName === 'gemini'
+    ? ((project.settings as any)?.geminiModel || env.GEMINI_MODEL || 'gemini-2.5-flash-lite')
+    : 'default';
   const apiKeyEnv = c.get('apiKeyEnvironment');
 
   // Resolve Provider via Service
@@ -712,7 +715,7 @@ app.openapi(validateRoute, async (c) => {
       pipelineStage: 'ai_provider',
       resolvedBy: 'cache',
       provider: providerName as any,
-      model: 'gemini-1.5-flash',
+      model: resolvedModel,
       latencyMs: 0,
       tokenCount: 0,
       confidence: cachedResult.confidence,
@@ -800,13 +803,21 @@ app.openapi(validateRoute, async (c) => {
   }
 
   const startTime = Date.now();
-  const result = await pipeline.run({
-    question: body.question,
-    answer: body.answer,
-    promptVersion,
-    minScore: project.settings?.minScore ?? 50,
-    ...(body.fieldContext !== undefined ? { fieldContext: body.fieldContext } : {}),
-  });
+  let result;
+  try {
+    result = await pipeline.run({
+      question: body.question,
+      answer: body.answer,
+      promptVersion,
+      minScore: project.settings?.minScore ?? 50,
+      ...(body.fieldContext !== undefined ? { fieldContext: body.fieldContext } : {}),
+    });
+  } catch (err: any) {
+    if (err.message === 'INVALID_MODEL_CONFIGURATION') {
+      return c.json({ error: 'INVALID_MODEL_CONFIGURATION', message: 'The configured AI model is unavailable or was not found.' }, 500);
+    }
+    throw err;
+  }
   const latencyMs = Date.now() - startTime;
 
   const scoreAfter = result.score;
@@ -832,7 +843,7 @@ app.openapi(validateRoute, async (c) => {
       pipelineStage: result.source === 'local' ? 'local_validator' : 'ai_provider',
       resolvedBy: result.resolvedBy ?? result.provider,
       provider: result.source === 'local' ? null : result.provider as any,
-      model: result.source === 'local' ? null : 'gemini-1.5-flash',
+      model: result.source === 'local' ? null : (result.provider === 'gemini' ? resolvedModel : 'default'),
       latencyMs: result.metadata?.latencyMs ?? latencyMs,
       tokenCount: (result.tokenUsage?.inputTokens ?? 0) + (result.tokenUsage?.outputTokens ?? 0),
       confidence: result.confidence,
@@ -876,7 +887,7 @@ app.openapi(validateRoute, async (c) => {
         estimatedCost: cost,
         latencyMs,
         provider: 'gemini',
-        model: 'gemini-1.5-flash',
+        model: resolvedModel,
         billedToUser: providerMode === 'hosted',
       },
     }).catch(err => console.error('Failed to log token_analytics event:', err));

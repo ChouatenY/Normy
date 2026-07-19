@@ -90,6 +90,9 @@ export const validateRoute = createRoute({
     429: {
       description: 'Rate limit exceeded',
     },
+    500: {
+      description: 'Internal Server Error',
+    },
   },
   security: [
     {

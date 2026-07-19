@@ -45,7 +45,7 @@ async function main() {
   const provider = new GeminiProvider({
     provider: 'gemini',
     apiKey,
-    model: 'gemini-2.5-flash',
+    model: process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite',
   });
 
   const testCases: { file: string; cases: TestCase[] }[] = [];
