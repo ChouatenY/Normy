@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { CodeBlock } from './CodeBlock.js';
 import { validateInputAction } from '../app/actions.js';
+import { CustomSelect } from './ui/custom-select.js';
 
 interface PlaygroundViewProps {
   apiKey?: string;
@@ -164,18 +165,18 @@ export function PlaygroundView({ apiKey = '', projectId = '' }: PlaygroundViewPr
 
           <div className="input-group" style={{ marginBottom: 28 }}>
             <label className="input-label">AI Model Provider Override</label>
-            <select
+            <CustomSelect
               value={provider}
-              onChange={(e) => setProvider(e.target.value as any)}
-              className="input-field"
-              style={{ cursor: 'pointer' }}
-            >
-              <option value="">Project Default (Dynamic Resolution)</option>
-              <option value="gemini">Force Google Gemini</option>
-              <option value="openai">Force OpenAI GPT</option>
-              <option value="anthropic">Force Anthropic Claude</option>
-            </select>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-sec)', marginTop: 4 }}>
+              onChange={(val) => setProvider(val as any)}
+              options={[
+                { label: 'Project Default (Dynamic Resolution)', value: '' },
+                { label: 'Force Google Gemini', value: 'gemini' },
+                { label: 'Force OpenAI GPT', value: 'openai' },
+                { label: 'Force Anthropic Claude', value: 'anthropic' }
+              ]}
+              style={{ height: '42px', minHeight: '42px' }}
+            />
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-sec)', marginTop: 8, display: 'block' }}>
               Leave as Project Default to use the provider configured in your project settings.
             </span>
           </div>

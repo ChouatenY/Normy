@@ -137,23 +137,38 @@ export async function deleteApiKeyAction(id: string): Promise<boolean> {
 }
 
 export async function validateInputAction(data: { projectId: string; question: string; answer: string; provider: string; apiKey: string }) {
-  const res = await fetch(`${getApiUrl()}/validate`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${data.apiKey}`,
-    },
-    body: JSON.stringify({
-      projectId: data.projectId,
-      question: data.question,
-      answer: data.answer,
-      provider: data.provider
-    }),
-  });
-  if (!res.ok) {
-    throw new Error(await res.text());
+  try {
+    const res = await fetch(`${getApiUrl()}/validate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${data.apiKey}`,
+      },
+      body: JSON.stringify({
+        projectId: data.projectId,
+        question: data.question,
+        answer: data.answer,
+        provider: data.provider || undefined
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text().catch(() => 'Unknown validation error');
+      return {
+        valid: false,
+        error: `HTTP_${res.status}`,
+        feedback: errText || `API responded with status ${res.status}`
+      };
+    }
+
+    return await res.json();
+  } catch (error: any) {
+    return {
+      valid: false,
+      error: 'NETWORK_ERROR',
+      feedback: error.message || 'Failed to connect to the Normy API server.'
+    };
   }
-  return await res.json();
 }
 
 export async function getAnalyticsAction(projectId: string) {
