@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useData } from '../../../components/providers/DataProvider.js';
 import { DbService } from '../../../lib/db-service.js';
@@ -18,6 +18,20 @@ export default function ApiKeysPage() {
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Map of prefix -> full raw key for keys generated locally
+  const [newlyCreatedKeys, setNewlyCreatedKeys] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('normy_session_keys');
+      if (saved) {
+        setNewlyCreatedKeys(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Failed to load session keys from localStorage', e);
+    }
+  }, []);
+
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(text);
@@ -28,7 +42,16 @@ export default function ApiKeysPage() {
     e.preventDefault();
     if (!selectedProject || !newKeyName) return;
     const apiKey = await DbService.createApiKey(selectedProject.id, newKeyName, newKeyEnv);
-    setGeneratedKey(apiKey);
+    if (apiKey) {
+      setGeneratedKey(apiKey);
+      const prefix = apiKey.substring(0, 18);
+      const updatedKeys = {
+        ...newlyCreatedKeys,
+        [prefix]: apiKey
+      };
+      setNewlyCreatedKeys(updatedKeys);
+      localStorage.setItem('normy_session_keys', JSON.stringify(updatedKeys));
+    }
     setNewKeyName('');
     await refreshApiKeys();
   };
@@ -92,26 +115,44 @@ export default function ApiKeysPage() {
             </tr>
           </thead>
           <tbody>
-            {apiKeys.filter(key => !key.revokedAt).map(key => (
-              <tr key={key.id} style={{ borderBottom: '1px solid var(--border)', fontSize: '0.875rem', color: 'var(--white)' }}>
-                <td style={{ padding: '16px' }}>{key.name}</td>
-                <td style={{ padding: '16px', fontFamily: 'var(--mono)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {key.keyPrefix}••••••••
-                    <button onClick={() => handleCopy(key.keyPrefix)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-sec)' }}>
-                      {copiedKey === key.keyPrefix ? <Check size={14} color="var(--teal)" /> : <Copy size={14} />}
-                    </button>
-                  </div>
-                </td>
-                <td style={{ padding: '16px' }}>
-                  <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: key.environment === 'production' ? 'rgba(76,175,145,0.1)' : 'rgba(255,255,255,0.05)', color: key.environment === 'production' ? 'var(--teal)' : 'var(--text-sec)' }}>{key.environment}</span>
-                </td>
-                <td style={{ padding: '16px', color: 'var(--text-sec)' }}>{new Date(key.createdAt).toLocaleDateString()}</td>
-                <td style={{ padding: '16px', textAlign: 'right' }}>
-                  <button className="btn btn-glass" style={{ padding: '6px' }} onClick={() => setDeleteModal({ isOpen: true, keyId: key.id, keyName: key.name })}><Trash2 size={16} color="var(--red)" /></button>
-                </td>
-              </tr>
-            ))}
+            {apiKeys.filter(key => !key.revokedAt).map(key => {
+              const fullKey = newlyCreatedKeys[key.keyPrefix];
+              const displayCopyTarget = fullKey || key.keyPrefix;
+              const hasFullKey = !!fullKey;
+
+              return (
+                <tr key={key.id} style={{ borderBottom: '1px solid var(--border)', fontSize: '0.875rem', color: 'var(--white)' }}>
+                  <td style={{ padding: '16px' }}>{key.name}</td>
+                  <td style={{ padding: '16px', fontFamily: 'var(--mono)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      {key.keyPrefix}••••••••
+                      <button 
+                        onClick={() => handleCopy(displayCopyTarget)} 
+                        style={{ 
+                          background: 'none', 
+                          border: 'none', 
+                          cursor: 'pointer', 
+                          color: hasFullKey ? 'var(--teal)' : 'var(--text-sec)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          padding: 2
+                        }}
+                        title={hasFullKey ? "Copy Full API Key" : "Copy Prefix (Full key only available on creation)"}
+                      >
+                        {copiedKey === displayCopyTarget ? <Check size={14} color="var(--teal)" /> : <Copy size={14} />}
+                      </button>
+                    </div>
+                  </td>
+                  <td style={{ padding: '16px' }}>
+                    <span style={{ padding: '2px 8px', borderRadius: 12, fontSize: '0.75rem', background: key.environment === 'production' ? 'rgba(76,175,145,0.1)' : 'rgba(255,255,255,0.05)', color: key.environment === 'production' ? 'var(--teal)' : 'var(--text-sec)' }}>{key.environment}</span>
+                  </td>
+                  <td style={{ padding: '16px', color: 'var(--text-sec)' }}>{new Date(key.createdAt).toLocaleDateString()}</td>
+                  <td style={{ padding: '16px', textAlign: 'right' }}>
+                    <button className="btn btn-glass" style={{ padding: '6px' }} onClick={() => setDeleteModal({ isOpen: true, keyId: key.id, keyName: key.name })}><Trash2 size={16} color="var(--red)" /></button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
