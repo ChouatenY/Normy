@@ -678,7 +678,7 @@ app.post('/api-keys', async (c) => {
     keyHash: hashApiKey(key),
     keyPrefix: key.substring(0, 18),
     environment: mode === 'live' ? 'production' : 'development',
-    rateLimit: body.rateLimit ?? 60,
+    rateLimit: body.rateLimit ?? 300,
   }).returning({
     id: apiKeys.id,
     projectId: apiKeys.projectId,

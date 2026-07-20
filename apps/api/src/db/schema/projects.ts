@@ -118,7 +118,7 @@ export const projects = pgTable(
     /** Live production credits (in USD) */
     liveCreditsBalance: numeric('live_credits_balance', { precision: 10, scale: 4 })
       .notNull()
-      .default('0.0000'),
+      .default('1.0000'),
 
     // ── Settings (flexible JSONB) ──────────────────────────────────────────────
     settings: jsonb('settings')

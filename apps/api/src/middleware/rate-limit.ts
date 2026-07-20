@@ -9,6 +9,21 @@ export const rateLimit = createMiddleware<AuthContext>(async (c, next) => {
     return await next();
   }
 
+  // Skip rate limits entirely if the project uses its own API key (BYOK)
+  const project = c.get('project');
+  if (project) {
+    const providerName = project.defaultProvider || 'gemini';
+    const rawEncryptedKey = 
+      providerName === 'gemini' ? project.geminiApiKey :
+      providerName === 'openai' ? project.openaiApiKey :
+      providerName === 'anthropic' ? project.anthropicApiKey : null;
+
+    if (rawEncryptedKey) {
+      // User has brought their own key. Do not enforce Normy's hosted rate limits.
+      return await next();
+    }
+  }
+
   try {
     // 1. Fetch key config (either from cache/context or query)
     const keyRecord = await db.query.apiKeys.findFirst({
@@ -18,7 +33,7 @@ export const rateLimit = createMiddleware<AuthContext>(async (c, next) => {
       },
     });
 
-    const limit = keyRecord?.rateLimit ?? 60; // fallback default
+    const limit = keyRecord?.rateLimit ?? 300; // Increased fallback default from 60 to 300
     
     // 2. Generate window key: minute-based bucket
     const currentMinute = Math.floor(Date.now() / 60000);
