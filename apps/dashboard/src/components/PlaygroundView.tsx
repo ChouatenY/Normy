@@ -95,10 +95,10 @@ export function PlaygroundView({ apiKey = '', projectId = '' }: PlaygroundViewPr
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32 }} className="playground-grid">
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, minWidth: 0, maxWidth: '100%' }} className="playground-grid">
         
         {/* ── Left Form Input Panel ── */}
-        <div className="card-glass">
+        <div className="card-glass" style={{ minWidth: 0, maxWidth: '100%' }}>
           
           {/* API Credentials */}
           <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: 20, marginBottom: 20 }}>
@@ -195,7 +195,7 @@ export function PlaygroundView({ apiKey = '', projectId = '' }: PlaygroundViewPr
         </div>
 
         {/* ── Right Output / Preview Panel ── */}
-        <div>
+        <div style={{ minWidth: 0, maxWidth: '100%' }}>
           {result ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               
@@ -236,7 +236,7 @@ export function PlaygroundView({ apiKey = '', projectId = '' }: PlaygroundViewPr
 
                   <div>
                     <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-sec)' }}>Feedback / Reason: </span>
-                    <p style={{ fontSize: '0.875rem', color: 'var(--text)', marginTop: 4 }}>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text)', marginTop: 4, wordBreak: 'break-word' }}>
                       {result.feedback}
                     </p>
                   </div>

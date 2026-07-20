@@ -28,7 +28,8 @@ export function CodeBlock({ title, code, lang: _lang = 'tsx' }: CodeBlockProps) 
       borderRadius: 'var(--radius-sm)',
       overflow: 'hidden',
       marginBottom: 20,
-      position: 'relative'
+      position: 'relative',
+      maxWidth: '100%'
     }}>
       <div style={{
         display: 'flex',
@@ -88,6 +89,7 @@ export function CodeBlock({ title, code, lang: _lang = 'tsx' }: CodeBlockProps) 
         overflowX: 'auto',
         margin: 0,
         background: 'var(--near-black)',
+        maxWidth: '100%'
       }}>
         <code style={{
           fontFamily: 'var(--mono)',

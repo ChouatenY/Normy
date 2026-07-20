@@ -256,9 +256,31 @@ export default function ProvidersPage() {
               </div>
             </div>
             {hasWarning && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'var(--red)', fontSize: '0.8125rem', fontWeight: 600, background: 'rgba(239, 68, 68, 0.05)', padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(239, 68, 68, 0.1)' }}>
-                <ShieldAlert size={16} style={{ flexShrink: 0 }} />
-                <span>⚠️ No models found for this Gemini API key. Please check your credentials or verify your project billing setup on Google AI Studio.</span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, color: 'var(--red)', fontSize: '0.8125rem', fontWeight: 600, background: 'rgba(239, 68, 68, 0.05)', padding: '12px 16px', borderRadius: 8, border: '1px solid rgba(239, 68, 68, 0.1)', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <ShieldAlert size={16} style={{ flexShrink: 0 }} />
+                  <span>⚠️ No models found for this Gemini API key. Please check your credentials or verify your project billing setup on Google AI Studio.</span>
+                </div>
+                <button
+                  onClick={fetchDynamicProviders}
+                  disabled={isLoadingProviders}
+                  className="btn btn-glass"
+                  style={{
+                    padding: '4px 12px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    border: '1px solid rgba(239, 68, 68, 0.2)',
+                    color: 'var(--red)',
+                    background: 'rgba(239, 68, 68, 0.05)',
+                    cursor: 'pointer',
+                    borderRadius: 6,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}
+                >
+                  {isLoadingProviders ? 'Refreshing...' : 'Retry/Refresh'}
+                </button>
               </div>
             )}
           </div>
